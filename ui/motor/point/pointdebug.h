@@ -84,6 +84,9 @@ private:
 
 	QTableView     *pointview;
 	QSqlTableModel *pointmodel;
+	QSqlTableModel *model_glue1;
+	QSqlTableModel *point_glue2;
+	QSqlTableModel *point_glue3;
 
 	QList<QAction *> list_action;
 	QAction *action_go;
