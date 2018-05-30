@@ -10,7 +10,7 @@ Workflow::Workflow(QObject *parent) : QObject(parent)
 
 void Workflow::setConfig()
 {
-	// 配置流程
+	// 【1】 流程配置
 	QFile file("../config/workflow_glue.ini");
 	if (!file.exists())
 	{
@@ -25,6 +25,34 @@ void Workflow::setConfig()
 		is_config_glue2 = setting.value("workflow_glue/is_config_glue2").toBool();
 		is_config_glue3 = setting.value("workflow_glue/is_config_glue3").toBool();
 	}
+
+	// 【2】 点位配置
+	index_model = 0;
+	model_main = new QSqlTableModel(this);
+	// 使用 submit 时,数据库才会更改,否则做出的更改存储在缓存中
+	model_main->setEditStrategy(QSqlTableModel::OnManualSubmit);
+	model_main->setTable("point_main");
+	// 设置按第0列升序排列
+	model_main->setSort(0, Qt::AscendingOrder);
+	model_main->select();
+
+	model_glue1 = new QSqlTableModel(this);
+	model_glue1->setEditStrategy(QSqlTableModel::OnManualSubmit);
+	model_glue1->setTable("point_glue1");
+	model_glue1->setSort(0, Qt::AscendingOrder);
+	model_glue1->select();
+
+	model_glue2 = new QSqlTableModel(this);
+	model_glue2->setEditStrategy(QSqlTableModel::OnManualSubmit);
+	model_glue2->setTable("point_glue2");
+	model_glue2->setSort(0, Qt::AscendingOrder);
+	model_glue2->select();
+
+	model_glue3 = new QSqlTableModel(this);
+	model_glue3->setEditStrategy(QSqlTableModel::OnManualSubmit);
+	model_glue3->setTable("point_glue3");
+	model_glue3->setSort(0, Qt::AscendingOrder);
+	model_glue3->select();
 }
 
 void Workflow::setIOStatus()
@@ -400,7 +428,7 @@ void Workflow::thread_glue_3()
 }
 
 
-// 自定义槽, 连接外部信号
+// 连接 Operation 流程配置修改
 void Workflow::on_changedConfigGlue()
 {
 	QFile file("../config/workflow_glue.ini");
@@ -414,6 +442,76 @@ void Workflow::on_changedConfigGlue()
 	}
 }
 
+// 连接 PointDebug 点位数据修改
+void Workflow::on_changedSqlModel(int index)
+{
+	index_model = index;
+	if (0 == index_model)
+	{
+		model_main->select();
+		QMap<QString, PointGlue> xx = getPointInfo();
+
+		qDebug() << "xx";
+	}
+	else if (1 == index_model) model_main->select();
+	else if (2 == index_model) model_main->select();
+	else if (3 == index_model) model_main->select();
+	else return;
+}
+
+
+QSqlTableModel *Workflow::getCurrentModel()
+{
+	if (0 == index_model)	return model_main;
+	else if (1 == index_model) return model_glue1;
+	else if (2 == index_model) return model_glue2;
+	else if (3 == index_model) return model_glue3;
+	else
+	{
+		QMessageBox::warning(NULL, "错误", QStringLiteral("设置数据库模型错误"));
+		return NULL;
+	}
+}
+
+// 通过结构体存储
+QMap<QString, PointGlue> Workflow::getPointInfo()
+{
+	QSqlTableModel *pointmodel = getCurrentModel();
+
+	QMap<QString, PointGlue> _allPoint;
+	
+	for (int index = 0; index < pointmodel->rowCount(); index++)
+	{
+		QString name = pointmodel->record(index).value("name").toString();
+		QString description = pointmodel->record(index).value("description").toString();
+		float X = pointmodel->record(index).value("X").toString().toFloat();
+		float Y = pointmodel->record(index).value("Y").toString().toFloat();
+		float Z = pointmodel->record(index).value("Z").toString().toFloat();
+		bool open = pointmodel->record(index).value("open").toBool();
+		int openAdvance = pointmodel->record(index).value("openAdvance").toInt();
+		int openDelay = pointmodel->record(index).value("openDelay").toInt();
+		bool close = pointmodel->record(index).value("close").toBool();
+		int closeAdvance = pointmodel->record(index).value("closeAdvance").toInt();
+		int closeDelay = pointmodel->record(index).value("closeDelay").toInt();
+		int type = pointmodel->record(index).value("type").toInt();
+
+		PointGlue point; // = { name, description, X, Y, Z, open, openAdvance, openDelay, close, closeAdvance, closeDelay, type };
+		point.name = name;
+		point.description = description;
+		point.X = X;
+		point.Y = Y;
+		point.Z = Z;
+		point.open = open;
+		point.openAdvance = openAdvance;
+		point.openDelay = openDelay;
+		point.close = close;
+		point.closeAdvance = closeAdvance;
+		point.closeDelay = closeDelay;
+		point.type = type;
+		_allPoint.insert(name, point);
+	}
+	return _allPoint;
+}
 
 // 写log文件
 void Workflow::writRunningLog(QString str)

@@ -17,7 +17,9 @@ using namespace Eigen;
 
 // 载入动态库
 #include "../../../sdk/QIO/qio.h"
+#include "../../../sdk/QNavigationBar/qnavigationbar.h"
 class QInput;
+class QHNavigationBar;
 
 #define MOTOR_MAX_AXIS 3
 
@@ -52,9 +54,12 @@ public:
 	void thread_updateInputStatus();
 
 private:
+	// 点位窗口
+	void setGroupPoint();
 	void setViewPoint();
 	void setActions();
 
+	// 点位调试
 	void setGroupMove();
 	void setGroupIO();
 	void setGroupHome();
@@ -72,6 +77,10 @@ private:
     QGroupBox *group_step;
 
 private:
+	int index_model;
+	void setCurrentModel(int index);
+	QSqlTableModel *getCurrentModel();
+
 	void on_pointview_rightClicked(const QPoint &);
 	
 	void on_action_go();
@@ -82,11 +91,13 @@ private:
 	void on_action_del();
 	void on_action_save();
 
+	QWidget        *w_pointview;
+	QHNavigationBar *hnavigationbar;
 	QTableView     *pointview;
-	QSqlTableModel *pointmodel;
+	QSqlTableModel *model_main;
 	QSqlTableModel *model_glue1;
-	QSqlTableModel *point_glue2;
-	QSqlTableModel *point_glue3;
+	QSqlTableModel *model_glue2;
+	QSqlTableModel *model_glue3;
 
 	QList<QAction *> list_action;
 	QAction *action_go;
@@ -174,6 +185,9 @@ public:
 public:
     // 设置运动模式
     void setMoveType(int moveType);
+
+signals:
+	void changedSqlModel(int index);
 
 public:
 	QMap<QString, PointGlue> allPoint;

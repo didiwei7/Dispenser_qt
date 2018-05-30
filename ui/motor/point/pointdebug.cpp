@@ -31,7 +31,7 @@ PointDebug::PointDebug(QWidget *parent) : QWidget(parent)
 // 初始化Ui
 void PointDebug::setupUi()
 {
-	setViewPoint();
+	setGroupPoint();
     setGroupMove();
 	setGroupIO();
 	setGroupPos();
@@ -44,7 +44,7 @@ void PointDebug::setupUi()
 	layout_2_1->setContentsMargins(8, 8, 8, 8);
 	layout_2_1->setSpacing(10);
 	
-	layout_1->addWidget(pointview);
+	layout_1->addWidget(w_pointview);
 	layout_1->addLayout(layout_2_1);
 	layout_1->setStretch(0, 2);
 	layout_1->setStretch(1, 1);
@@ -61,24 +61,26 @@ void PointDebug::setupUi()
 // 初始化信号槽
 void PointDebug::setConnect()
 {
-	// 【1】 Pos  Radio
+	// 【1】 Point 
+	connect(hnavigationbar, &QHNavigationBar::currentItemChanged,
+		    this,           &PointDebug::setCurrentModel);
+	connect(action_go,	  &QAction::triggered, this, &PointDebug::on_action_go);
+	connect(action_teach, &QAction::triggered, this, &PointDebug::on_action_teach);
+	connect(action_add,	  &QAction::triggered, this, &PointDebug::on_action_add);
+	connect(action_insert, &QAction::triggered, this, &PointDebug::on_action_insert);
+	connect(action_del,    &QAction::triggered, this, &PointDebug::on_action_del);
+	connect(action_save,   &QAction::triggered, this, &PointDebug::on_action_save);
+	connect(pointview, &QTableView::customContextMenuRequested,
+		    this,      &PointDebug::on_pointview_rightClicked);
+
+	// 【2】 Pos  Radio
     connect(radio_continue, &QRadioButton::clicked, this, &PointDebug::on_radio_continue);
     connect(radio_long,     &QRadioButton::clicked, this, &PointDebug::on_radio_long);
     connect(radio_middle,   &QRadioButton::clicked, this, &PointDebug::on_radio_middle);
     connect(radio_short,    &QRadioButton::clicked, this, &PointDebug::on_radio_short);
 
-	// 【2】 Move Slider
+	// 【3】 Move Slider
 	connect(slider_speed,   &QSlider::valueChanged, this, &PointDebug::on_slider_speed_Changed);
-
-	// 【3】 View 
-	connect(action_go,     &QAction::triggered, this, &PointDebug::on_action_go);
-	connect(action_teach,  &QAction::triggered, this, &PointDebug::on_action_teach);
-	connect(action_add,    &QAction::triggered, this, &PointDebug::on_action_add);
-	connect(action_insert, &QAction::triggered, this, &PointDebug::on_action_insert);
-	connect(action_del,    &QAction::triggered, this, &PointDebug::on_action_del);
-	connect(action_save,   &QAction::triggered, this, &PointDebug::on_action_save);
-    connect(pointview, &QTableView::customContextMenuRequested,
-            this,      &PointDebug::on_pointview_rightClicked);
 
 	// 【4】 Move BTN
     connect(X_positive, &QPushButton::clicked, this, &PointDebug::on_X_positive_clicked);
@@ -113,7 +115,6 @@ void PointDebug::setThread()
 	future_thread_updateCurrentPos = QtConcurrent::run(&thread_pool, [&]() { thread_updateCurrentPos(); });
 	future_thread_updateInputStatus = QtConcurrent::run(&thread_pool, [&]() { thread_updateInputStatus(); });
 }
-
 
 // Ui
 void PointDebug::setGroupMove()
@@ -363,10 +364,32 @@ void PointDebug::setGroupStep()
     group_step->setLayout(layout_1);
 }
 
+void PointDebug::setGroupPoint()
+{
+	index_model = 0;
+	setActions();
+	setViewPoint();
+	
+	w_pointview = new QWidget();
+	
+	hnavigationbar = new QHNavigationBar();
+	hnavigationbar->setColumnWidth(100);
+	hnavigationbar->addItem(QStringLiteral("调试点位"));
+	hnavigationbar->addItem(QStringLiteral("点胶工位1"));
+	hnavigationbar->addItem(QStringLiteral("点胶工位2"));
+	hnavigationbar->addItem(QStringLiteral("点胶工位3"));
+
+	QVBoxLayout *layout_1 = new QVBoxLayout();
+	layout_1->setContentsMargins(0, 0, 0, 0);
+	layout_1->setSpacing(0);
+	layout_1->addWidget(hnavigationbar);
+	layout_1->addWidget(pointview);
+
+	w_pointview->setLayout(layout_1);
+}
+
 void PointDebug::setViewPoint()
 {
-	setActions();
-
 	// 【1】 连接数据库
 	QFileInfo file("../data/point/db_point.db");
 	if (!file.isFile())
@@ -402,27 +425,81 @@ void PointDebug::setViewPoint()
 	}
 
 	// 【2】 模型
-	pointmodel = new QSqlTableModel(this);
+	model_main = new QSqlTableModel(this);
     // 使用 submit 时,数据库才会更改,否则做出的更改存储在缓存中
-	pointmodel->setEditStrategy(QSqlTableModel::OnManualSubmit);
-	pointmodel->setTable("workStation1");
+	model_main->setEditStrategy(QSqlTableModel::OnManualSubmit);
+	model_main->setTable("point_main");
     // 设置按第0列升序排列
-	pointmodel->setSort(0, Qt::AscendingOrder);
+	model_main->setSort(0, Qt::AscendingOrder);
     // 更改Model对象的 头信息
-	pointmodel->setHeaderData(pointmodel->fieldIndex("name"), Qt::Horizontal, QStringLiteral("名称"));
-	pointmodel->setHeaderData(pointmodel->fieldIndex("description"),  Qt::Horizontal, QStringLiteral("描述"));
-	pointmodel->setHeaderData(pointmodel->fieldIndex("open"), Qt::Horizontal, QStringLiteral("是否开胶"));
-	pointmodel->setHeaderData(pointmodel->fieldIndex("openAdvance"), Qt::Horizontal, QStringLiteral("提前开胶"));
-	pointmodel->setHeaderData(pointmodel->fieldIndex("openDelay"), Qt::Horizontal, QStringLiteral("延迟开胶"));
-	pointmodel->setHeaderData(pointmodel->fieldIndex("close"), Qt::Horizontal, QStringLiteral("是否关胶"));
-	pointmodel->setHeaderData(pointmodel->fieldIndex("closeAdvance"), Qt::Horizontal, QStringLiteral("提前关胶"));
-	pointmodel->setHeaderData(pointmodel->fieldIndex("closeDelay"), Qt::Horizontal, QStringLiteral("延迟关胶"));
-	pointmodel->setHeaderData(pointmodel->fieldIndex("type"), Qt::Horizontal, QStringLiteral("类型"));
-    pointmodel->select();
+	model_main->setHeaderData(model_main->fieldIndex("name"), Qt::Horizontal, QStringLiteral("名称"));
+	model_main->setHeaderData(model_main->fieldIndex("description"),  Qt::Horizontal, QStringLiteral("描述"));
+	model_main->setHeaderData(model_main->fieldIndex("open"), Qt::Horizontal, QStringLiteral("是否开胶"));
+	model_main->setHeaderData(model_main->fieldIndex("openAdvance"), Qt::Horizontal, QStringLiteral("提前开胶"));
+	model_main->setHeaderData(model_main->fieldIndex("openDelay"), Qt::Horizontal, QStringLiteral("延迟开胶"));
+	model_main->setHeaderData(model_main->fieldIndex("close"), Qt::Horizontal, QStringLiteral("是否关胶"));
+	model_main->setHeaderData(model_main->fieldIndex("closeAdvance"), Qt::Horizontal, QStringLiteral("提前关胶"));
+	model_main->setHeaderData(model_main->fieldIndex("closeDelay"), Qt::Horizontal, QStringLiteral("延迟关胶"));
+	model_main->setHeaderData(model_main->fieldIndex("type"), Qt::Horizontal, QStringLiteral("类型"));
+	model_main->select();
+
+	model_glue1 = new QSqlTableModel(this);
+	// 使用 submit 时,数据库才会更改,否则做出的更改存储在缓存中
+	model_glue1->setEditStrategy(QSqlTableModel::OnManualSubmit);
+	model_glue1->setTable("point_glue1");
+	// 设置按第0列升序排列
+	model_glue1->setSort(0, Qt::AscendingOrder);
+	// 更改Model对象的 头信息
+	model_glue1->setHeaderData(model_glue1->fieldIndex("name"), Qt::Horizontal, QStringLiteral("名称"));
+	model_glue1->setHeaderData(model_glue1->fieldIndex("description"), Qt::Horizontal, QStringLiteral("描述"));
+	model_glue1->setHeaderData(model_glue1->fieldIndex("open"), Qt::Horizontal, QStringLiteral("是否开胶"));
+	model_glue1->setHeaderData(model_glue1->fieldIndex("openAdvance"), Qt::Horizontal, QStringLiteral("提前开胶"));
+	model_glue1->setHeaderData(model_glue1->fieldIndex("openDelay"), Qt::Horizontal, QStringLiteral("延迟开胶"));
+	model_glue1->setHeaderData(model_glue1->fieldIndex("close"), Qt::Horizontal, QStringLiteral("是否关胶"));
+	model_glue1->setHeaderData(model_glue1->fieldIndex("closeAdvance"), Qt::Horizontal, QStringLiteral("提前关胶"));
+	model_glue1->setHeaderData(model_glue1->fieldIndex("closeDelay"), Qt::Horizontal, QStringLiteral("延迟关胶"));
+	model_glue1->setHeaderData(model_glue1->fieldIndex("type"), Qt::Horizontal, QStringLiteral("类型"));
+	model_glue1->select();
+
+	model_glue2 = new QSqlTableModel(this);
+	// 使用 submit 时,数据库才会更改,否则做出的更改存储在缓存中
+	model_glue2->setEditStrategy(QSqlTableModel::OnManualSubmit);
+	model_glue2->setTable("point_glue2");
+	// 设置按第0列升序排列
+	model_glue2->setSort(0, Qt::AscendingOrder);
+	// 更改Model对象的 头信息
+	model_glue2->setHeaderData(model_glue2->fieldIndex("name"), Qt::Horizontal, QStringLiteral("名称"));
+	model_glue2->setHeaderData(model_glue2->fieldIndex("description"), Qt::Horizontal, QStringLiteral("描述"));
+	model_glue2->setHeaderData(model_glue2->fieldIndex("open"), Qt::Horizontal, QStringLiteral("是否开胶"));
+	model_glue2->setHeaderData(model_glue2->fieldIndex("openAdvance"), Qt::Horizontal, QStringLiteral("提前开胶"));
+	model_glue2->setHeaderData(model_glue2->fieldIndex("openDelay"), Qt::Horizontal, QStringLiteral("延迟开胶"));
+	model_glue2->setHeaderData(model_glue2->fieldIndex("close"), Qt::Horizontal, QStringLiteral("是否关胶"));
+	model_glue2->setHeaderData(model_glue2->fieldIndex("closeAdvance"), Qt::Horizontal, QStringLiteral("提前关胶"));
+	model_glue2->setHeaderData(model_glue2->fieldIndex("closeDelay"), Qt::Horizontal, QStringLiteral("延迟关胶"));
+	model_glue2->setHeaderData(model_glue2->fieldIndex("type"), Qt::Horizontal, QStringLiteral("类型"));
+	model_glue2->select();
+
+	model_glue3 = new QSqlTableModel(this);
+	// 使用 submit 时,数据库才会更改,否则做出的更改存储在缓存中
+	model_glue3->setEditStrategy(QSqlTableModel::OnManualSubmit);
+	model_glue3->setTable("point_glue3");
+	// 设置按第0列升序排列
+	model_glue3->setSort(0, Qt::AscendingOrder);
+	// 更改Model对象的 头信息
+	model_glue3->setHeaderData(model_glue3->fieldIndex("name"), Qt::Horizontal, QStringLiteral("名称"));
+	model_glue3->setHeaderData(model_glue3->fieldIndex("description"), Qt::Horizontal, QStringLiteral("描述"));
+	model_glue3->setHeaderData(model_glue3->fieldIndex("open"), Qt::Horizontal, QStringLiteral("是否开胶"));
+	model_glue3->setHeaderData(model_glue3->fieldIndex("openAdvance"), Qt::Horizontal, QStringLiteral("提前开胶"));
+	model_glue3->setHeaderData(model_glue3->fieldIndex("openDelay"), Qt::Horizontal, QStringLiteral("延迟开胶"));
+	model_glue3->setHeaderData(model_glue3->fieldIndex("close"), Qt::Horizontal, QStringLiteral("是否关胶"));
+	model_glue3->setHeaderData(model_glue3->fieldIndex("closeAdvance"), Qt::Horizontal, QStringLiteral("提前关胶"));
+	model_glue3->setHeaderData(model_glue3->fieldIndex("closeDelay"), Qt::Horizontal, QStringLiteral("延迟关胶"));
+	model_glue3->setHeaderData(model_glue3->fieldIndex("type"), Qt::Horizontal, QStringLiteral("类型"));
+	model_glue3->select();
 
     // 【3】 视图
 	pointview = new QTableView(this);
-	pointview->setModel(pointmodel);
+	pointview->setModel(model_main);
 	pointview->setAlternatingRowColors(true);
 	pointview->setStyleSheet("QTableView{background-color: #FFFFFF;"
 							 "alternate-background-color: #FFF0F5;}");
@@ -472,6 +549,29 @@ void PointDebug::setActions()
 
 
 // 槽 TableView
+void PointDebug::setCurrentModel(int index)
+{
+	index_model = index;
+	if (0 == index_model)	pointview->setModel(model_main);
+	else if (1 == index_model) pointview->setModel(model_glue1);
+	else if (2 == index_model) pointview->setModel(model_glue2);
+	else if (3 == index_model) pointview->setModel(model_glue3);
+	else return;
+}
+
+QSqlTableModel *PointDebug::getCurrentModel()
+{
+	if (0 == index_model)	return model_main;
+	else if (1 == index_model) return model_glue1;
+	else if (2 == index_model) return model_glue2;
+	else if (3 == index_model) return model_glue3;
+	else
+	{
+		QMessageBox::warning(NULL, "错误", QStringLiteral("设置数据库模型错误"));
+		return NULL;
+	}
+}
+
 void PointDebug::on_pointview_rightClicked(const QPoint &)
 {
 	QItemSelectionModel *select_current = pointview->selectionModel();
@@ -524,6 +624,7 @@ void PointDebug::on_action_teach()
 	QString sz_axis = QString::number(fz_axis, 'f', 3);
 
 	int row = pointview->currentIndex().row();
+	QSqlTableModel *pointmodel = getCurrentModel();
 	pointmodel->setData(pointmodel->index(row, 3), sx_axis);
 	pointmodel->setData(pointmodel->index(row, 4), sy_axis);
 	pointmodel->setData(pointmodel->index(row, 5), sz_axis);
@@ -533,6 +634,8 @@ void PointDebug::on_action_teach()
 
 void PointDebug::on_action_add()
 {
+	QSqlTableModel *pointmodel = getCurrentModel();
+
 	int row_count = pointmodel->rowCount();
 
 	QSqlRecord record_point = pointmodel->record();
@@ -557,6 +660,8 @@ void PointDebug::on_action_add()
 
 void PointDebug::on_action_del()
 {
+	QSqlTableModel *pointmodel = getCurrentModel();
+
 	int ret = QMessageBox::warning(NULL, QStringLiteral("Waring"),
 		QStringLiteral("你确定删除当前行吗?"),
 		QMessageBox::Yes, QMessageBox::No);
@@ -587,6 +692,8 @@ void PointDebug::on_action_del()
 
 void PointDebug::on_action_insert()
 {
+	QSqlTableModel *pointmodel = getCurrentModel();
+
 	// 【1】 获取当前行, 总行数
 	int row = pointview->currentIndex().row();
 	int row_count = pointmodel->rowCount();
@@ -621,10 +728,15 @@ void PointDebug::on_action_insert()
 
 void PointDebug::on_action_save()
 {
+	QSqlTableModel *pointmodel = getCurrentModel();
 	pointmodel->submitAll();
-	allPoint.clear();
-	allPoint = getPointInfo();
+
+	emit changedSqlModel(index_model);
+
+	//allPoint.clear();
+	//allPoint = getPointInfo();
 }
+
 
 
 // 槽 Step
@@ -1140,6 +1252,8 @@ void PointDebug::thread_updateInputStatus()
 // 通过结构体存储
 QMap<QString, PointGlue> PointDebug::getPointInfo()
 {
+	QSqlTableModel *pointmodel = getCurrentModel();
+
 	QMap<QString, PointGlue> _allPoint;
 	int index = 0;
 	for (index; index < pointmodel->rowCount(); index++)
@@ -1185,6 +1299,11 @@ PointGlue PointDebug::get_point_name(QString name)
 
 PointGlue PointDebug::get_point_index(int index)
 {
+	QSqlTableModel *pointmodel = getCurrentModel();
+
+	QAbstractItemModel *abstractmodel = pointview->model();
+	pointmodel->setParent(abstractmodel);
+
 	QString name = pointmodel->record(index).value("name").toString();
 
 	QMap<QString, PointGlue>::iterator Point_it;

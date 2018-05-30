@@ -22,6 +22,9 @@
 // 数学库
 #include <QtMath>
 
+// 数据库
+#include <QtSql>
+
 // 运动控制
 #include "../adt/adtcontrol.h"
 #include "../io/io.h"
@@ -84,7 +87,7 @@ public:		// 换料盘
 	void thread_exchangeTrays();
 
 
-public:
+public:		// 配置数据
 	bool is_config_gluel;
 	bool is_config_glue2;
 	bool is_config_glue3;
@@ -92,21 +95,33 @@ public:
 	void thread_glue_2();
 	void thread_glue_3();
 
-public:
-
+public:		// 点位数据
+	QSqlTableModel *model_main;
+	QSqlTableModel *model_glue1;
+	QSqlTableModel *model_glue2;
+	QSqlTableModel *model_glue3;
 
 signals:	// 自定义信号
-	void changedRundataLabel(QString str);
-	void changedRundataText(QString str);
-	void changedOffsetChart(float x, float y, float A);
+	void changedRundataLabel(QString str);	// To Operation
+	void changedRundataText(QString str);	// To Operation
+	void changedOffsetChart(float x, float y, float A);	// To Operation
 	
 public slots:	// 连接外部信号
-	void on_changedConfigGlue();
+	void on_changedConfigGlue();			// From Operation
+	void on_changedSqlModel(int index);		// From PointDebug
 
-
-public:		
-	void    writRunningLog(QString str);
+public:
+	// 写Log文件
+	void writRunningLog(QString str);
+	
+	// 获取当前事件
 	QString getCurrentTime();
+
+public:		// 获取点位
+	int index_model;
+	QSqlTableModel *getCurrentModel();
+	QMap<QString, PointGlue> getPointInfo();	// 通过结构体存储
+
 };
 
 #endif // WORKFLOW_H

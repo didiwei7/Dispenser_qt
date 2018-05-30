@@ -49,11 +49,13 @@ void MainWidget::setConnect()
     connect(vnavigationbar, &QVNavigationBar::currentItemChanged,
             stackedWidget,  &QStackedWidget::setCurrentIndex);
 
-	// 【2】 连接信号槽
+	// 【2】 自定义信号槽
 	connect(w_workflow,  &Workflow::changedRundataLabel,
 		    w_operation, &Operation::on_changedRundataLabel);
 	connect(w_workflow,  &Workflow::changedRundataText,
 		    w_operation, &Operation::on_changedRundataText);
 	connect(w_operation, &Operation::changedConfigGlue,
 			w_workflow,  &Workflow::on_changedConfigGlue);
+	connect(w_motor->w_pointDebug, &PointDebug::changedSqlModel,
+			w_workflow,  &Workflow::on_changedSqlModel);
 }
