@@ -1,0 +1,44 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2015
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "QFlex", "D:/CodeManage/MyFramework/Dispenser/sdk/QFlex\QFlex.vcxproj", "{EAE13C6B-174A-38B9-AF77-93743F655AD3}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "QNavigationBar", "D:/CodeManage/MyFramework/Dispenser/sdk/QNavigationBar\QNavigationBar.vcxproj", "{E1CD04CE-5975-3301-A9F6-CE75F693C006}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "QMySlider", "D:/CodeManage/MyFramework/Dispenser/sdk/QMySlider\QMySlider.vcxproj", "{BB8435F9-1D9D-3A9D-B894-C37FDDD77520}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "QCommunication", "D:/CodeManage/MyFramework/Dispenser/sdk/QCommunication\QCommunication.vcxproj", "{3EAA64B8-F74E-33A8-B6C8-F35FEC461D8A}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "QIO", "D:/CodeManage/MyFramework/Dispenser/sdk/QIO\QIO.vcxproj", "{553DCD6E-3591-3D32-B0C5-190AE3682614}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{EAE13C6B-174A-38B9-AF77-93743F655AD3}.Debug|Win32.ActiveCfg = Debug|Win32
+		{EAE13C6B-174A-38B9-AF77-93743F655AD3}.Debug|Win32.Build.0 = Debug|Win32
+		{EAE13C6B-174A-38B9-AF77-93743F655AD3}.Release|Win32.ActiveCfg = Release|Win32
+		{EAE13C6B-174A-38B9-AF77-93743F655AD3}.Release|Win32.Build.0 = Release|Win32
+		{E1CD04CE-5975-3301-A9F6-CE75F693C006}.Debug|Win32.ActiveCfg = Debug|Win32
+		{E1CD04CE-5975-3301-A9F6-CE75F693C006}.Debug|Win32.Build.0 = Debug|Win32
+		{E1CD04CE-5975-3301-A9F6-CE75F693C006}.Release|Win32.ActiveCfg = Release|Win32
+		{E1CD04CE-5975-3301-A9F6-CE75F693C006}.Release|Win32.Build.0 = Release|Win32
+		{BB8435F9-1D9D-3A9D-B894-C37FDDD77520}.Debug|Win32.ActiveCfg = Debug|Win32
+		{BB8435F9-1D9D-3A9D-B894-C37FDDD77520}.Debug|Win32.Build.0 = Debug|Win32
+		{BB8435F9-1D9D-3A9D-B894-C37FDDD77520}.Release|Win32.ActiveCfg = Release|Win32
+		{BB8435F9-1D9D-3A9D-B894-C37FDDD77520}.Release|Win32.Build.0 = Release|Win32
+		{3EAA64B8-F74E-33A8-B6C8-F35FEC461D8A}.Debug|Win32.ActiveCfg = Debug|Win32
+		{3EAA64B8-F74E-33A8-B6C8-F35FEC461D8A}.Debug|Win32.Build.0 = Debug|Win32
+		{3EAA64B8-F74E-33A8-B6C8-F35FEC461D8A}.Release|Win32.ActiveCfg = Release|Win32
+		{3EAA64B8-F74E-33A8-B6C8-F35FEC461D8A}.Release|Win32.Build.0 = Release|Win32
+		{553DCD6E-3591-3D32-B0C5-190AE3682614}.Debug|Win32.ActiveCfg = Debug|Win32
+		{553DCD6E-3591-3D32-B0C5-190AE3682614}.Debug|Win32.Build.0 = Debug|Win32
+		{553DCD6E-3591-3D32-B0C5-190AE3682614}.Release|Win32.ActiveCfg = Release|Win32
+		{553DCD6E-3591-3D32-B0C5-190AE3682614}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+	EndGlobalSection
+	GlobalSection(ExtensibilityAddIns) = postSolution
+	EndGlobalSection
+EndGlobal

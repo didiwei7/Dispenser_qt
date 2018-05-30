@@ -1,0 +1,12 @@
+#ifndef QMYSLIDER_GLOBAL_H
+#define QMYSLIDER_GLOBAL_H
+
+#include <QtCore/qglobal.h>
+
+#if defined(QMYSLIDER_LIBRARY)
+#  define QMYSLIDERSHARED_EXPORT Q_DECL_EXPORT
+#else
+#  define QMYSLIDERSHARED_EXPORT Q_DECL_IMPORT
+#endif
+
+#endif // QMYSLIDER_GLOBAL_H

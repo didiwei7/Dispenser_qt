@@ -1,0 +1,12 @@
+#ifndef CONTROL_LU_GLOBAL_H
+#define CONTROL_LU_GLOBAL_H
+
+#include <QtCore/qglobal.h>
+
+#if defined(CONTROL_LU_LIBRARY)
+#  define CONTROL_LUSHARED_EXPORT Q_DECL_EXPORT
+#else
+#  define CONTROL_LUSHARED_EXPORT Q_DECL_IMPORT
+#endif
+
+#endif // CONTROL_LU_GLOBAL_H

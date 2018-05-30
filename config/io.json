@@ -1,0 +1,68 @@
+{
+    "Card0": {
+        "Input": {
+            "0": { "index": 0,  "name": "X轴报警",  "status": 0,  "visible": false},
+            "1": { "index": 1,  "name": "Y轴报警",  "status": 0,  "visible": false},
+            "2": { "index": 2,  "name": "Z轴报警",  "status": 0,  "visible": false},
+            "3": { "index": 3,  "name": "A轴报警",  "status": 0,  "visible": false},
+            "4": { "index": 4,  "name": "X正限位",  "status": 0,  "visible": false},
+            "5": { "index": 5,  "name": "X负限位",  "status": 0,  "visible": false},
+            "6": { "index": 6,  "name": "Y正限位",  "status": 0,  "visible": false},
+            "7": { "index": 7,  "name": "Y负限位",  "status": 0,  "visible": false},
+            "8": { "index": 8,  "name": "Z正限位",  "status": 0,  "visible": false},
+            "9": { "index": 9,  "name": "Z负限位",  "status": 0,  "visible": false},
+            "10": { "index": 10,  "name": "A正限位",  "status": 0,  "visible": false},
+            "11": { "index": 11,  "name": "A负限位",  "status": 0,  "visible": false},
+            "12": { "index": 12,  "name": "X原点",    "status": 0,  "visible": false},
+            "13": { "index": 13,  "name": "Y原点",    "status": 0,  "visible": false},
+            "14": { "index": 14,  "name": "Z原点",    "status": 0,  "visible": false},
+            "15": { "index": 15,  "name": "A原点",    "status": 0,  "visible": false},
+            "16": { "index": 16,  "name": "急停",  "status": 0,  "visible": true},
+            "17": { "index": 17,  "name": "启动",  "status": 0,  "visible": true},
+            "18": { "index": 18,  "name": "点胶",  "status": 0,  "visible": true},
+            "19": { "index": 19,  "name": "擦胶",  "status": 0,  "visible": true},
+            "20": { "index": 20,  "name": "复位",  "status": 0,  "visible": true},
+            "21": { "index": 21,  "name": "照明",  "status": 0,  "visible": true},
+            "22": { "index": 22,  "name": "擦胶-无尘布感应",    "status": 0,  "visible": true},
+            "23": { "index": 23,  "name": "擦胶-A轴行程感应",   "status": 0,  "visible": true},
+            "24": { "index": 24,  "name": "擦胶-擦胶感应器",    "status": 0,  "visible": true},
+            "25": { "index": 25,  "name": "擦胶-气缸推进感应",  "status": 0,  "visible": true},
+            "26": { "index": 26,  "name": "擦胶-气缸后退感应",  "status": 0,  "visible": true},
+            "27": { "index": 27,  "name": "校针-位移传感器",  "status": 0,  "visible": true},
+            "28": { "index": 28,  "name": "校针-X对射光纤",   "status": 0,  "visible": true},
+            "29": { "index": 29,  "name": "校针-Y对射光纤",   "status": 0,  "visible": true},
+            "30": { "index": 30,  "name": "加热-温控器报警", "status": 0,  "visible": true},
+            "31": { "index": 31,  "name": "加热-负压表1",   "status": 0,  "visible": true},
+            "32": { "index": 32,  "name": "加热-负压表2",   "status": 0,  "visible": true},
+            "33": { "index": 33,  "name": "备用",  "status": 0,  "visible": true},
+            "34": { "index": 34,  "name": "备用",  "status": 0,  "visible": true},
+            "35": { "index": 35,  "name": "备用",  "status": 0,  "visible": true}
+        },
+        
+        "Output": {
+            "0": { "index": 0,  "name": "X轴使能",     "status": 0,  "visible": true},
+            "1": { "index": 1,  "name": "X轴报警清除",  "status": 0,  "visible": true},
+            "2": { "index": 2,  "name": "Y轴使能",     "status": 0,  "visible": true},
+            "3": { "index": 3,  "name": "Y轴报警清除",  "status": 0,  "visible": true},
+            "4": { "index": 4,  "name": "Z轴使能",     "status": 0,  "visible": true},
+            "5": { "index": 5,  "name": "Z轴报警清除",  "status": 0,  "visible": true},
+            "6": { "index": 6,  "name": "A轴使能",     "status": 0,  "visible": true},
+            "7": { "index": 7,  "name": "A轴报警清除",  "status": 0,  "visible": true},
+            "8": { "index": 8,  "name": "点胶阀开关",     "status": 0,  "visible": true},
+            "9": { "index": 9,  "name": "加热-温控开关",  "status": 0,  "visible": true},
+            "10": { "index": 10,  "name": "加热-真空吸1",   "status": 0,  "visible": true},
+            "11": { "index": 11,  "name": "加热-真空吸2",   "status": 0,  "visible": true},
+            "12": { "index": 12,  "name": "擦胶气缸",  "status": 0,  "visible": true},
+            "13": { "index": 13,  "name": "备用",  "status": 0,  "visible": true},
+            "14": { "index": 14,  "name": "备用",  "status": 0,  "visible": true},
+            "15": { "index": 15,  "name": "备用",  "status": 0,  "visible": true}
+        }
+    },
+
+    "Card1": {
+
+    }
+
+
+   
+}

@@ -1,0 +1,59 @@
+{
+    "HomeMode": { 
+        "X_axis": {
+            "m_nHomeDir": 1, 
+            "m_nStop0Active": 0, 
+            "m_nLimitActive": 0, 
+            "m_nStop1Active": -1,
+            "m_fBackRange": 10,
+            "m_fEncoderZRange": 0,
+            "m_fOffset": 0
+        },
+
+        "Y_axis": {
+            "m_nHomeDir": 0, 
+            "m_nStop0Active": 0, 
+            "m_nLimitActive": -1, 
+            "m_nStop1Active": 10,
+            "m_fBackRange": 0,
+            "m_fEncoderZRange": 0,
+            "m_fOffset": 1
+        },
+
+        "Z_axis": {
+            "m_nHomeDir": 0, 
+            "m_nStop0Active": 0, 
+            "m_nLimitActive": -1, 
+            "m_nStop1Active": 10,
+            "m_fBackRange": 0,
+            "m_fEncoderZRange": 0,
+            "m_fOffset": 1
+        }
+    },
+
+    "HomeSpeed": {
+        "X_axis":{
+            "m_fStartSpeed": 2,
+            "m_fSearchSpeed": 10,
+            "m_fHomeSpeed": 2,
+            "m_fAcc": 2,
+            "m_fZPhaseSpeed": 0
+        },
+
+        "Y_axis":{
+            "m_fStartSpeed": 2,
+            "m_fSearchSpeed": 10,
+            "m_fHomeSpeed": 2,
+            "m_fAcc": 2,
+            "m_fZPhaseSpeed": 0
+        },
+
+        "Z_axis":{
+            "m_fStartSpeed": 2,
+            "m_fSearchSpeed": 10,
+            "m_fHomeSpeed": 2,
+            "m_fAcc": 2,
+            "m_fZPhaseSpeed": 0
+        }
+    }
+}
