@@ -425,23 +425,23 @@ void PointDebug::setViewPoint()
 	}
 
 	// 【2】 模型
-	model_main = new QSqlTableModel(this);
+	model_general = new QSqlTableModel(this);
     // 使用 submit 时,数据库才会更改,否则做出的更改存储在缓存中
-	model_main->setEditStrategy(QSqlTableModel::OnManualSubmit);
-	model_main->setTable("point_main");
+	model_general->setEditStrategy(QSqlTableModel::OnManualSubmit);
+	model_general->setTable("point_main");
     // 设置按第0列升序排列
-	model_main->setSort(0, Qt::AscendingOrder);
+	model_general->setSort(0, Qt::AscendingOrder);
     // 更改Model对象的 头信息
-	model_main->setHeaderData(model_main->fieldIndex("name"), Qt::Horizontal, QStringLiteral("名称"));
-	model_main->setHeaderData(model_main->fieldIndex("description"),  Qt::Horizontal, QStringLiteral("描述"));
-	model_main->setHeaderData(model_main->fieldIndex("open"), Qt::Horizontal, QStringLiteral("是否开胶"));
-	model_main->setHeaderData(model_main->fieldIndex("openAdvance"), Qt::Horizontal, QStringLiteral("提前开胶"));
-	model_main->setHeaderData(model_main->fieldIndex("openDelay"), Qt::Horizontal, QStringLiteral("延迟开胶"));
-	model_main->setHeaderData(model_main->fieldIndex("close"), Qt::Horizontal, QStringLiteral("是否关胶"));
-	model_main->setHeaderData(model_main->fieldIndex("closeAdvance"), Qt::Horizontal, QStringLiteral("提前关胶"));
-	model_main->setHeaderData(model_main->fieldIndex("closeDelay"), Qt::Horizontal, QStringLiteral("延迟关胶"));
-	model_main->setHeaderData(model_main->fieldIndex("type"), Qt::Horizontal, QStringLiteral("类型"));
-	model_main->select();
+	model_general->setHeaderData(model_general->fieldIndex("name"), Qt::Horizontal, QStringLiteral("名称"));
+	model_general->setHeaderData(model_general->fieldIndex("description"),  Qt::Horizontal, QStringLiteral("描述"));
+	model_general->setHeaderData(model_general->fieldIndex("open"), Qt::Horizontal, QStringLiteral("是否开胶"));
+	model_general->setHeaderData(model_general->fieldIndex("openAdvance"), Qt::Horizontal, QStringLiteral("提前开胶"));
+	model_general->setHeaderData(model_general->fieldIndex("openDelay"), Qt::Horizontal, QStringLiteral("延迟开胶"));
+	model_general->setHeaderData(model_general->fieldIndex("close"), Qt::Horizontal, QStringLiteral("是否关胶"));
+	model_general->setHeaderData(model_general->fieldIndex("closeAdvance"), Qt::Horizontal, QStringLiteral("提前关胶"));
+	model_general->setHeaderData(model_general->fieldIndex("closeDelay"), Qt::Horizontal, QStringLiteral("延迟关胶"));
+	model_general->setHeaderData(model_general->fieldIndex("type"), Qt::Horizontal, QStringLiteral("类型"));
+	model_general->select();
 
 	model_glue1 = new QSqlTableModel(this);
 	// 使用 submit 时,数据库才会更改,否则做出的更改存储在缓存中
@@ -499,7 +499,7 @@ void PointDebug::setViewPoint()
 
     // 【3】 视图
 	pointview = new QTableView(this);
-	pointview->setModel(model_main);
+	pointview->setModel(model_general);
 	pointview->setAlternatingRowColors(true);
 	pointview->setStyleSheet("QTableView{background-color: #FFFFFF;"
 							 "alternate-background-color: #FFF0F5;}");
@@ -552,7 +552,7 @@ void PointDebug::setActions()
 void PointDebug::setCurrentModel(int index)
 {
 	index_model = index;
-	if (0 == index_model)	pointview->setModel(model_main);
+	if (0 == index_model)	pointview->setModel(model_general);
 	else if (1 == index_model) pointview->setModel(model_glue1);
 	else if (2 == index_model) pointview->setModel(model_glue2);
 	else if (3 == index_model) pointview->setModel(model_glue3);
@@ -561,7 +561,7 @@ void PointDebug::setCurrentModel(int index)
 
 QSqlTableModel *PointDebug::getCurrentModel()
 {
-	if (0 == index_model)	return model_main;
+	if (0 == index_model)	return model_general;
 	else if (1 == index_model) return model_glue1;
 	else if (2 == index_model) return model_glue2;
 	else if (3 == index_model) return model_glue3;
@@ -812,7 +812,7 @@ void PointDebug::on_X_positive_clicked()
 
 	float fx = edit_X_step->text().toFloat();
 	move_axis_offset(1, fx, speed, acc, dec);
-	wait_finish(1);
+	wait_axis_stop(1);
 }
 
 void PointDebug::on_X_positive_pressed()
@@ -865,7 +865,7 @@ void PointDebug::on_X_negative_clicked()
 
 	float fx = edit_X_step->text().toFloat();
 	move_axis_offset(1, -fx, speed, acc, dec);
-	wait_finish(1);
+	wait_axis_stop(1);
 }
 
 void PointDebug::on_X_negative_pressed()
@@ -919,7 +919,7 @@ void PointDebug::on_Y_positive_clicked()
 
 	float fy = edit_Y_step->text().toFloat();
 	move_axis_offset(2, fy, speed, acc, dec);
-	wait_finish(2);
+	wait_axis_stop(2);
 }
 
 void PointDebug::on_Y_positive_pressed()
@@ -972,7 +972,7 @@ void PointDebug::on_Y_negative_clicked()
 
 	float fy = edit_Y_step->text().toFloat();
 	move_axis_offset(2, -fy, speed, acc, dec);
-	wait_finish(2);
+	wait_axis_stop(2);
 }
 
 void PointDebug::on_Y_negative_pressed()
@@ -1026,7 +1026,7 @@ void PointDebug::on_Z_positive_clicked()
 
 	float fz = edit_Z_step->text().toFloat();
 	move_axis_offset(3, fz, speed, acc, dec);
-	wait_finish(3);
+	wait_axis_stop(3);
 }
 
 void PointDebug::on_Z_positive_pressed()
@@ -1079,7 +1079,7 @@ void PointDebug::on_Z_negative_clicked()
 
 	float fz = edit_Z_step->text().toFloat();
 	move_axis_offset(3, -fz, speed, acc, dec);
-	wait_finish(3);
+	wait_axis_stop(3);
 }
 
 void PointDebug::on_Z_negative_pressed()
@@ -1153,9 +1153,9 @@ void PointDebug::on_btn_station_home()
 	adt8949_HomeProcess_Ex(0, 1);
 	adt8949_HomeProcess_Ex(0, 2);
 	adt8949_HomeProcess_Ex(0, 3);
-	wait_finish(1);
-	wait_finish(2);
-	wait_finish(3);
+	wait_axis_stop(1);
+	wait_axis_stop(2);
+	wait_axis_stop(3);
 }
 
 void PointDebug::on_btn_x_home()
@@ -1163,7 +1163,7 @@ void PointDebug::on_btn_x_home()
 	if (!(init_card() == 1)) return;
 
 	adt8949_HomeProcess_Ex(0, 1);
-	wait_finish(1);
+	wait_axis_stop(1);
 }
 
 void PointDebug::on_btn_y_home()
@@ -1171,7 +1171,7 @@ void PointDebug::on_btn_y_home()
 	if (!(init_card() == 1)) return;
 
 	adt8949_HomeProcess_Ex(0, 2);
-	wait_finish(2);
+	wait_axis_stop(2);
 }
 
 void PointDebug::on_btn_z_home()
@@ -1179,7 +1179,7 @@ void PointDebug::on_btn_z_home()
 	if (!(init_card() == 1)) return;
 
 	adt8949_HomeProcess_Ex(0, 3);
-	wait_finish(3);
+	wait_axis_stop(3);
 }
 
 

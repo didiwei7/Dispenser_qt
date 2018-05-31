@@ -272,7 +272,7 @@ bool axis_isMoving(int axis)
 }
 
 // 等待运动结束
-void wait_finish(int axis)
+void wait_axis_stop(int axis)
 {
 	int state = 0;
 	while (true)
@@ -287,3 +287,14 @@ void wait_finish(int axis)
 	} 	
 }
 
+
+
+float get_current_pos_axis(int axis)
+{
+	long lPos;
+	float fPos;
+	adt8949_get_command_pos(0, axis, &lPos);
+	fPos = lPos/1000.0;
+
+	return fPos;
+}

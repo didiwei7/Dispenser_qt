@@ -120,7 +120,7 @@ public:
 	QCheckBox *check_glue3;
 
 signals:
-	void changedConfigGlue();
+	void changedConfigGlue(bool glue1, bool glue2, bool glue3);
 
 public:
 	// 获取当前时间

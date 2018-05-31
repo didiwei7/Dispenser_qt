@@ -379,5 +379,5 @@ void Operation::on_check_glue()
 	setting.setValue("is_config_glue3", check_glue3->isChecked());
 	setting.endGroup();
 
-	emit changedConfigGlue();
+	emit changedConfigGlue(check_glue1->isChecked(), check_glue2->isChecked(), check_glue3->isChecked());
 }

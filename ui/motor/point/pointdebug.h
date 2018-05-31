@@ -29,7 +29,7 @@ enum EM_STATION_MVTYPE
 	EMOVE_CP = 0,	        //连续运动
 	EMOVE_LONG_STEP = 1,    //长距离
 	EMOVE_MEDIU_STEP = 2,   //中等距离
-	EMOVE_SHORT_STEP = 3,   //短距离
+	EMOVE_SHORT_STEP = 3    //短距离
 };
 
 class PointDebug : public QWidget
@@ -94,7 +94,7 @@ private:
 	QWidget        *w_pointview;
 	QHNavigationBar *hnavigationbar;
 	QTableView     *pointview;
-	QSqlTableModel *model_main;
+	QSqlTableModel *model_general;
 	QSqlTableModel *model_glue1;
 	QSqlTableModel *model_glue2;
 	QSqlTableModel *model_glue3;

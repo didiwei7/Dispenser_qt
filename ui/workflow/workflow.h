@@ -29,6 +29,26 @@
 #include "../adt/adtcontrol.h"
 #include "../io/io.h"
 
+enum MODELPOINT
+{
+	GENERAL = 0,
+	GLUE1   = 1,
+	GLUE2   = 2,
+	GLUE3   = 3
+};
+
+enum POINTTYPE
+{
+
+};
+
+enum ZMOVETYPE
+{
+	NORMAL = 0,
+	BEFORE = 1,
+	AFTER = -1
+};
+
 class Workflow : public QObject
 {
     Q_OBJECT
@@ -37,6 +57,7 @@ public:
 
 private:
 	void setConfig();
+	void setPoint();
 	void setIOStatus();
 	void setThread();
 	void setConnect();
@@ -87,7 +108,7 @@ public:		// 换料盘
 	void thread_exchangeTrays();
 
 
-public:		// 配置数据
+public:		// 点胶
 	bool is_config_gluel;
 	bool is_config_glue2;
 	bool is_config_glue3;
@@ -95,8 +116,19 @@ public:		// 配置数据
 	void thread_glue_2();
 	void thread_glue_3();
 
+
+public:		// 校针
+	float glue_offset_x;
+	float glue_offset_y;
+
+	bool is_calibNeedle_ok;
+	bool start_thread_calibNeedle;
+	bool close_thread_calibNeedle;
+	QFuture<void> future_thread_calibNeedle;
+	void thread_calibNeedle();
+
 public:		// 点位数据
-	QSqlTableModel *model_main;
+	QSqlTableModel *model_general;
 	QSqlTableModel *model_glue1;
 	QSqlTableModel *model_glue2;
 	QSqlTableModel *model_glue3;
@@ -107,7 +139,7 @@ signals:	// 自定义信号
 	void changedOffsetChart(float x, float y, float A);	// To Operation
 	
 public slots:	// 连接外部信号
-	void on_changedConfigGlue();			// From Operation
+	void on_changedConfigGlue(bool glue1, bool glue2, bool glue3);			// From Operation
 	void on_changedSqlModel(int index);		// From PointDebug
 
 public:
@@ -117,10 +149,25 @@ public:
 	// 获取当前事件
 	QString getCurrentTime();
 
+
 public:		// 获取点位
-	int index_model;
-	QSqlTableModel *getCurrentModel();
-	QMap<QString, PointGlue> getPointInfo();	// 通过结构体存储
+	QMap<QString, PointRun> allpoint_pointRun;
+	QMap<QString, PointGeneral> allpoint_general;
+	QMap<QString, PointGlue> allpoint_glue1;
+	QMap<QString, PointGlue> allpoint_glue2;
+	QMap<QString, PointGlue> allpoint_glue3;
+	
+	QMap<QString, PointRun> getAllRunPointInfo();
+	QMap<QString, PointGlue> getAllGluePointInfo(int index);
+	QMap<QString, PointGeneral> getAllGeneralPointInfo();
+	
+
+	float wSpeed;
+	float wAcc;
+	float wDec;
+
+	bool move_point_name(QString pointname, int type, int z_flag);
+	bool move_point_name(QString pointname, int z_flag = 0);
 
 };
 
