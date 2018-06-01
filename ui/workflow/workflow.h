@@ -166,8 +166,9 @@ public:		// 获取点位
 	float wAcc;
 	float wDec;
 
+	void set_speed(float speed, float acc, float dec);
 	bool move_point_name(QString pointname, int type, int z_flag);
-	bool move_point_name(QString pointname, int z_flag = 0);
+	bool move_point_name(QString pointname, int z_flag = 0);		// 移动到点, by point
 
 };
 

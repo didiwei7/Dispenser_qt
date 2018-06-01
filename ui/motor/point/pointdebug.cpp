@@ -110,8 +110,15 @@ void PointDebug::setConnect()
 void PointDebug::setThread()
 {
 	thread_pool.setMaxThreadCount(2);
-	exit_thread_updateCurrentPos = false;
-	exit_thread_updateInputStatus = false;
+
+	is_updateCurrentPos_ok = false;
+	start_thread_updateCurrentPos = true;
+	close_thread_updateCurrentPos = false;
+
+	is_updateInputStatus_ok = false;
+	start_thread_updateInputStatus = true;
+	close_thread_updateInputStatus = false;
+
 	future_thread_updateCurrentPos = QtConcurrent::run(&thread_pool, [&]() { thread_updateCurrentPos(); });
 	future_thread_updateInputStatus = QtConcurrent::run(&thread_pool, [&]() { thread_updateInputStatus(); });
 }
@@ -1130,87 +1137,93 @@ void PointDebug::on_btn_stop()
 {
 	if (!(init_card() == 1)) return;
 
-	if (axis_isMoving(1))
+	/*if (axis_isMoving(1))
 	{
-		adt8949_dec_stop(0, 1);
-		Sleep(3);
+		stop_axis(AXISNUM::X);
+		Sleep(1);
 	}
 	if (axis_isMoving(2))
 	{
-		adt8949_dec_stop(0, 2);
-		Sleep(3);
+		stop_axis(AXISNUM::Y);
+		Sleep(1);
 	}
 	if (axis_isMoving(3))
 	{
-		adt8949_dec_stop(0, 3);
-	}
+		stop_axis(AXISNUM::Z);
+		Sleep(1);
+	}*/
+
+	stop_axis(AXISNUM::X);
+	Sleep(1);
+	stop_axis(AXISNUM::Y);
+	Sleep(1);
+	stop_axis(AXISNUM::Z);
 }
 
 void PointDebug::on_btn_station_home()
 {
 	if (!(init_card() == 1)) return;
 
-	adt8949_HomeProcess_Ex(0, 1);
-	adt8949_HomeProcess_Ex(0, 2);
-	adt8949_HomeProcess_Ex(0, 3);
-	wait_axis_stop(1);
-	wait_axis_stop(2);
-	wait_axis_stop(3);
+	home_axis(AXISNUM::X);
+	home_axis(AXISNUM::Y);
+	home_axis(AXISNUM::Z);
+	wait_axis_stop(AXISNUM::X);
+	wait_axis_stop(AXISNUM::X);
+	wait_axis_stop(AXISNUM::X);
 }
 
 void PointDebug::on_btn_x_home()
 {
 	if (!(init_card() == 1)) return;
-
-	adt8949_HomeProcess_Ex(0, 1);
-	wait_axis_stop(1);
+	
+	home_axis(AXISNUM::X);
+	
+	// 去掉等待, 还可以点停止, 以免撞机
+	// wait_axis_stop(AXISNUM::X);
 }
 
 void PointDebug::on_btn_y_home()
 {
 	if (!(init_card() == 1)) return;
 
-	adt8949_HomeProcess_Ex(0, 2);
-	wait_axis_stop(2);
+	home_axis(AXISNUM::Y);
+
+	// 去掉等待, 还可以点停止, 以免撞机
+	// wait_axis_stop(AXISNUM::Y);
 }
 
 void PointDebug::on_btn_z_home()
 {
 	if (!(init_card() == 1)) return;
 
-	adt8949_HomeProcess_Ex(0, 3);
-	wait_axis_stop(3);
+	home_axis(AXISNUM::Y);
+
+	// 去掉等待, 还可以点停止, 以免撞机
+	// wait_axis_stop(AXISNUM::Y);
 }
 
 
 // 更新当前位置
 void PointDebug::thread_updateCurrentPos()
 {
-	if (!(init_card() == 1)) return;
+	// if (!(init_card() == 1)) return;
 
-	while (true)
+	while (close_thread_updateInputStatus == false)
 	{
-		long lx_axis, ly_axis, lz_axis;
-		adt8949_get_command_pos(0, 1, &lx_axis);
-		adt8949_get_command_pos(0, 2, &ly_axis);
-		adt8949_get_command_pos(0, 3, &lz_axis);
 
-		float fx_axis = lx_axis / 1000.0;
-		float fy_axis = ly_axis / 1000.0;
-		float fz_axis = lz_axis / 1000.0;
+		get_current_pos_axis(AXISNUM::X); 
+
+		float fx_axis = get_current_pos_axis(AXISNUM::X);
+		float fy_axis = get_current_pos_axis(AXISNUM::Y);
+		float fz_axis = get_current_pos_axis(AXISNUM::Z);
 
 		QString sx_axis = QString::number(fx_axis, 'f', 3);
 		QString sy_axis = QString::number(fy_axis, 'f', 3);
 		QString sz_axis = QString::number(fz_axis, 'f', 3);
 
 		label_X_currentpos->setText(sx_axis);
-		label_X_currentpos->setText(sy_axis);
+		label_Y_currentpos->setText(sy_axis);
 		label_Z_currentpos->setText(sz_axis);
-
-		if (exit_thread_updateCurrentPos == true)
-		{
-			break;
-		}
 
 		Sleep(5);
 	}
@@ -1222,27 +1235,22 @@ void PointDebug::thread_updateInputStatus()
 {
 	if (!(init_card() == 1)) return;
 
-	while (true)
+	while (close_thread_updateInputStatus == false)
 	{
-		INPUT_X[0].setStatus(adt8949_read_bit(0, 4));
-		INPUT_X[1].setStatus(adt8949_read_bit(0, 12));
-		INPUT_X[2].setStatus(adt8949_read_bit(0, 5));
-		INPUT_X[3].setStatus(adt8949_read_bit(0, 0));
+		INPUT_X[0].setStatus(read_in_bit(4));
+		INPUT_X[1].setStatus(read_in_bit(12));
+		INPUT_X[2].setStatus(read_in_bit(5));
+		INPUT_X[3].setStatus(read_in_bit(0));
 
-		INPUT_Y[0].setStatus(adt8949_read_bit(0, 6));
-		INPUT_Y[1].setStatus(adt8949_read_bit(0, 13));
-		INPUT_Y[2].setStatus(adt8949_read_bit(0, 7));
-		INPUT_Y[3].setStatus(adt8949_read_bit(0, 1));
+		INPUT_Y[0].setStatus(read_in_bit(6));
+		INPUT_Y[1].setStatus(read_in_bit(13));
+		INPUT_Y[2].setStatus(read_in_bit(7));
+		INPUT_Y[3].setStatus(read_in_bit(1));
 
-		INPUT_Z[0].setStatus(adt8949_read_bit(0, 8));
-		INPUT_Z[1].setStatus(adt8949_read_bit(0, 14));
-		INPUT_Z[2].setStatus(adt8949_read_bit(0, 9));
-		INPUT_Z[3].setStatus(adt8949_read_bit(0, 2));
-
-		if (exit_thread_updateInputStatus == true)
-		{
-			break;
-		}
+		INPUT_Z[0].setStatus(read_in_bit(8));
+		INPUT_Z[1].setStatus(read_in_bit(14));
+		INPUT_Z[2].setStatus(read_in_bit(9));
+		INPUT_Z[3].setStatus(read_in_bit(2));
 
 		Sleep(10);
 	}

@@ -23,14 +23,6 @@
 #include "../../sdk/QFlex/QtFlexManager.h"
 #include "../../sdk/QFlex/QtFlexStyle.h"
 #include "../../sdk/QFlex/QtFlexWidget.h"
-//#include "QFlex/QtDockGuider.h"
-//#include "QFlex/QtDockWidget.h"
-//#include "QFlex/QtDockSide.h"
-//#include "QFlex/QtDockSite.h"
-//#include "QFlex/QtFlexHelper.h"
-//#include "QFlex/QtFlexManager.h"
-//#include "QFlex/QtFlexStyle.h"
-//#include "QFlex/QtFlexWidget.h"
 class QtGuiderImpl;
 class FlexWidget;
 class DockWidget;

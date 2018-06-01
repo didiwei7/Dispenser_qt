@@ -118,22 +118,54 @@ void Workflow::thread_watch_start()
 {
 	if (!(init_card() == 1)) return;
 
+	int step_start = 0;
+
 	while (close_thread_watch_start == false)
 	{
-		if (adt8949_read_bit(0, 17) == 1)
+		switch (step_start)
 		{
-			// 开始
-			emit changedRundataLabel(QStringLiteral("运行中..."));
-			emit changedRundataText(QStringLiteral("开始运行"));
-			writRunningLog(QStringLiteral("开始运行"));
+		case 0:
+		{
+			if (start_thread_watch_start == true || (read_in_bit(20) == 1))
+			{
+				step_start = 5;
+			}
+			else
+			{
+				Sleep(1);
+				step_start = 0;
+			}
+		}
+		break;
 
-			// 开启点胶线程
+		case 5:		// 消息更新
+		{
+			step_start = 10;
+		}
+		break;
 
+		case 10:
+		{
+		}
+		break;
+
+		case 8888:	// 线程: 流程执行完毕, 等待下次开始
+		{
+			start_thread_watch_start = false;
+			step_start = 0;
+		}
+		break;
+
+		case 9999:	// 线程: 线程退出
+		{
+			close_thread_watch_start = true;
+		}
+		break;
+
+		default:
 			break;
 		}
 	}
-
-
 }
 
 // Thread 复位
@@ -145,91 +177,119 @@ void Workflow::thread_watch_reset()
 
 	while (close_thread_watch_reset == false)
 	{
-		if (adt8949_read_bit(0, 20) == 1)
+		switch (step_reset)
 		{
-			switch (step_reset)
+		case 0:	// 复位开始
 			{
-			case 0:	// 复位开始
+				if (start_thread_watch_reset == true || (read_in_bit(20) == 1))
 				{
-					// 消息更新
-					emit changedRundataLabel(QStringLiteral("复位开始..."));
-					emit changedRundataText(QStringLiteral("复位开始"));
-					writRunningLog(QStringLiteral("复位开始"));
-
-					step_reset = 10;
-					break;
+					step_reset = 5;
 				}
-
-			case 10: // 检测输入
+				else
 				{
-					emit changedRundataLabel(QStringLiteral("检测输入信号"));
-					emit changedRundataText(QStringLiteral("检测输入信号"));
-					writRunningLog(QStringLiteral("检测输入信号"));
-					step_reset = 20;
-					break;
-				}
-
-			case 20: // 初始化输出
-				{
-					// 初始化输出
-
-					emit changedRundataLabel(QStringLiteral("初始化输出"));
-					emit changedRundataText(QStringLiteral("初始化输出"));
-					writRunningLog(QStringLiteral("初始化输出"));
-					step_reset = 30;
-					break;
-				}
-
-			case 30: // 检测输入, 输出
-				{
-					// 检测输入, 输出
-					emit changedRundataLabel(QStringLiteral("检测输入输出"));
-					emit changedRundataText(QStringLiteral("检测输入输出"));
-					writRunningLog(QStringLiteral("检测输入输出"));
-				
-					step_reset = 40;
-					break;
-				}
-
-			case 40: // 工站复位
-				{ 
-					emit changedRundataLabel(QStringLiteral("工站复位"));
-					emit changedRundataText(QStringLiteral("工站复位"));
-					writRunningLog(QStringLiteral("工站复位"));
-
-					// 【1】 工站复位
-					adt8949_HomeProcess_Ex(0, 3);	// Z轴先复位
-					wait_axis_stop(AXISNUM::Z);
-
-					adt8949_HomeProcess_Ex(0, 1);
-					adt8949_HomeProcess_Ex(0, 2);
-					wait_axis_stop(AXISNUM::X);
-					wait_axis_stop(AXISNUM::Y);
-
-					// 【2】 判断复位状态
-					emit changedRundataLabel(QStringLiteral("工站复位完成"));
-					emit changedRundataText(QStringLiteral("工站复位完成"));
-					writRunningLog(QStringLiteral("工站复位完成"));
-
-					step_reset = 50;
-					break;
-				}
-
-			case 50: // 复位完成
-				{
-					emit changedRundataLabel(QStringLiteral("复位完成, 已就绪"));
-					emit changedRundataText(QStringLiteral("复位完成"));
-					writRunningLog(QStringLiteral("复位完成"));
-
-					break;
-				}
-			
-			default:
-				break;
+					Sleep(1);
+					step_reset = 0;
+				}		
 			}
+			break;
 
-			break; 
+		case 5:
+		{
+			// 消息更新
+			emit changedRundataLabel(QStringLiteral("复位开始..."));
+			emit changedRundataText(QStringLiteral("复位开始"));
+			writRunningLog(QStringLiteral("复位开始"));
+
+			step_reset = 10;
 		}
+		break;
+
+		case 10: // 检测输入
+			{
+
+
+				emit changedRundataLabel(QStringLiteral("检测输入信号"));
+				emit changedRundataText(QStringLiteral("检测输入信号"));
+				writRunningLog(QStringLiteral("检测输入信号"));
+				step_reset = 20;
+			}
+			break;
+
+		case 20: // 初始化输出
+			{
+				// 初始化输出
+
+				emit changedRundataLabel(QStringLiteral("初始化输出"));
+				emit changedRundataText(QStringLiteral("初始化输出"));
+				writRunningLog(QStringLiteral("初始化输出"));
+				step_reset = 30;
+					
+			}
+			break;
+
+		case 30: // 检测输入, 输出
+			{
+				// 检测输入, 输出
+				emit changedRundataLabel(QStringLiteral("检测输入输出"));
+				emit changedRundataText(QStringLiteral("检测输入输出"));
+				writRunningLog(QStringLiteral("检测输入输出"));
+				
+				step_reset = 40;
+					
+			}
+			break;
+
+		case 40: // 工站复位
+			{ 
+				emit changedRundataLabel(QStringLiteral("工站复位"));
+				emit changedRundataText(QStringLiteral("工站复位"));
+				writRunningLog(QStringLiteral("工站复位"));
+
+				// 工站复位
+				home_axis(AXISNUM::Z);		
+				wait_axis_homeOk(AXISNUM::Z);
+
+				home_axis(AXISNUM::X);
+				home_axis(AXISNUM::Y);
+				wait_axis_homeOk(AXISNUM::X);
+				wait_axis_homeOk(AXISNUM::Y);
+
+				emit changedRundataLabel(QStringLiteral("工站复位完成"));
+				emit changedRundataText(QStringLiteral("工站复位完成"));
+				writRunningLog(QStringLiteral("工站复位完成"));
+
+				step_reset = 50;
+			}
+			break;
+
+		case 50: // 复位完成
+			{
+				emit changedRundataLabel(QStringLiteral("复位完成, 已就绪"));
+				emit changedRundataText(QStringLiteral("复位完成"));
+				writRunningLog(QStringLiteral("复位完成"));
+
+				step_reset = 8888;
+					
+			}
+			break;
+
+		case 8888:	// 线程: 流程执行完毕, 等待下次开始
+			{
+				start_thread_watch_reset = false;
+				step_reset = 0;
+			}
+			break;
+
+		case 9999:	// 线程: 线程退出
+			{
+				close_thread_watch_reset = true;
+			}
+			break;
+			
+		default:
+			break;
+		}
+		
 	}
 }
 
@@ -244,13 +304,60 @@ void Workflow::thread_watch_estop()
 {
 	if (!(init_card() == 1)) return;
 
+	int step_estop = 0;
+
 	while (close_thread_watch_estop == false)
 	{
-		if (adt8949_read_bit(0, 16) == 1)
+		switch (step_estop)
+		{
+		case 0:	// 复位开始
+		{
+			if (start_thread_watch_reset == true || (read_in_bit(16) == 1))
+			{
+				step_estop = 5;
+			}
+			else
+			{
+				Sleep(1);
+				step_estop = 0;
+			}
+		}
+		break;
+
+		case 5:	// 消息更新
+		{
+			// 消息更新
+			emit changedRundataLabel(QStringLiteral("急停已按下"));
+			emit changedRundataText(QStringLiteral("急停已按下"));
+			writRunningLog(QStringLiteral("急停已按下"));
+
+			step_estop = 10;
+		}
+		break;
+
+		case 10:
 		{
 			// 急停
 			stop_allaxis();
 			estop();
+			step_estop = 0;
+		}
+		break;
+
+		case 8888:	// 线程: 流程执行完毕, 等待下次开始
+		{
+			start_thread_watch_estop = false;
+			step_estop = 0;
+		}
+		break;
+
+		case 9999:	// 线程: 线程退出
+		{
+			close_thread_watch_reset = true;
+		}
+		break;
+
+		default:
 			break;
 		}
 	}
@@ -317,17 +424,24 @@ void Workflow::thread_exchangeTrays()
 				}
 				else
 				{
-					// 换料盘开始
-					emit changedRundataText(QStringLiteral("换料盘开始"));
-					writRunningLog(QStringLiteral("换料盘开始"));
-
-					step_tray = 10;
+					step_tray = 5;
 				}
 			}
 			break;
 
+		case 5:		// 消息更新
+			{
+				// 换料盘开始
+				emit changedRundataText(QStringLiteral("换料盘开始"));
+				writRunningLog(QStringLiteral("换料盘开始"));
+
+				step_tray = 10;
+			}
+
 		case 10:	// 料盘退出
 			{
+
+
 				if (1 == read_in_bit(33))	// 料盘到位感应
 				{
 					write_out_bit(15, 0);	// 关气缸推出
@@ -420,6 +534,255 @@ void Workflow::thread_exchangeTrays()
 	}
 }
 
+// Thread 校针 执行完需要退出线程
+void Workflow::thread_calibNeedle()
+{
+	if (!(init_card() == 1)) return;
+
+	float x_start_pos, x_end_pos;
+	float y_start_pos, y_end_pos;
+
+	int step_calibNeedle = 0;
+
+	while (close_thread_calibNeedle == false)
+	{
+		switch (step_calibNeedle)
+		{
+		case 0:		// 等待触发
+		{
+			if (start_thread_calibNeedle == false)
+			{
+				step_calibNeedle = 0;
+			}
+			else
+			{
+				step_calibNeedle = 10;
+			}
+		}
+		break;
+
+		case 10:	// 到校针安全点
+		{
+			// 换料盘开始
+			emit changedRundataText(QStringLiteral("校针开始"));
+			writRunningLog(QStringLiteral("校针开始"));
+
+			// 移动到校针安全点
+			move_point_name("calib_needle_safe");
+			wait_axis_stop(AXISNUM::X);
+			wait_axis_stop(AXISNUM::Y);
+			wait_axis_stop(AXISNUM::Z);
+
+			step_calibNeedle = 20;
+		}
+		break;
+
+		case 20:	// 到校针点, X-3, Y-3
+		{
+			// 移动到校针安全点
+			move_point_name("calib_needle");
+			wait_axis_stop(AXISNUM::X);
+			wait_axis_stop(AXISNUM::Y);
+			wait_axis_stop(AXISNUM::Z);
+
+			move_axis_offset(AXISNUM::X, -3, wSpeed, wAcc, wDec);
+			move_axis_offset(AXISNUM::Y, -3, wSpeed, wAcc, wDec);
+			wait_axis_stop(AXISNUM::X);
+			wait_axis_stop(AXISNUM::Y);
+
+			step_calibNeedle = 30;
+		}
+		break;
+
+		case 30:    // 向 X+ 走6mm 
+		{
+			move_axis_offset(AXISNUM::X, 6, wSpeed, wAcc, wDec);
+
+			step_calibNeedle = 40;
+		}
+		break;
+
+		case 40:	// 等待触发 "对射X" == 1
+		{
+			if (1 == read_in_bit(35))	// 此处写对射X
+			{
+				stop_axis(AXISNUM::X);
+				Sleep(100);
+				x_start_pos = get_current_pos_axis(AXISNUM::X);
+
+				step_calibNeedle = 50;
+			}
+			else
+			{
+				step_calibNeedle = 40;
+			}
+		}
+		break;
+
+		case 50:	// 等待触发 "对射X" == 0
+		{
+			if (0 == read_in_bit(35))	// 此处写 对射X
+			{
+				stop_axis(AXISNUM::X);
+				Sleep(100);
+				x_end_pos = get_current_pos_axis(AXISNUM::X);
+
+				step_calibNeedle = 60;
+			}
+			else
+			{
+				step_calibNeedle = 50;
+			}
+		}
+		break;
+
+		case 60:	// 到对射X中间, 计算偏差
+		{
+			float x_mid_pos = (x_end_pos - x_start_pos) / 2;
+			// move_axis_abs(AXISNUM::X, x_mid_pos, wSpeed, wAcc, wDec);
+			glue_offset_x = x_mid_pos - allpoint_pointRun["calib_needle"].X;
+
+			step_calibNeedle = 100;
+		}
+		break;
+
+		case 100:	// 向 Y+ 走6mm 
+		{
+			move_axis_offset(AXISNUM::X, 6, wSpeed, wAcc, wDec);
+			step_calibNeedle = 110;
+		}
+		break;
+
+		case 110:	// 等待触发 "对射Y" == 1
+		{
+			if (1 == read_in_bit(35))	// 此处写 "对射Y"
+			{
+				stop_axis(AXISNUM::Y);
+				Sleep(100);
+				y_start_pos = get_current_pos_axis(AXISNUM::Y);
+
+				step_calibNeedle = 120;
+			}
+			else
+			{
+				step_calibNeedle = 110;
+			}
+		}
+		break;
+
+		case 120:   // 继续向 Y+ 走6mm
+		{
+			move_axis_offset(AXISNUM::X, 6, wSpeed, wAcc, wDec);
+
+			step_calibNeedle = 130;
+		}
+		break;
+
+		case 130:	// 等待触发 "对射Y" == 0
+		{
+			if (0 == read_in_bit(35))	// 此处写 对射Y
+			{
+				stop_axis(AXISNUM::Y);
+				Sleep(100);
+				y_end_pos = get_current_pos_axis(AXISNUM::Y);
+
+				step_calibNeedle = 140;
+			}
+			else
+			{
+				step_calibNeedle = 130;
+			}
+		}
+		break;
+
+		case 140:	// 到 "对射Y" 中间, 计算偏差
+		{
+			float y_mid_pos = (x_end_pos - x_start_pos) / 2;
+			// move_axis_abs(AXISNUM::X, x_mid_pos, wSpeed, wAcc, wDec);
+			glue_offset_y = y_mid_pos - allpoint_pointRun["calib_needle"].Y;
+
+			step_calibNeedle = 200;
+		}
+		break;
+
+		case 200:	// Z回安全高度 0
+		{
+			move_axis_abs(AXISNUM::Z, 0.000, wSpeed, wAcc, wAcc);
+			wait_axis_stop(AXISNUM::Z);
+
+			step_calibNeedle = 300;
+		}
+		break;
+
+		case 300:
+		{
+			move_point_name("calib_needle_attach_safe");
+			wait_axis_stop(AXISNUM::X);
+			wait_axis_stop(AXISNUM::Y);
+			wait_axis_stop(AXISNUM::Z);
+
+			step_calibNeedle = 310;
+		}
+		break;
+
+		case 310:
+		{
+			move_point_name("calib_needle_attach");
+			wait_axis_stop(AXISNUM::X);
+			wait_axis_stop(AXISNUM::Y);
+			wait_axis_stop(AXISNUM::Z);
+
+			step_calibNeedle = 320;
+		}
+		break;
+
+
+		case 320:
+		{
+			move_axis_offset(AXISNUM::X, glue_offset_x, wSpeed, wAcc, wDec);
+			move_axis_offset(AXISNUM::Y, glue_offset_y, wSpeed, wAcc, wDec);
+			wait_axis_stop(AXISNUM::X);
+			wait_axis_stop(AXISNUM::Y);
+
+			step_calibNeedle = 330;
+		}
+		break;
+
+		case 330:
+		{
+			move_axis_offset(AXISNUM::X, glue_offset_x, wSpeed, wAcc, wDec);
+			move_axis_offset(AXISNUM::Y, glue_offset_y, wSpeed, wAcc, wDec);
+			wait_axis_stop(AXISNUM::X);
+			wait_axis_stop(AXISNUM::Y);
+
+			step_calibNeedle = 8888;
+		}
+		break;
+
+
+		case 8888:
+		{
+			emit changedRundataText(QStringLiteral("针头校准已结束"));
+			writRunningLog(QStringLiteral("针头校准已结束"));
+
+			start_thread_exchangeTrays = false;
+			step_calibNeedle = 9999;
+		}
+		break;
+
+		case 9999:
+		{
+			// 安全退出该线程
+			close_thread_exchangeTrays = true;
+		}
+		break;
+
+		default:
+			break;
+		}
+	}
+}
+
 // Thread 点胶1
 void Workflow::thread_glue_1()
 {
@@ -438,257 +801,7 @@ void Workflow::thread_glue_3()
 
 }
 
-// Thread 校针
-void Workflow::thread_calibNeedle()
-{
-	if (!(init_card() == 1)) return;
 
-	float x_start_pos, x_end_pos;
-	float y_start_pos, y_end_pos;
-
-	int step_calibNeedle = 0;
-
-	while (close_thread_calibNeedle == false)
-	{
-		switch (step_calibNeedle)
-		{
-		case 0:		// 等待触发
-			{
-				if (start_thread_calibNeedle == false)
-				{
-					step_calibNeedle = 0;
-				}
-				else
-				{
-					// 换料盘开始
-					emit changedRundataText(QStringLiteral("校针开始"));
-					writRunningLog(QStringLiteral("校针开始"));
-
-					step_calibNeedle = 10;
-				}
-			}
-			break;
-
-		case 10:	// 到校针安全点
-			{
-				// 移动到校针安全点
-				move_point_name("calib_needle_safe");
-				wait_axis_stop(AXISNUM::X);
-				wait_axis_stop(AXISNUM::Y);
-				wait_axis_stop(AXISNUM::Z);
-
-				step_calibNeedle = 20;
-			}
-			break;
-
-		case 20:	// 到校针点, X-3, Y-3
-			{
-				// 移动到校针安全点
-				move_point_name("calib_needle");
-				wait_axis_stop(AXISNUM::X);
-				wait_axis_stop(AXISNUM::Y);
-				wait_axis_stop(AXISNUM::Z);
-
-				move_axis_offset(AXISNUM::X, -3, wSpeed, wAcc, wDec);
-				move_axis_offset(AXISNUM::Y, -3, wSpeed, wAcc, wDec);
-				wait_axis_stop(AXISNUM::X);
-				wait_axis_stop(AXISNUM::Y);
-
-				step_calibNeedle = 30;
-			}
-			break;
-
-		case 30:    // 向 X+ 走6mm 
-			{
-				move_axis_offset(AXISNUM::X, 6, wSpeed, wAcc, wDec);
-
-				step_calibNeedle = 40;
-			}
-			break;
-
-		case 40:	// 等待触发 "对射X" == 1
-			{
-				if (1 == read_in_bit(35))	// 此处写对射X
-				{
-					stop_axis(AXISNUM::X);
-					Sleep(100);
-					x_start_pos = get_current_pos_axis(AXISNUM::X);
-
-					step_calibNeedle = 50;
-				}
-				else
-				{
-					step_calibNeedle = 40;
-				}
-			}
-			break;
-
-		case 50:	// 等待触发 "对射X" == 0
-			{
-				if (0 == read_in_bit(35))	// 此处写 对射X
-				{
-					stop_axis(AXISNUM::X);
-					Sleep(100);
-					x_end_pos = get_current_pos_axis(AXISNUM::X);
-
-					step_calibNeedle = 60;
-				}
-				else
-				{
-					step_calibNeedle = 50;
-				}
-			}
-			break;
-
-		case 60:	// 到对射X中间, 计算偏差
-			{
-				float x_mid_pos = (x_end_pos - x_start_pos) / 2;
-				// move_axis_abs(AXISNUM::X, x_mid_pos, wSpeed, wAcc, wDec);
-				glue_offset_x = x_mid_pos - allpoint_pointRun["calib_needle"].X;
-				
-				step_calibNeedle = 100;
-			}
-			break;
-
-		case 100:	// 向 Y+ 走6mm 
-			{
-				move_axis_offset(AXISNUM::X, 6, wSpeed, wAcc, wDec);
-				step_calibNeedle = 110;
-			}
-			break;
-
-		case 110:	// 等待触发 "对射Y" == 1
-			{
-				if (1 == read_in_bit(35))	// 此处写 "对射Y"
-				{
-					stop_axis(AXISNUM::Y);
-					Sleep(100);
-					y_start_pos = get_current_pos_axis(AXISNUM::Y);
-
-					step_calibNeedle = 120;
-				}
-				else
-				{
-					step_calibNeedle = 110;
-				}
-			}
-			break;
-
-		case 120:   // 继续向 Y+ 走6mm
-			{
-				move_axis_offset(AXISNUM::X, 6, wSpeed, wAcc, wDec);
-
-				step_calibNeedle = 130;
-			}
-			break;
-
-		case 130:	// 等待触发 "对射Y" == 0
-			{
-				if (0 == read_in_bit(35))	// 此处写 对射Y
-				{
-					stop_axis(AXISNUM::Y);
-					Sleep(100);
-					y_end_pos = get_current_pos_axis(AXISNUM::Y);
-
-					step_calibNeedle = 140;
-				}
-				else
-				{
-					step_calibNeedle = 130;
-				}
-			}
-			break;
-
-		case 140:	// 到 "对射Y" 中间, 计算偏差
-			{
-				float y_mid_pos = (x_end_pos - x_start_pos) / 2;
-				// move_axis_abs(AXISNUM::X, x_mid_pos, wSpeed, wAcc, wDec);
-				glue_offset_y = y_mid_pos - allpoint_pointRun["calib_needle"].Y;
-
-				step_calibNeedle = 200;
-			}
-			break;
-
-		case 200:	// Z回安全高度 0
-			{
-				move_axis_abs(AXISNUM::Z, 0.000, wSpeed, wAcc, wAcc);
-				wait_axis_stop(AXISNUM::Z);
-
-				step_calibNeedle = 300;
-			}
-			break;
-
-		case 300:
-			{
-				move_point_name("calib_needle_attach_safe");
-				wait_axis_stop(AXISNUM::X);
-				wait_axis_stop(AXISNUM::Y);
-				wait_axis_stop(AXISNUM::Z);
-
-				step_calibNeedle = 310;
-			}
-			break;
-
-		case 310:
-			{
-				move_point_name("calib_needle_attach");
-				wait_axis_stop(AXISNUM::X);
-				wait_axis_stop(AXISNUM::Y);
-				wait_axis_stop(AXISNUM::Z);
-
-				step_calibNeedle = 320;
-			}
-			break;
-
-
-		case 320:
-			{
-				move_axis_offset(AXISNUM::X, glue_offset_x, wSpeed, wAcc, wDec);
-				move_axis_offset(AXISNUM::Y, glue_offset_y, wSpeed, wAcc, wDec);
-				wait_axis_stop(AXISNUM::X);
-				wait_axis_stop(AXISNUM::Y);
-
-				step_calibNeedle = 330;
-			}
-			break;
-
-		case 330:
-			{
-				move_axis_offset(AXISNUM::X, glue_offset_x, wSpeed, wAcc, wDec);
-				move_axis_offset(AXISNUM::Y, glue_offset_y, wSpeed, wAcc, wDec);
-				wait_axis_stop(AXISNUM::X);
-				wait_axis_stop(AXISNUM::Y);
-
-				step_calibNeedle = 8888;
-			}
-			break;
-
-
-		case 8888:
-		{
-			emit changedRundataText(QStringLiteral("针头校准已结束"));
-			writRunningLog(QStringLiteral("针头校准已结束"));
-
-			start_thread_exchangeTrays = false;
-			close_thread_exchangeTrays = true;
-		}
-		break;
-
-		case 9999:
-		{
-			// 安全退出该线程
-			close_thread_exchangeTrays = true;
-
-			// 触发停止信号
-
-		}
-		break;
-
-		default:
-			break;
-		}
-	}
-}
 
 
 
@@ -741,6 +854,7 @@ void Workflow::on_changedSqlModel(int index)
 }
 
 
+
 // 写log文件
 void Workflow::writRunningLog(QString str)
 {
@@ -768,7 +882,7 @@ QString Workflow::getCurrentTime()
 }
 
 
-// 获取点胶点位
+// 获取 PointGlue
 QMap<QString, PointGlue> Workflow::getAllGluePointInfo(int index)
 {
 	QSqlTableModel *pointmodel = new QSqlTableModel();
@@ -816,7 +930,7 @@ QMap<QString, PointGlue> Workflow::getAllGluePointInfo(int index)
 	return _allPoint;
 }
 
-// 获取普通点位
+// 获取 PointGeneral
 QMap<QString, PointGeneral> Workflow::getAllGeneralPointInfo()
 {
 	QSqlTableModel *pointmodel = new QSqlTableModel();
@@ -842,7 +956,7 @@ QMap<QString, PointGeneral> Workflow::getAllGeneralPointInfo()
 	return _allPoint;
 }
 
-// RunPoint
+// 获取 RunPoint
 QMap<QString, PointRun> Workflow::getAllRunPointInfo()
 {
 	QMap<QString, PointRun> _allPoint;
@@ -921,7 +1035,15 @@ QMap<QString, PointRun> Workflow::getAllRunPointInfo()
 	return _allPoint;
 }
 
+// 修改全局的速度
+void Workflow::set_speed(float speed, float acc, float dec)
+{
+	wSpeed = speed;
+	wAcc = acc;
+	wDec = dec;
+}
 
+// 移动到点, by pointname, type
 bool Workflow::move_point_name(QString pointname, int type, int z_flag)
 {
 	if (0 == type)
@@ -1117,6 +1239,7 @@ bool Workflow::move_point_name(QString pointname, int type, int z_flag)
 	return true;
 }
 
+// 移动到点, by pointname
 bool Workflow::move_point_name(QString pointname, int z_flag)
 {
 	if (!allpoint_pointRun.contains(pointname))

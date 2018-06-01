@@ -45,12 +45,17 @@ private:
 
 public:
 	QThreadPool thread_pool;
-	QFuture<void> future_thread_updateCurrentPos;
-	QFuture<void> future_thread_updateInputStatus;
-	bool exit_thread_updateCurrentPos;
-	bool exit_thread_updateInputStatus;
 
-    void thread_updateCurrentPos();
+	bool is_updateCurrentPos_ok;
+	bool start_thread_updateCurrentPos;
+	bool close_thread_updateCurrentPos;
+	QFuture<void> future_thread_updateCurrentPos;
+	void thread_updateCurrentPos();
+
+	bool is_updateInputStatus_ok;
+	bool start_thread_updateInputStatus;
+	bool close_thread_updateInputStatus;
+	QFuture<void> future_thread_updateInputStatus;
 	void thread_updateInputStatus();
 
 private:

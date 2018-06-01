@@ -11,23 +11,23 @@
         },
 
         "Y_axis": {
-            "m_nHomeDir": 0, 
+            "m_nHomeDir": 1, 
             "m_nStop0Active": 0, 
-            "m_nLimitActive": -1, 
-            "m_nStop1Active": 10,
-            "m_fBackRange": 0,
+            "m_nLimitActive": 0, 
+            "m_nStop1Active": -1,
+            "m_fBackRange": 10,
             "m_fEncoderZRange": 0,
-            "m_fOffset": 1
+            "m_fOffset": 0
         },
 
         "Z_axis": {
-            "m_nHomeDir": 0, 
+            "m_nHomeDir": 1, 
             "m_nStop0Active": 0, 
-            "m_nLimitActive": -1, 
-            "m_nStop1Active": 10,
-            "m_fBackRange": 0,
+            "m_nLimitActive": 0, 
+            "m_nStop1Active": -1,
+            "m_fBackRange": 10,
             "m_fEncoderZRange": 0,
-            "m_fOffset": 1
+            "m_fOffset": 0
         }
     },
 

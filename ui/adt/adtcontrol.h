@@ -11,10 +11,6 @@ using namespace std;
 
 #include "adt8949.h"
 
-#define X_AXIS 1
-#define Y_AXIS 2
-#define Z_AXIS 3
-
 // CCD点胶点(描点)
 typedef struct _CCDGlue
 {
@@ -199,6 +195,10 @@ enum AXISNUM
 // 初始化控制卡 第一次调用才初始化, 第二次调用时返回第一次初始化的结果
 int init_card();
 
+// 减速停止
+void stop_axis_dec(int axis);
+
+
 // 停止轴, by axis
 void stop_axis(int axis);
 
@@ -232,12 +232,16 @@ void set_home_mode();
 // 设置回原速度
 void set_home_speed();
 
+// 轴回原
+void home_axis(int axis);
+
+// 等待回原完成
+void wait_axis_homeOk(int axis);
 
 
 
 // 速度, 带轴号, 带加减速
 void set_axis_speed(int axis, float speed, float acc, float dec);
-
 
 // 移动, 带速度, 带加减速, 带正负限位
 void move_axis_abs(int axis, float pos, float speed, float acc, float dec);

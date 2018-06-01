@@ -19,6 +19,25 @@ int init_card()
 		else if (ret == 0)
 		{
 			QMessageBox::about(NULL, NULL, QStringLiteral("控制卡未安装"));
+
+			// 测试
+			/*// 设置X轴
+			adt8949_set_pulse_mode(0, 1, 1, 0, 0);
+			adt8949_set_gear(0, 1, 1000);
+
+			// 设置Y轴
+			adt8949_set_pulse_mode(0, 2, 1, 0, 0);
+			adt8949_set_gear(0, 2, 1000);
+
+			// 设置Z轴
+			adt8949_set_pulse_mode(0, 3, 1, 0, 0);
+			adt8949_set_gear(0, 3, 1000);
+
+			// 设置限位锁模式
+			// adt8949_set_limit_lock(0, 1);
+			set_home_mode();
+			set_home_speed();*/
+
 			return ret;
 		}
 		else
@@ -38,6 +57,11 @@ int init_card()
 			adt8949_set_pulse_mode(0, 3, 1, 0, 0);
 			adt8949_set_gear(0, 3, 1000);
 
+			// 设置限位锁模式
+			// adt8949_set_limit_lock(0, 1);
+			set_home_mode();
+			set_home_speed();
+
 			return ret;
 		}
 	}
@@ -47,6 +71,12 @@ int init_card()
 	}
 
 
+}
+
+// 停止轴, 减速, by axis
+void stop_axis_dec(int axis)
+{
+	adt8949_dec_stop(0, axis);
 }
 
 // 停止轴, by axis
@@ -132,7 +162,7 @@ void set_home_mode()
 	m_fBackRange[0]     = x_obj.value("m_fBackRange").toDouble();
 	m_fEncoderZRange[0] = x_obj.value("m_fEncoderZRange").toDouble();
 	m_fOffset[0]        = x_obj.value("m_fOffset").toDouble();
-	adt8949_SetHomeMode_Ex(0, X_AXIS,
+	adt8949_SetHomeMode_Ex(0, AXISNUM::X,
 		m_nHomeDir[0],   m_nStop0Active[0],   m_nLimitActive[0], m_nStop1Active[0],
 		m_fBackRange[0], m_fEncoderZRange[0], m_fOffset[0]);
 
@@ -144,7 +174,7 @@ void set_home_mode()
 	m_fBackRange[1]     = y_obj.value("m_fBackRange").toDouble();
 	m_fEncoderZRange[1] = y_obj.value("m_fEncoderZRange").toDouble();
 	m_fOffset[1]        = y_obj.value("m_fOffset").toDouble();
-	adt8949_SetHomeMode_Ex(0, Y_AXIS,
+	adt8949_SetHomeMode_Ex(0, AXISNUM::Y,
 		m_nHomeDir[1],   m_nStop0Active[1],   m_nLimitActive[1], m_nStop1Active[1],
 		m_fBackRange[1], m_fEncoderZRange[1], m_fOffset[1]);
 
@@ -156,7 +186,7 @@ void set_home_mode()
 	m_fBackRange[2]     = z_obj.value("m_fBackRange").toDouble();
 	m_fEncoderZRange[2] = z_obj.value("m_fEncoderZRange").toDouble();
 	m_fOffset[2]        = z_obj.value("m_fOffset").toDouble();
-	adt8949_SetHomeMode_Ex(0, Z_AXIS,
+	adt8949_SetHomeMode_Ex(0, AXISNUM::Z,
 		m_nHomeDir[2],   m_nStop0Active[2],   m_nLimitActive[2], m_nStop1Active[2],
 		m_fBackRange[2], m_fEncoderZRange[2], m_fOffset[2]);
 
@@ -185,27 +215,48 @@ void set_home_speed()
 	m_fHomeSpeed[0]    = xs_obj.value("m_fHomeSpeed").toDouble();
 	m_fAcc[0]          = xs_obj.value("m_fAcc").toDouble();
 	m_fZPhaseSpeed[0]  = xs_obj.value("m_fZPhaseSpeed").toDouble();
-	adt8949_SetHomeSpeed_Ex(0, X_AXIS, m_fStartSpeed[0], m_fSearchSpeed[0], m_fHomeSpeed[0], m_fAcc[0], m_fZPhaseSpeed[0]);
+	adt8949_SetHomeSpeed_Ex(0, AXISNUM::X, m_fStartSpeed[0], m_fSearchSpeed[0], m_fHomeSpeed[0], m_fAcc[0], m_fZPhaseSpeed[0]);
 
-	QJsonObject ys_obj = obj.value("HomeSpeed").toObject().value("X_axis").toObject();
+	QJsonObject ys_obj = obj.value("HomeSpeed").toObject().value("Y_axis").toObject();
 	m_fStartSpeed[1]   = ys_obj.value("m_fStartSpeed").toDouble();
 	m_fSearchSpeed[1]  = ys_obj.value("m_fSearchSpeed").toDouble();
 	m_fHomeSpeed[1]    = ys_obj.value("m_fHomeSpeed").toDouble();
 	m_fAcc[1]          = ys_obj.value("m_fAcc").toDouble();
 	m_fZPhaseSpeed[1]  = ys_obj.value("m_fZPhaseSpeed").toDouble();
-	adt8949_SetHomeSpeed_Ex(0, Y_AXIS, m_fStartSpeed[1], m_fSearchSpeed[1], m_fHomeSpeed[1], m_fAcc[1], m_fZPhaseSpeed[1]);
+	adt8949_SetHomeSpeed_Ex(0, AXISNUM::Y, m_fStartSpeed[1], m_fSearchSpeed[1], m_fHomeSpeed[1], m_fAcc[1], m_fZPhaseSpeed[1]);
 
-	QJsonObject zs_obj = obj.value("HomeSpeed").toObject().value("X_axis").toObject();
+	QJsonObject zs_obj = obj.value("HomeSpeed").toObject().value("Z_axis").toObject();
 	m_fStartSpeed[2]   = zs_obj.value("m_fStartSpeed").toDouble();
 	m_fSearchSpeed[2]  = zs_obj.value("m_fSearchSpeed").toDouble();
 	m_fHomeSpeed[2]    = zs_obj.value("m_fHomeSpeed").toDouble();
 	m_fAcc[2]          = zs_obj.value("m_fAcc").toDouble();
 	m_fZPhaseSpeed[2]  = zs_obj.value("m_fZPhaseSpeed").toDouble();
-	adt8949_SetHomeSpeed_Ex(0, Z_AXIS, m_fStartSpeed[2], m_fSearchSpeed[2], m_fHomeSpeed[2], m_fAcc[2], m_fZPhaseSpeed[2]);
+	adt8949_SetHomeSpeed_Ex(0, AXISNUM::Z, m_fStartSpeed[2], m_fSearchSpeed[2], m_fHomeSpeed[2], m_fAcc[2], m_fZPhaseSpeed[2]);
 
 	file.close();
 }
 
+// 轴回原
+void home_axis(int axis)
+{
+	adt8949_HomeProcess_Ex(0, axis);
+}
+
+// 等待回原完成
+void wait_axis_homeOk(int axis)
+{
+	int state = -10;
+	while (true)
+	{
+		Sleep(1);
+		state = adt8949_GetHomeStatus_Ex(0, axis);
+
+		if (state == 0)
+		{
+			break;
+		}
+	}
+}
 
 
 
