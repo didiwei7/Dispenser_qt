@@ -15,6 +15,15 @@ IO::IO(QWidget *parent) : QWidget(parent)
 	setConnect();
 }
 
+IO::~IO()
+{
+	close_thread_updateInputStatus = true;
+
+	thread_pool.waitForDone();
+	thread_pool.clear();
+	thread_pool.destroyed();
+}
+
 void IO::setupUi()
 {
     layout_1   = new QHBoxLayout();
@@ -44,15 +53,19 @@ void IO::setConnect()
 {
 	for (int i = OUT_VISIBLE_BEGIN; i < OUT_COUNT; i++)
 	{
-        connect(OUTPUT[i], &QOutputButton::clicked, this, &IO::on_btn_output);
+        connect(OUTPUT[i], &QOutputButton::wclicked, this, &IO::on_btn_output);
 	}
 }
 
 void IO::setThread()
 {
+	is_updateInputStatus_ok = false;
+	start_thread_updateInputStatus = true;
+	close_thread_updateInputStatus = false;
+
 	thread_pool.setMaxThreadCount(1);
-	exit_thread_updateOutputStatus = false;
-	future_thread_updateOutputStatus = QtConcurrent::run(&thread_pool, [&]() { thread_updateInputStatus(); });
+
+	future_thread_updateInputStatus = QtConcurrent::run(&thread_pool, [&]() { thread_updateInputStatus(); });
 	// qDebug() << thread_updateOutputStatus.isRunning();
 }
 
@@ -277,21 +290,57 @@ void IO::setIOConnect()
 
 void IO::thread_updateInputStatus()
 {
-	if (!(init_card() == 1)) return;
+	// if (!(init_card() == 1)) return;
 
-	while (true)
+	int step_input = 0;
+
+	while (close_thread_updateInputStatus == false)
 	{
-		for (int i = IN_VISIBLE_BEGIN; i < IN_COUNT; i++)
+		switch (step_input)
 		{
-			INPUT[i]->setStatus(adt8949_read_bit(0, i));
+		case 0:		// 等待触发
+		{
+			if (start_thread_updateInputStatus == false)
+			{
+				Sleep(2);
+				step_input = 0;
+			}
+			else
+			{
+				step_input = 10;
+			}
 		}
+		break;
 
-		if (exit_thread_updateOutputStatus == true)
+		case 10:	// 刷新Input
 		{
+			for (int i = IN_VISIBLE_BEGIN; i < IN_COUNT; i++)
+			{
+				INPUT[i]->setStatus(read_in_bit(i));
+				Sleep(10);
+			}
+
+			step_input = 0;
+		}
+		break;
+
+		case 8888:	// 退出流程
+		{
+			start_thread_updateInputStatus = false;
+			step_input = 0;
+		}
+		break;
+
+		case 9999:	// 退出线程
+		{
+			// 安全退出该线程
+			close_thread_updateInputStatus = true;
+		}
+		break;
+
+		default:
 			break;
-		}
-
-		Sleep(10);
+		}	
 	}
 }
 

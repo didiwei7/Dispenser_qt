@@ -21,7 +21,7 @@ int init_card()
 			QMessageBox::about(NULL, NULL, QStringLiteral("控制卡未安装"));
 
 			// 测试
-			/*// 设置X轴
+			// 设置X轴
 			adt8949_set_pulse_mode(0, 1, 1, 0, 0);
 			adt8949_set_gear(0, 1, 1000);
 
@@ -36,7 +36,9 @@ int init_card()
 			// 设置限位锁模式
 			// adt8949_set_limit_lock(0, 1);
 			set_home_mode();
-			set_home_speed();*/
+			set_home_speed();
+
+			// move_inp_abs_line3(1, 1, 1);
 
 			return ret;
 		}
@@ -101,7 +103,6 @@ void estop()
 
 
 
-
 // 获取输入点状态, by bit
 int read_in_bit(int bit)
 {
@@ -132,7 +133,6 @@ void change_out_bit(int bit)
 		adt8949_write_bit(0, bit, 0);
 	}
 }
-
 
 
 
@@ -191,6 +191,11 @@ void set_home_mode()
 		m_fBackRange[2], m_fEncoderZRange[2], m_fOffset[2]);
 
 	file.close();
+
+	QFile file2("../config/motor2.json");
+	file2.open((QIODevice::WriteOnly));
+	QJsonDocument doc_save(obj);
+	file2.write(doc_save.toJson());
 }
 
 // 设置回原速度
@@ -255,24 +260,76 @@ void wait_axis_homeOk(int axis)
 		{
 			break;
 		}
+
+		// 这才是标准的做法
+		//if (m_stopFlag == 1)
+		//{
+		//	break;
+		//}
 	}
 }
 
 
 
-// 速度, 带轴号, 带加减速
-void set_axis_speed(int axis, float speed, float acc, float dec)
+// 获取单轴绝对位置
+float get_current_pos_axis(int axis)
 {
-	adt8949_set_admode(0, axis, 0);
-	adt8949_set_startv(0, axis, float(0.1));
-	adt8949_set_endv(0, axis, float(0.1));
+	long lPos;
+	float fPos;
+	adt8949_get_command_pos(0, axis, &lPos);
+	fPos = lPos / 1000.0;
+
+	return fPos;
+}
+
+
+// 设置所有轴速度, 带起始速度, 带加减速, 带模式
+void set_speed_mode(float startv, float speed, float acc, unsigned short mode)
+{
+	for ( int axis = 1; axis < 4; axis++)
+	{
+		adt8949_set_admode(0, axis, mode);
+		adt8949_set_startv(0, axis, startv);
+		// adt8949_set_endv(0, axis, float(0.1));
+		adt8949_set_speed(0, axis, speed);
+		adt8949_set_acc(0, axis, acc);		// 加速度 
+		// adt8949_set_dec(0, axis, dec);	// 减速度 
+		adt8949_set_jcc(0, axis, 3);		// 加加速度, 值越小, 加减速效果越明显
+	}
+}
+
+// 设置单轴速度, 带轴号, 带起始速度, 带加减速, 带模式
+void set_axis_speed_mode(int axis, float startv, float speed, float acc, unsigned short mode)
+{
+	adt8949_set_admode(0, axis, mode);
+	adt8949_set_startv(0, axis, startv);
+	// adt8949_set_endv(0, axis, float(0.1));
 	adt8949_set_speed(0, axis, speed);
 	adt8949_set_acc(0, axis, acc);	// 加速度 
-	adt8949_set_dec(0, axis, dec);	// 减速度 
+	// adt8949_set_dec(0, axis, dec);	// 减速度 
 	adt8949_set_jcc(0, axis, 3);	// 加加速度, 值越小, 加减速效果越明显
 }
 
-// 移动, 带速度, 带加减速, 带正负限位
+// 单轴绝对运动, 不带速度设置, 需提前设置速度, 模式
+void move_axis_abs(int axis, float pos)
+{
+	adt8949_abs_pmove(0, axis, pos);
+}
+
+// 单轴相对运动, 不带速度设置, 需提前设置速度, 模式
+void move_axis_offset(int axis, float distance)
+{
+	adt8949_abs_pmove(0, axis, distance);
+}
+
+// 单轴连续运动, 不带速度设置, 需提前设置速度, 模式
+void move_axis_continue(int axis, int dir)
+{
+	adt8949_continue_move(0, axis, dir);
+}
+
+
+// 单轴绝对运动, 带速度, 带加减速, 带正负限位
 void move_axis_abs(int axis, float pos, float speed, float acc, float dec)
 {
 	adt8949_set_admode(0, axis, 0);
@@ -285,7 +342,7 @@ void move_axis_abs(int axis, float pos, float speed, float acc, float dec)
 	adt8949_abs_pmove(0, axis, pos);
 }
 
-// 移动, 带速度, 带加减速, 带正负限位
+// 单轴相对运动, 带速度, 带加减速, 带正负限位
 void move_axis_offset(int axis, float distance, float speed, float acc, float dec)
 {
 	adt8949_set_admode(0, axis, 0);
@@ -298,7 +355,7 @@ void move_axis_offset(int axis, float distance, float speed, float acc, float de
 	adt8949_abs_pmove(0, axis, distance);
 }
 
-// 连续运动, 带方向(0+, 1-), 带速度, 带加减速, 带正负限位
+// 单轴连续运动, 带方向(0+, 1-), 带速度, 带加减速, 带正负限位
 void move_axis_continue(int axis, int dir, float speed, float acc, float dec)
 {
 	adt8949_set_admode(0, axis, 0);
@@ -312,6 +369,44 @@ void move_axis_continue(int axis, int dir, float speed, float acc, float dec)
 }
 
 
+// X, Y, Z三轴直线插补, by x_pos, y_pos, z_pos
+void move_inp_abs_line3(float x_pos, float y_pos, float z_pos)
+{
+	unsigned char axismap = 7;
+	adt8949_set_precount(0, 30);
+	adt8949_inp_abs_move4(0, 0, axismap, x_pos, y_pos, z_pos, 0);
+}
+
+// X, Y两轴直线插补
+void move_inp_abs_line2(float x_pos, float y_pos)
+{
+	unsigned char axismap = 3;
+	adt8949_set_precount(0, 30);
+	adt8949_inp_abs_move4(0, 0, axismap, x_pos, y_pos, 0, 0);
+}
+
+// X, Y圆弧插补, Z轴直线插补 by pos_x, pos_y, pos_z, center_x, center_y
+void move_imp_abs_helix2(float pos_x, float pos_y, float pos_z, float center_x, float center_y)
+{
+	int AxisList[4] = { 1, 2, 3, 0 };
+	float pos[4] = { pos_x, pos_y, pos_z, 0 };
+	float center[2] = { center_x, center_y};
+
+	adt8949_set_precount(0, 30);
+	adt8949_inp_abs_helix2(0, 0, AxisList, pos, center, 0);
+}
+
+// X, Y圆弧插补 by pos_x, pos_y, center_x, center_y
+void move_inp_abs_arc2(float pos_x, float pos_y, float center_x, float center_y)
+{
+	unsigned char axismap = 3;
+	float pos[4] = { pos_x, pos_y, 0, 0 };
+	float center[2] = { center_x, center_y };
+
+	adt8949_set_precount(0, 30);
+	adt8949_inp_abs_arc2(0, 0, axismap, pos, center, 1);
+}
+
 
 
 // 判断是否运动 by axis
@@ -322,7 +417,7 @@ bool axis_isMoving(int axis)
 	return state;
 }
 
-// 等待运动结束
+// 等待单轴停止
 void wait_axis_stop(int axis)
 {
 	int state = 0;
@@ -335,17 +430,58 @@ void wait_axis_stop(int axis)
 		{
 			break;
 		}
+
+		// 这才是标准的做法
+		//if (m_stopFlag == 1)
+		//{
+		//	break;
+		//}
 	} 	
 }
 
-
-
-float get_current_pos_axis(int axis)
+// 等待所有轴停止
+void wait_allaxis_stop()
 {
-	long lPos;
-	float fPos;
-	adt8949_get_command_pos(0, axis, &lPos);
-	fPos = lPos/1000.0;
+	int stateX = 0;
+	int stateY = 0;
+	int stateZ = 0;
+	while (true)
+	{
+		Sleep(1);
+		adt8949_get_status(0, 1, &stateX);
+		adt8949_get_status(0, 2, &stateY);
+		adt8949_get_status(0, 3, &stateZ);
+		if (stateX == 0 && stateY == 0 && stateZ == 0)
+		{
+			break;
+		}
 
-	return fPos;
+		// 这才是标准的做法
+		//if (m_stopFlag == 1)
+		//{
+		//	break;
+		//}
+	}
+}
+
+// 等待插补完成
+void wait_inp_finish()
+{
+	int state = 0;
+	while (true)
+	{
+		Sleep(1);
+		adt8949_get_inp_status(0, &state);
+
+		if (state == 0)
+		{
+			break;
+		}
+
+		// 这才是标准的做法
+		//if (m_stopFlag == 1)
+		//{
+		//	break;
+		//}
+	}
 }

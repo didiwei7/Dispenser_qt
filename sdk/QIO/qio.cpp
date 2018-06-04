@@ -134,32 +134,44 @@ void QInputLabel::setStatus(int state)
 }
 
 
-QOutputButton::QOutputButton(QPushButton *parent) : QPushButton(parent)
+QOutputButton::QOutputButton(QWidget *parent) : QWidget(parent)
 {
-    setFixedHeight(20);
+	setFixedSize(150, 20);
+
+	btn_output = new QPushButton(this);
+	btn_output->setFixedSize(this->size());
+
+	connect(btn_output, &QPushButton::clicked, this, &QOutputButton::on_btn_output);
 }
 
-QOutputButton::QOutputButton(const QString &name, int state, QPushButton *parent) : QPushButton(parent)
+QOutputButton::QOutputButton(const QString &name, int state, QWidget *parent) : QWidget(parent)
 {
-    setFixedSize(150, 20);
+	setFixedSize(150, 20);
 
-    setText(name);
+	btn_output = new QPushButton(this);
+	btn_output->setText(name);
+	btn_output->setFixedSize(this->size());
+	setStatus(state);
 
-    setStatus(state);
+	connect(btn_output, &QPushButton::clicked, this, &QOutputButton::on_btn_output);
 }
 
 void QOutputButton::setStatus(int state)
 {
     if(state <= 0)
     {
-        this->setStyleSheet(QStringLiteral("background-color: #D1D1D1;"
+		btn_output->setStyleSheet(QStringLiteral("background-color: #D1D1D1;"
                                            "border-radius: 5px;"));
     }
     else if(state == 1)
     {
-		this->setStyleSheet(QStringLiteral("background-color: #5CACEE;"
+		btn_output->setStyleSheet(QStringLiteral("background-color: #5CACEE;"
                                      "color: #eff0f1;"
                                      "border-radius: 5px;"));
     }
 }
 
+void QOutputButton::on_btn_output()
+{
+	emit wclicked();
+}

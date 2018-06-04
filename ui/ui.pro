@@ -35,8 +35,8 @@ SOURCES += \
             motor/point/pointdebug.cpp      \
             vision/vision.cpp               \
             photo/photo.cpp                 \
-            operation/operation.cpp \
-    workflow/workflow.cpp
+            operation/operation.cpp         \
+            workflow/workflow.cpp
 
 HEADERS += \
             mainwindow/mainwindow.h         \
@@ -48,8 +48,8 @@ HEADERS += \
             motor/point/pointdebug.h        \
             vision/vision.h                 \
             photo/photo.h                   \
-            operation/operation.h \
-    workflow/workflow.h
+            operation/operation.h           \
+            workflow/workflow.h
 
 RC_FILE  += myico.rc
 

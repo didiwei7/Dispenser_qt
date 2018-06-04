@@ -29,6 +29,7 @@
 #include "../adt/adtcontrol.h"
 #include "../io/io.h"
 
+// 点位模型
 enum MODELPOINT
 {
 	GENERAL = 0,
@@ -37,11 +38,13 @@ enum MODELPOINT
 	GLUE3   = 3
 };
 
+// 点位类型
 enum POINTTYPE
 {
 
 };
 
+// Z轴优先优先类型
 enum ZMOVETYPE
 {
 	NORMAL = 0,
@@ -49,16 +52,26 @@ enum ZMOVETYPE
 	AFTER = -1
 };
 
+// 点胶工位CCD视野中心
+enum CCDORG
+{
+	GLUE1ORG = 0,
+	GLUE2ORG = 1,
+	GLUE3ORG = 2
+};
+
 class Workflow : public QObject
 {
     Q_OBJECT
 public:
     explicit Workflow(QObject *parent = nullptr);
+	~Workflow();
 
 private:
 	void setConfig();
 	void setPoint();
 	void setIOStatus();
+	void setSocketMsg();
 	void setThread();
 	void setConnect();
 
@@ -107,12 +120,32 @@ public:		// 换料盘
 	QFuture<void> future_thread_exchangeTrays;
 	void thread_exchangeTrays();
 
+public:
+	QString receivedMsg_ccd;
 
-public:		// 点胶
-	bool is_config_gluel;
+public:		// 点胶1
+	bool is_config_gluel;		// 是否配置  glue1
+	bool is_gluel_ok;			
+	bool start_thread_glue_1;
+	bool close_thread_glue_1;
+	QFuture<void> future_thread_glue_1;
+	void thread_glue_1();
+
+
+public:
+	// 可通过信号槽来刷新点位, 但不要在运行中设置
+	QVector<CCDGlue> vec_ccdGlue_1;
+	QVector<CCDGlue> vec_ccdGlue_2;
+	QVector<CCDGlue> vec_ccdGlue_3;
+
+	// 可通过信号槽来刷新中心点, 但不要在运行中设置
+	float org_ccdglue_x[3];
+	float org_ccdglue_y[3];
+
+
+public:
 	bool is_config_glue2;
 	bool is_config_glue3;
-	void thread_glue_1();
 	void thread_glue_2();
 	void thread_glue_3();
 
@@ -151,16 +184,20 @@ public:
 
 
 public:		// 获取点位
-	QMap<QString, PointRun> allpoint_pointRun;
 	QMap<QString, PointGeneral> allpoint_general;
 	QMap<QString, PointGlue> allpoint_glue1;
 	QMap<QString, PointGlue> allpoint_glue2;
 	QMap<QString, PointGlue> allpoint_glue3;
+	QMap<QString, PointRun> allpoint_pointRun;
 	
-	QMap<QString, PointRun> getAllRunPointInfo();
-	QMap<QString, PointGlue> getAllGluePointInfo(int index);
 	QMap<QString, PointGeneral> getAllGeneralPointInfo();
+	QMap<QString, PointGlue> getAllGluePointInfo(int index);
+	QMap<QString, PointRun> getAllRunPointInfo();
 	
+	QVector<CCDGlue> getCCDGluePoint2Vector(int index);
+
+	MatrixXf CalCCDGluePoint(const QVector<CCDGlue> vector_ccdGlue, const float offset_x, const float offset_y);
+	MatrixXf CalCCDGluePoint(const QVector<CCDGlue> vector_ccdGlue, const float offset_x, const float offset_y, const float offset_angle, const float org_x, const float org_y);
 
 	float wSpeed;
 	float wAcc;

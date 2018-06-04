@@ -6,10 +6,13 @@
 #include <QDebug>
 #include <iostream>
 #include <stdio.h>
-using namespace std;
+#include <Eigen/Dense>
 
+using namespace std;
+using namespace Eigen;
 
 #include "adt8949.h"
+
 
 // CCD点胶点(描点)
 typedef struct _CCDGlue
@@ -19,6 +22,8 @@ typedef struct _CCDGlue
 	float            X;					      // X
 	float            Y;						  // Y
 	float            Z;                       // Z
+	float            center_X;				  // 圆心X
+	float            center_Y;				  // 圆心Y
 	bool             open;					  // 是否开胶
 	int              openAdvance;			  // 提前开胶时间
 	int              openDelay;               // 延迟开胶时间
@@ -34,6 +39,8 @@ typedef struct _CCDGlue
 		X = 0.000;					  // X
 		Y = 0.000;					  // Y
 		Z = 0.000;                    // Z
+		center_X = 0.000;			  // 圆心X
+		center_Y = 0.000;			  // 圆心Y
 		open = false;				  // 是否开胶
 		openAdvance = 0;			  // 提前开胶时间
 		openDelay = 0;                 // 延迟开胶时间
@@ -192,6 +199,8 @@ enum AXISNUM
 	Z = 3
 };
 
+
+
 // 初始化控制卡 第一次调用才初始化, 第二次调用时返回第一次初始化的结果
 int init_card();
 
@@ -239,29 +248,59 @@ void home_axis(int axis);
 void wait_axis_homeOk(int axis);
 
 
+// 获取单轴绝对位置
+float get_current_pos_axis(int axis);
 
-// 速度, 带轴号, 带加减速
-void set_axis_speed(int axis, float speed, float acc, float dec);
 
-// 移动, 带速度, 带加减速, 带正负限位
+// 设置所有轴速度, 带起始速度, 带加减速, 带模式
+void set_speed_mode(float startv, float speed, float acc, unsigned short mode);
+
+// 设置单轴速度, 带轴号, 带起始速度, 带加减速, 带模式
+void set_axis_speed_mode(int axis, float startv, float speed, float acc, unsigned short mode);
+
+// 单轴绝对运动, 不带速度设置, 需提前设置速度, 模式
+void move_axis_abs(int axis, float pos);
+
+// 单轴相对运动, 不带速度设置, 需提前设置速度, 模式
+void move_axis_offset(int axis, float distance);
+
+// 单轴连续运动, 不带速度设置, 需提前设置速度, 模式
+void move_axis_continue(int axis, int dir);
+
+
+// 绝对移动, 带正负限位
 void move_axis_abs(int axis, float pos, float speed, float acc, float dec);
 
-// 移动, 带速度, 带加减速, 带正负限位
+// 相对移动, 带速度, 带加减速, 带正负限位
 void move_axis_offset(int axis, float distance, float speed, float acc, float dec);
 
 // 连续运动, 带方向(0+, 1-), 带速度, 带加减速, 带正负限位
 void move_axis_continue(int axis, int dir, float speed, float acc, float dec);
 
 
-float get_current_pos_axis(int axis);
+// X, Y, Z三轴直线插补, by x_pos, y_pos, z_pos
+void move_inp_abs_line3(float x_pos, float y_pos, float z_pos);
+
+// X, Y两轴直线插补
+void move_inp_abs_line2(float x_pos, float y_pos);
+
+// X, Y圆弧插补, Z轴直线插补 by pos_x, pos_y, pos_z, center_x, center_y
+void move_imp_abs_helix2(float pos_x, float pos_y, float pos_z, float center_x, float center_y);
+
+// X, Y圆弧插补 by pos_x, pos_y, center_x, center_y
+void move_inp_abs_arc2(float pos_x, float pos_y, float center_x, float center_y);
 
 
 // 运动, 
 bool axis_isMoving(int axis);
 
-// 等待运动结束
+// 等待单轴停止
 void wait_axis_stop(int axis);
 
+// 等待所有轴停止
+void wait_allaxis_stop();
 
+// 等待插补完成
+void wait_inp_finish();
 
 #endif // ADTCONTROL_H

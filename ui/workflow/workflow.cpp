@@ -9,6 +9,20 @@ Workflow::Workflow(QObject *parent) : QObject(parent)
 	setThread();
 }
 
+Workflow::~Workflow()
+{
+	close_thread_watch_start = true;
+	close_thread_watch_reset = true;
+	close_thread_watch_stop = true;
+	close_thread_watch_estop = true;
+	close_thread_exchangeTrays = true;
+	close_thread_workflow = true;
+
+	thread_pool.waitForDone();
+	thread_pool.clear();
+	thread_pool.destroyed();
+}
+
 void Workflow::setConfig()
 {
 	// 【1】 流程配置
@@ -65,6 +79,11 @@ void Workflow::setPoint()
 	allpoint_pointRun = getAllRunPointInfo();
 }
 
+void Workflow::setSocketMsg()
+{
+	receivedMsg_ccd = "";
+}
+
 void Workflow::setIOStatus()
 {
 	if (!(init_card() == 1)) return;
@@ -78,7 +97,7 @@ void Workflow::setThread()
 {
 	// qDebug() << QThreadPool::globalInstance()->maxThreadCount();
 
-	thread_pool.setMaxThreadCount(6);
+	thread_pool.setMaxThreadCount(20);
 
 	is_start_ok = false;
 	start_thread_watch_start = false;
@@ -124,15 +143,28 @@ void Workflow::thread_watch_start()
 	{
 		switch (step_start)
 		{
-		case 0:
+		case 0:		// 等待触发
 		{
 			if (start_thread_watch_start == true || (read_in_bit(20) == 1))
 			{
-				step_start = 5;
+				if (true == is_reset_ok)
+				{
+					step_start = 5;
+				}
+				else
+				{
+					emit changedRundataLabel(QStringLiteral("请先复位"));
+					emit changedRundataText(QStringLiteral("未复位, 无法启动"));
+					writRunningLog(QStringLiteral("未复位, 无法启动"));
+
+					Sleep(2);
+					step_start = 0;
+				}
+				
 			}
 			else
 			{
-				Sleep(1);
+				Sleep(2);
 				step_start = 0;
 			}
 		}
@@ -140,14 +172,121 @@ void Workflow::thread_watch_start()
 
 		case 5:		// 消息更新
 		{
+			emit changedRundataLabel(QStringLiteral("运行中..."));
+			emit changedRundataText(QStringLiteral("校针开始"));
+			writRunningLog(QStringLiteral("校针开始"));
+
 			step_start = 10;
 		}
 		break;
 
-		case 10:
+		case 10:	// 到清胶点	
 		{
+			// 【1】 设置速度, 模式
+			// set_speed_mode()
+			
+			// 【2】 到清胶安全点
+			move_point_name("xx");
+			wait_allaxis_stop();
+
+			// 【3】 判断清胶气缸
+			if (true)
+			{
+
+			}
+
+			// 【4】 到清胶点
+			move_point_name("xx");
+			wait_allaxis_stop();
+
+			// 【5】 清胶气缸夹紧
+
+			// 【6】 到清胶安全点
+			move_point_name("xx");
+			wait_allaxis_stop();
+
+			// 【7】 清胶气缸松开
+
+
+			step_start = 20;
 		}
 		break;
+
+		case 20:	// 点胶1开始
+		{
+			// 通过标志位开启 "点胶1线程"
+
+			step_start = 30;
+		}
+		break;
+
+		case 30:	// 等待点胶1完成
+		{
+			// 判断点胶1是否完成
+			if (!true)
+			{
+				step_start = 30;
+			}
+			else
+			{
+				step_start = 40;
+			}
+		}
+		break;
+
+		case 40:	// 点胶2开始
+		{
+			// 通过标志位开启 "点胶1线程"
+
+			step_start = 50;
+		}
+		break;
+
+		case 50:	// 等待点胶2完成
+		{
+			// 判断"点胶1"是否完成
+			if (!true)
+			{
+				step_start = 50;
+			}
+			else
+			{
+				step_start = 60;
+			}
+		}
+		break;
+
+		case 60:	// 点胶3开始
+		{
+			// 通过标志位开启 "点胶3线程"
+
+			step_start = 70;
+		}
+		break;
+
+		case 70:	// 等待点胶3完成
+		{
+			// 判断"点胶3"是否完成
+			if (!true)
+			{
+				step_start = 70;
+			}
+			else
+			{
+				step_start = 80;
+			}
+		}
+		break;
+
+		case 80:	// 回清胶安全点
+		{
+			// 【1】 到清胶安全点
+			move_point_name("xx");
+			wait_allaxis_stop();
+
+			// 【2】 等待下次开始
+			step_start = 8888;
+		}
 
 		case 8888:	// 线程: 流程执行完毕, 等待下次开始
 		{
@@ -786,6 +925,254 @@ void Workflow::thread_calibNeedle()
 // Thread 点胶1
 void Workflow::thread_glue_1()
 {
+	if (!(init_card() == 1)) return;
+
+	// 从CCD获取到的偏移 X, Y, A
+	float ccd_offset_x, ccd_offset_y, ccd_offset_A;
+
+	// 校针获取到的偏移 X, Y, Z
+	float calibNeedle_offset_x, calibNeedle_offset_y, calibNeedle_offset_z;
+
+	// 镭射获取的高度
+	float laser_z;
+	float laser_1_z, laser_2_z, laser_3_z, laser_4_z;
+
+	// 4段圆弧的圆心坐标
+	float center_result_x[4];
+	float center_result_y[4];
+
+	MatrixXf work_matrix;
+	QVector<CCDGlue>::iterator iter_cmd;
+	CCDGlue current_cmd;
+	int     current_cmd_num;
+	
+
+	int step_glue1;
+
+	while (close_thread_glue_1 == false)
+	{
+		switch (step_glue1)
+		{
+		case 0:		// 等待触发
+		{
+			if (start_thread_glue_1 == false)
+			{
+				Sleep(2);
+				step_glue1 = 0;
+			}
+			else
+			{
+				step_glue1 = 10;
+			}
+		}
+		break;
+
+		case 10:	// 检查是否配置了该流程
+		{
+			if (is_config_gluel == false)
+			{
+				step_glue1 = 7777;
+			}
+			else
+			{
+				step_glue1 = 20;
+			}
+		}
+		break;
+
+		case 20:	// 设置速度, 模式
+		{
+			// 设置所有轴速度, 模式
+			// set_speed_mode()
+			step_glue1 = 30;
+		}
+		break;
+
+		case 30:	// Z轴到安全位
+		{
+			move_axis_abs(AXISNUM::Z, 0);
+			step_glue1 = 40;
+		}
+		break;
+
+		case 40:	// 提前切换图像程序
+		{
+			// 发消息
+			step_glue1 = 50;
+		}
+		break;
+
+		case 50:	// 点前清胶
+		{
+			// 【1】 到清胶安全点
+			move_point_name("xx");
+			wait_allaxis_stop();
+
+			// 【2】 判断清胶气缸
+			if (true)
+			{
+				QMessageBox::warning(NULL, QStringLiteral("警告"), QStringLiteral("清胶气缸状态错误, 请检查"));
+				step_glue1 = 8888;
+			}
+
+			// 【4】 到清胶点
+			move_point_name("xx");
+			wait_allaxis_stop();
+
+			// 【5】 清胶气缸夹紧
+
+
+			// 【6】 到清胶安全点, 此点位安全高度为 0
+			move_point_name("xx");
+			wait_allaxis_stop();
+
+			// 【7】 清胶气缸松开
+
+			step_glue1 = 60;
+		}
+		break;
+
+		case 60:	// 到" 点胶1" 拍照点
+		{
+			// 到点胶1拍照点
+			move_point_name("xx");
+			wait_allaxis_stop();
+
+			step_glue1 = 70;
+		}
+		break;
+
+		case 70:	// 拍照
+		{
+			// 发消息拍照
+
+			step_glue1 = 80;
+		}
+		break;
+
+		case 80:	// 等待获取偏移 ccd_offset_x, ccd_offset_y, ccd_offset_z
+		{
+			if (receivedMsg_ccd == "" || receivedMsg_ccd.length() < 5)
+			{
+				step_glue1 = 80;
+			}
+			else
+			{
+				if (receivedMsg_ccd.split("]").last() == "-1")
+				{
+					step_glue1 = 7777;
+				}
+				else
+				{
+					ccd_offset_x = receivedMsg_ccd.split("]").at(1).toFloat();
+					ccd_offset_y = receivedMsg_ccd.split("]").at(2).toFloat();
+					ccd_offset_A = receivedMsg_ccd.split("]").at(3).toFloat();
+
+					receivedMsg_ccd = "";
+
+					step_glue1 = 90;
+				}
+			}
+		}
+		break;
+
+		case 90:	// 计算矩阵偏移
+		{
+			work_matrix = CalCCDGluePoint(vec_ccdGlue_1, ccd_offset_x, ccd_offset_y, ccd_offset_A, org_ccdglue_x[CCDORG::GLUE1ORG], org_ccdglue_y[CCDORG::GLUE1ORG]);
+		}
+		break;
+
+		case 100:	// 初始化所有标志位
+		{
+			iter_cmd = vec_ccdGlue_1.begin();
+
+			current_cmd_num = 0;
+			
+
+			step_glue1 = 110;
+
+		}
+		break;
+
+		case 110:	// 判断 "结束" 和 "CCDGlue.type"
+		{
+			if ( iter_cmd == vec_ccdGlue_1.end())
+			{
+				step_glue1 = 8888;
+			}
+			else
+			{
+				if (vec_ccdGlue_1.at(current_cmd_num).type == QString("null"))
+				{
+					step_glue1 = 8888;
+				}
+				else if (current_cmd.type == QString("line"))
+				{
+					current_cmd = vec_ccdGlue_1.at(current_cmd_num);
+					step_glue1 = 200;
+				}
+				else if (current_cmd.type == QString("circle"))
+				{
+					current_cmd = vec_ccdGlue_1.at(current_cmd_num);
+					step_glue1 = 300;
+				}
+				else
+				{
+					QMessageBox::warning(NULL, QStringLiteral("警告"), QStringLiteral("点位解析错误"));
+					step_glue1 = 9000;
+				}
+			}
+		}
+		break;
+
+		case 200:	// 直线插补
+		{
+			// 【1】 打开插补缓存区
+
+
+			// 【2】 判断 "镭射"
+			if (!false)
+			{
+				step_glue1 = 210;
+			}
+			else
+			{
+				step_glue1 = 250;
+			}
+		}
+		break;
+
+		case 250:	// 镭射测量
+		{
+			float move_pos[3];
+
+			// move_pos[0] = work_matrix[current_cmd_num, 0] + ;
+		}
+		break;
+
+		case 8888:
+		{
+			emit changedRundataText(QStringLiteral("换料盘结束"));
+			writRunningLog(QStringLiteral("换料盘结束"));
+			start_thread_glue_1 = false;
+			step_glue1 = 0;
+		}
+		break;
+
+		case 9999:
+		{
+			// 安全退出该线程
+			close_thread_glue_1 = true;
+
+			// 触发停止信号
+
+		}
+		break;
+
+		default:
+			break;
+		}
+	}
 
 }
 
@@ -800,7 +1187,6 @@ void Workflow::thread_glue_3()
 {
 
 }
-
 
 
 
@@ -836,17 +1222,20 @@ void Workflow::on_changedSqlModel(int index)
 	else if (1 == index)
 	{
 		model_glue1->select();
-		allpoint_glue1 = getAllGluePointInfo(1);
+		allpoint_glue1 = getAllGluePointInfo(1);	// 点胶点位信息, 可查找
+		vec_ccdGlue_1 = getCCDGluePoint2Vector(1);	// 点胶流程点位信息, 用于自动解析指令
 	}
 	else if (2 == index)
 	{
 		model_glue2->select();
 		allpoint_glue2 = getAllGluePointInfo(2);
+		vec_ccdGlue_2 = getCCDGluePoint2Vector(2);
 	}
 	else if (3 == index)
 	{
 		model_glue3->select();
 		allpoint_glue3 = getAllGluePointInfo(3);
+		vec_ccdGlue_3 = getCCDGluePoint2Vector(3);
 	}
 	else return;
 
@@ -1034,6 +1423,195 @@ QMap<QString, PointRun> Workflow::getAllRunPointInfo()
 
 	return _allPoint;
 }
+
+// 获取 CCDGlue 到 QVector
+QVector<CCDGlue> Workflow::getCCDGluePoint2Vector(int index)
+{
+	QSqlTableModel *pointmodel = new QSqlTableModel();
+	QVector<CCDGlue> _vector_ccdGlue;
+
+	if (1 == index) pointmodel = model_glue1; // QSqlTableModel *pointmodel = model_glue1;
+	else if (2 == index) pointmodel = model_glue2;
+	else if (3 == index) pointmodel = model_glue3;
+	else
+	{
+		QMessageBox::warning(NULL, "错误", QStringLiteral("设置数据库模型错误"));
+		return _vector_ccdGlue;
+	}
+
+
+	for (int index = 0; index < pointmodel->rowCount(); index++)
+	{
+		QString name = pointmodel->record(index).value("name").toString();
+		QString description = pointmodel->record(index).value("description").toString();
+		float X = pointmodel->record(index).value("X").toString().toFloat();
+		float Y = pointmodel->record(index).value("Y").toString().toFloat();
+		float Z = pointmodel->record(index).value("Z").toString().toFloat();
+		bool open = pointmodel->record(index).value("open").toBool();
+		int openAdvance = pointmodel->record(index).value("openAdvance").toInt();
+		int openDelay = pointmodel->record(index).value("openDelay").toInt();
+		bool close = pointmodel->record(index).value("close").toBool();
+		int closeAdvance = pointmodel->record(index).value("closeAdvance").toInt();
+		int closeDelay = pointmodel->record(index).value("closeDelay").toInt();
+		int type = pointmodel->record(index).value("type").toInt();
+
+		CCDGlue point; // = { name, description, X, Y, Z, open, openAdvance, openDelay, close, closeAdvance, closeDelay, type };
+		point.name = name;
+		point.description = description;
+		point.X = X;
+		point.Y = Y;
+		point.Z = Z;
+		point.open = open;
+		point.openAdvance = openAdvance;
+		point.openDelay = openDelay;
+		point.close = close;
+		point.closeAdvance = closeAdvance;
+		point.closeDelay = closeDelay;
+		point.type = type;
+
+		_vector_ccdGlue.append(point);
+	}
+	return _vector_ccdGlue;
+}
+
+// 计算平移矩阵     offset_x, offset_y
+MatrixXf Workflow::CalCCDGluePoint(const QVector<CCDGlue> vector_ccdGlue, const float offset_x, const float offset_y)
+{
+	// 【1】 声明矩阵
+	MatrixXf m2f_ccdGlue(2, 1);			// CCD矩阵 X, Y
+	MatrixXf m2f_offset(2, 1);			// 偏移矩阵 offset_x, offset_y
+	MatrixXf m2f_tmp(2, 1);				// m2f_tmp = m2f_offset + m2f_ccdGlue
+
+	MatrixXf m3f_result_ccdGlue(20, 3);		// 返回 3维pointGlue
+
+											// 【2】 初始化矩阵
+	m2f_ccdGlue <<
+		0,
+		0;
+
+	m2f_offset <<
+		offset_x,
+		offset_y;
+
+	m2f_tmp <<
+		0,
+		0;
+
+	// 【3】计算结果
+	for (int index = 0; index < vector_ccdGlue.size(); index++)
+	{
+		// 获取CCD矩阵的 X，Y
+		m2f_ccdGlue <<
+			vector_ccdGlue.at(index).X,
+			vector_ccdGlue.at(index).Y;
+
+		// 平移
+		m2f_tmp = m2f_ccdGlue + m2f_offset;
+
+		// 获取返回值
+		m3f_result_ccdGlue(index, 0) = m2f_tmp(0, 0);
+		m3f_result_ccdGlue(index, 1) = m2f_tmp(1, 0);
+		m3f_result_ccdGlue(index, 2) = vector_ccdGlue.at(index).Z;
+	}
+
+	return  m3f_result_ccdGlue;
+}
+
+// 计算平移旋转矩阵  offset_x, offset_y, offset_angle, org_x, org_y
+MatrixXf Workflow::CalCCDGluePoint(const QVector<CCDGlue> vector_ccdGlue, const float offset_x, const float offset_y, const float offset_angle, const float org_x, const float org_y)
+{
+	MatrixXf m3f_ccdGlue(3, 1);				// CCD矩阵
+	MatrixXf m3f_offset(3, 3);				// 偏移矩阵
+
+	MatrixXf m3f_angle(3, 3);			    // 角度矩阵
+	MatrixXf m3f_move_left(3, 3);			// 左移			
+	MatrixXf m3f_move_right(3, 3);			// 右移
+
+	MatrixXf m3f_tmp(3, 1);
+	MatrixXf m3f_result_ccdGlue(22, 3);
+
+	m3f_ccdGlue <<
+		0,
+		0,
+		1;
+
+	m3f_offset <<
+		1, 0, offset_x,
+		0, 1, offset_y,
+		0, 0, 1;
+
+	m3f_angle <<
+		cos(offset_angle), -sin(offset_angle), 0,
+		sin(offset_angle), cos(offset_angle), 0,
+		0, 0, 1;
+
+	m3f_move_left <<
+		1, 0, -org_x,
+		0, 1, -org_y,
+		0, 0, 1;
+
+	m3f_move_right <<
+		1, 0, org_x,
+		0, 1, org_x,
+		0, 0, 1;
+
+	m3f_tmp <<
+		0,
+		0,
+		1;
+
+
+	for (int index = 0; index<vector_ccdGlue.size(); index++)
+	{
+		// 获取CCD矩阵的 X，Y
+		m3f_ccdGlue <<
+			vector_ccdGlue.at(index).X,
+			vector_ccdGlue.at(index).Y,
+			1;
+
+		// 绕原点旋转
+		/*// x = r * cos(A),  y = r * sin(A);
+		// _x = r * cos(A + B) = r * cos(A) * cos(B) - r * sin(A) * sin(B) = x * cos(B) - y * sin(B)
+		// _y = r * sin(A + B) = r * sin(A) * cos(B) + r * cos(A) * sin(B) = x * sin(B) + y * cos(B)
+		// MatrixXf m2f_angle(2, 2);
+		// m2f_angle << cos(B), -sin(B),
+		//				sin(B), cos(B);*/
+
+		// 绕某一点旋转
+		/*// 1. 左移 -> (-org_x, -org_y)
+		// 2. 旋转
+		//		MatrixXf m3f_angle(3, 3);
+		//		m2f_angle << cos(B), -sin(B), 0,
+		//					 sin(B),  cos(B), 0,
+		//						0,      0,    1;
+		// 3. 右移 -> (org_x, org_y) */
+
+		/*// 左移
+		m3f_tmp = m3f_move_left * m3f_ccdGlue;
+		cout << m3f_tmp << endl << endl;
+		// 旋转
+		m3f_tmp = m3f_angle * m3f_tmp;
+		cout << m3f_tmp << endl << endl;
+		// 右移
+		m3f_tmp = m3f_move_right * m3f_tmp;
+		cout << m3f_tmp << endl << endl;*/
+
+		// 旋转
+		m3f_tmp = m3f_move_right * m3f_angle * m3f_move_left * m3f_ccdGlue;
+
+		// 平移
+		m3f_tmp = m3f_offset * m3f_tmp;
+
+		// 返回
+		m3f_result_ccdGlue(index, 0) = m3f_tmp(0, 0);
+		m3f_result_ccdGlue(index, 1) = m3f_tmp(1, 0);
+		m3f_result_ccdGlue(index, 2) = vector_ccdGlue.at(index).Z;
+	}
+
+	return  m3f_result_ccdGlue;
+}
+
+
 
 // 修改全局的速度
 void Workflow::set_speed(float speed, float acc, float dec)

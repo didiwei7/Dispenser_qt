@@ -23,6 +23,7 @@ class IO : public QWidget
     Q_OBJECT
 public:
     explicit IO(QWidget *parent = nullptr);
+	~IO();
 
 private:
 	void setupUi();
@@ -36,8 +37,11 @@ private:
 
 private:
 	QThreadPool thread_pool;
-	QFuture<void> future_thread_updateOutputStatus;
-	bool exit_thread_updateOutputStatus; 
+
+	bool is_updateInputStatus_ok;
+	bool start_thread_updateInputStatus;
+	bool close_thread_updateInputStatus;
+	QFuture<void> future_thread_updateInputStatus;
 	void thread_updateInputStatus();
 
 	void updateOutputStatus();

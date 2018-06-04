@@ -7,10 +7,6 @@
 #include <QtSql>
 #include <QMap>
 
-#include <Eigen/Dense>
-using namespace std;
-using namespace Eigen;
-
 // 控制卡
 #include "adt8949.h"
 #include "../../adt/adtcontrol.h"
@@ -37,6 +33,7 @@ class PointDebug : public QWidget
     Q_OBJECT
 public:
     explicit PointDebug(QWidget *parent = nullptr);
+	~PointDebug();
 
 private:
     void setupUi();
@@ -182,10 +179,10 @@ private:
     QLineEdit *edit_Z_step;
 
 public:
-	QInput INPUT_X[4];
-	QInput INPUT_Y[4];
-	QInput INPUT_Z[4];
-	QInput INPUT_A[4];
+	QInput *INPUT_X[4];
+	QInput *INPUT_Y[4];
+	QInput *INPUT_Z[4];
+	QInput *INPUT_A[4];
 
 public:
     // 设置运动模式

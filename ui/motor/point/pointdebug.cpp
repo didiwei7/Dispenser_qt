@@ -3,29 +3,21 @@
 
 PointDebug::PointDebug(QWidget *parent) : QWidget(parent)
 {
-	//Matrix2d a;
-	//a << 1, 2,
-	//	3, 4;
-	//MatrixXd b(2, 2);
-	//b << 2, 3,
-	//	1, 4;
-	//cout << "a + b =\n" << a + b << endl;
-	//cout << "a - b =\n" << a - b << endl;
-	//cout << "Doing a += b;" << endl;
-	//a += b;
-	//cout << "Now a =\n" << a << endl;
-	//cout << "a^T=  " << a.transpose() << endl;
-	//cout << "a*b= " << a*b << endl;
-	//Vector3d v(1, 2, 3);
-	//Vector3d w(1, 0, 0);
-	//cout << "-v + w - v =\n" << -v + w - v << endl;
-	//cout << v << endl;
-	//cout << v.transpose() << endl;
-
-
     setupUi();
 	setConnect();
 	setThread();
+}
+
+PointDebug::~PointDebug()
+{
+	// 关闭线程
+	close_thread_updateCurrentPos = true;
+	close_thread_updateInputStatus = true;
+
+	// 销毁线程池
+	thread_pool.waitForDone();
+	thread_pool.clear();
+	thread_pool.destroyed();
 }
 
 // 初始化Ui
@@ -221,6 +213,14 @@ void PointDebug::setGroupIO()
 	QLabel *label_a = new QLabel(QStringLiteral("A"));
 	label_a->setAlignment(Qt::AlignCenter);
 
+	for (int i = 0; i < 4; i++)
+	{
+		INPUT_X[i] = new QInput(this);
+		INPUT_Y[i] = new QInput(this);
+		INPUT_Z[i] = new QInput(this);
+		INPUT_A[i] = new QInput(this);
+	}
+
 	// 【2】 布局
 	QGridLayout *layout_2_1 = new QGridLayout();
 	layout_2_1->addWidget(label_x, 0, 1, Qt::AlignCenter);
@@ -229,28 +229,28 @@ void PointDebug::setGroupIO()
 	layout_2_1->addWidget(label_a, 0, 4, Qt::AlignCenter);
 
 	layout_2_1->addWidget(label_p, 1, 0, Qt::AlignCenter);
-	layout_2_1->addWidget(&INPUT_X[0], 1, 1, Qt::AlignCenter);
-	layout_2_1->addWidget(&INPUT_Y[0], 1, 2, Qt::AlignCenter);
-	layout_2_1->addWidget(&INPUT_Z[0], 1, 3, Qt::AlignCenter);
-	layout_2_1->addWidget(&INPUT_A[0], 1, 4, Qt::AlignCenter);
+	layout_2_1->addWidget(INPUT_X[0], 1, 1, Qt::AlignCenter);
+	layout_2_1->addWidget(INPUT_Y[0], 1, 2, Qt::AlignCenter);
+	layout_2_1->addWidget(INPUT_Z[0], 1, 3, Qt::AlignCenter);
+	layout_2_1->addWidget(INPUT_A[0], 1, 4, Qt::AlignCenter);
 
 	layout_2_1->addWidget(label_o, 2, 0, Qt::AlignCenter);
-	layout_2_1->addWidget(&INPUT_X[1], 2, 1, Qt::AlignCenter);
-	layout_2_1->addWidget(&INPUT_Y[1], 2, 2, Qt::AlignCenter);
-	layout_2_1->addWidget(&INPUT_Z[1], 2, 3, Qt::AlignCenter);
-	layout_2_1->addWidget(&INPUT_A[1], 2, 4, Qt::AlignCenter);
+	layout_2_1->addWidget(INPUT_X[1], 2, 1, Qt::AlignCenter);
+	layout_2_1->addWidget(INPUT_Y[1], 2, 2, Qt::AlignCenter);
+	layout_2_1->addWidget(INPUT_Z[1], 2, 3, Qt::AlignCenter);
+	layout_2_1->addWidget(INPUT_A[1], 2, 4, Qt::AlignCenter);
 
 	layout_2_1->addWidget(label_n, 3, 0, Qt::AlignCenter);
-	layout_2_1->addWidget(&INPUT_X[2], 3, 1, Qt::AlignCenter);
-	layout_2_1->addWidget(&INPUT_Y[2], 3, 2, Qt::AlignCenter);
-	layout_2_1->addWidget(&INPUT_Z[2], 3, 3, Qt::AlignCenter);
-	layout_2_1->addWidget(&INPUT_A[2], 3, 4, Qt::AlignCenter);
+	layout_2_1->addWidget(INPUT_X[2], 3, 1, Qt::AlignCenter);
+	layout_2_1->addWidget(INPUT_Y[2], 3, 2, Qt::AlignCenter);
+	layout_2_1->addWidget(INPUT_Z[2], 3, 3, Qt::AlignCenter);
+	layout_2_1->addWidget(INPUT_A[2], 3, 4, Qt::AlignCenter);
 
 	layout_2_1->addWidget(label_alarm, 4, 0, Qt::AlignCenter);
-	layout_2_1->addWidget(&INPUT_X[3], 4, 1, Qt::AlignCenter);
-	layout_2_1->addWidget(&INPUT_Y[3], 4, 2, Qt::AlignCenter);
-	layout_2_1->addWidget(&INPUT_Z[3], 4, 3, Qt::AlignCenter);
-	layout_2_1->addWidget(&INPUT_A[3], 4, 4, Qt::AlignCenter);
+	layout_2_1->addWidget(INPUT_X[3], 4, 1, Qt::AlignCenter);
+	layout_2_1->addWidget(INPUT_Y[3], 4, 2, Qt::AlignCenter);
+	layout_2_1->addWidget(INPUT_Z[3], 4, 3, Qt::AlignCenter);
+	layout_2_1->addWidget(INPUT_A[3], 4, 4, Qt::AlignCenter);
 
 	QHBoxLayout *layout_1 = new QHBoxLayout();
 	layout_1->addLayout(layout_2_1);
@@ -278,9 +278,9 @@ void PointDebug::setGroupCurrentpos()
 {
     group_currentpos = new QGroupBox(QStringLiteral("当前位置"));
 
-    QLabel *labelx = new QLabel(QStringLiteral("X(mm):"));
-    QLabel *labely = new QLabel(QStringLiteral("Y(mm):"));
-    QLabel *labelz = new QLabel(QStringLiteral("Z(mm):"));
+    QLabel *labelx = new QLabel(QStringLiteral("X(mm):"), this);
+    QLabel *labely = new QLabel(QStringLiteral("Y(mm):"), this);
+    QLabel *labelz = new QLabel(QStringLiteral("Z(mm):"), this);
 
     label_X_currentpos = new QLabel();
     label_X_currentpos->setAlignment(Qt::AlignLeft);
@@ -408,20 +408,73 @@ void PointDebug::setViewPoint()
 		// 【2】 创建数据库表单
 		QSqlQuery query_point(db_point);
 		db_point.open();
-		query_point.exec(QLatin1String("create table workStation1("
+		query_point.exec(QLatin1String(	"create table point_main("
 										"ID integer primary key,"
 										"name varchar,"
 										"description varchar,"
 										"X varchar,"
 										"Y varchar,"
 										"Z varchar,"
+										"center_X varchar,"
+										"center_Y varchar,"
 										"open bool,"
 										"openAdvance integer,"
 										"openDelay integer,"
 										"close bool,"
 										"closeAdvance integer,"
 										"closeDelay integer,"
-										"type bool)"));
+										"type varchar)"));
+
+		query_point.exec(QLatin1String( "create table point_glue1("
+										"ID integer primary key,"
+										"name varchar,"
+										"description varchar,"
+										"X varchar,"
+										"Y varchar,"
+										"Z varchar,"
+										"center_X varchar,"
+										"center_Y varchar,"
+										"open bool,"
+										"openAdvance integer,"
+										"openDelay integer,"
+										"close bool,"
+										"closeAdvance integer,"
+										"closeDelay integer,"
+										"type varchar)"));
+
+		query_point.exec(QLatin1String( "create table point_glue2("
+										"ID integer primary key,"
+										"name varchar,"
+										"description varchar,"
+										"X varchar,"
+										"Y varchar,"
+										"Z varchar,"
+										"center_X varchar,"
+										"center_Y varchar,"
+										"open bool,"
+										"openAdvance integer,"
+										"openDelay integer,"
+										"close bool,"
+										"closeAdvance integer,"
+										"closeDelay integer,"
+										"type varchar)"));
+
+		query_point.exec(QLatin1String( "create table point_glue3("
+										"ID integer primary key,"
+										"name varchar,"
+										"description varchar,"
+										"X varchar,"
+										"Y varchar,"
+										"Z varchar,"
+										"center_X varchar,"
+										"center_Y varchar,"
+										"open bool,"
+										"openAdvance integer,"
+										"openDelay integer,"
+										"close bool,"
+										"closeAdvance integer,"
+										"closeDelay integer,"
+										"type varchar)"));
 	}
 	else
 	{
@@ -518,9 +571,9 @@ void PointDebug::setViewPoint()
     // 设置整行选中
 	pointview->setSelectionBehavior(QAbstractItemView::SelectRows);
 	// 设置列宽
-	pointview->setColumnWidth(0, 30);
+	pointview->setColumnWidth(0, 25);
 	pointview->setColumnWidth(1, 200);
-	pointview->setColumnWidth(2, 200);
+	pointview->setColumnWidth(2, 160);
 	pointview->setColumnWidth(3, 60);
 	pointview->setColumnWidth(4, 60);
 	pointview->setColumnWidth(5, 60);
@@ -531,6 +584,8 @@ void PointDebug::setViewPoint()
 	pointview->setColumnWidth(10, 60);
 	pointview->setColumnWidth(11, 60);
 	pointview->setColumnWidth(12, 60);
+	pointview->setColumnWidth(13, 60);
+	pointview->setColumnWidth(14, 60);
     // 可弹出右键菜单
     pointview->setContextMenuPolicy(Qt::CustomContextMenu);
 	// 隐藏表头
@@ -647,18 +702,20 @@ void PointDebug::on_action_add()
 
 	QSqlRecord record_point = pointmodel->record();
 	record_point.setValue("ID", row_count);
-	record_point.setValue("name",        "Point");
+	record_point.setValue("name", "Point");
 	record_point.setValue("description", "...");
 	record_point.setValue("X", "0.000");
 	record_point.setValue("Y", "0.000");
 	record_point.setValue("Z", "0.000");
+	record_point.setValue("center_X", "0.000");
+	record_point.setValue("center_Y", "0.000");
 	record_point.setValue("open", false);
 	record_point.setValue("openAdvance", 0);
 	record_point.setValue("openDelay", 0);
 	record_point.setValue("close", false);
 	record_point.setValue("closeAdvance", 0); 
 	record_point.setValue("closeDelay", 0);
-	record_point.setValue("type", 0);
+	record_point.setValue("type", "line");
 
 	pointmodel->insertRecord(row_count, record_point);
 	// pointmodel->submitAll();
@@ -720,13 +777,15 @@ void PointDebug::on_action_insert()
 	record_point.setValue("X", "0.000");
 	record_point.setValue("Y", "0.000");
 	record_point.setValue("Z", "0.000");
+	record_point.setValue("center_X", "0.000");
+	record_point.setValue("center_Y", "0.000");
 	record_point.setValue("open", false);
 	record_point.setValue("openAdvance", 0);
 	record_point.setValue("openDelay", 0);
 	record_point.setValue("close", false);
 	record_point.setValue("closeAdvance", 0);
 	record_point.setValue("closeDelay", 0);
-	record_point.setValue("type", 0);
+	record_point.setValue("type", "line");
 
 	pointmodel->insertRecord(row, record_point);
 	// pointmodel->submitAll();
@@ -1206,26 +1265,65 @@ void PointDebug::on_btn_z_home()
 // 更新当前位置
 void PointDebug::thread_updateCurrentPos()
 {
-	// if (!(init_card() == 1)) return;
+    // if (!(init_card() == 1)) return;
 
-	while (close_thread_updateInputStatus == false)
+	int step_pos = 0;
+
+	while (close_thread_updateCurrentPos == false)
 	{
+		switch (step_pos)
+		{
+		case 0:		// 等待触发
+		{
+			if (start_thread_updateCurrentPos == false)
+			{
+				Sleep(2);
+				step_pos = 0;
+			}
+			else
+			{
+				step_pos = 10;
+			}
+		}
+		break;
 
-		get_current_pos_axis(AXISNUM::X); 
+		case 10:	// 刷新Input
+		{
+			float fx_axis = get_current_pos_axis(AXISNUM::X);
+			float fy_axis = get_current_pos_axis(AXISNUM::Y);
+			float fz_axis = get_current_pos_axis(AXISNUM::Z);
 
-		float fx_axis = get_current_pos_axis(AXISNUM::X);
-		float fy_axis = get_current_pos_axis(AXISNUM::Y);
-		float fz_axis = get_current_pos_axis(AXISNUM::Z);
+			QString sx_axis = QString::number(fx_axis, 'f', 3);
+			QString sy_axis = QString::number(fy_axis, 'f', 3);
+			QString sz_axis = QString::number(fz_axis, 'f', 3);
 
-		QString sx_axis = QString::number(fx_axis, 'f', 3);
-		QString sy_axis = QString::number(fy_axis, 'f', 3);
-		QString sz_axis = QString::number(fz_axis, 'f', 3);
+			label_X_currentpos->setText(sx_axis);
+			label_Y_currentpos->setText(sy_axis);
+			label_Z_currentpos->setText(sz_axis);
 
-		label_X_currentpos->setText(sx_axis);
-		label_Y_currentpos->setText(sy_axis);
-		label_Z_currentpos->setText(sz_axis);
+			Sleep(5);
 
-		Sleep(5);
+			step_pos = 0;
+		}
+		break;
+
+		case 8888:	// 退出流程
+		{
+			start_thread_updateCurrentPos = false;
+			step_pos = 0;
+		}
+		break;
+
+		case 9999:	// 退出线程
+		{
+			// 安全退出该线程
+			close_thread_updateCurrentPos = true;
+		}
+		break;
+
+		default:
+			break;
+		}
 	}
 
 }
@@ -1233,27 +1331,70 @@ void PointDebug::thread_updateCurrentPos()
 // 更新IO信息
 void PointDebug::thread_updateInputStatus()
 {
-	if (!(init_card() == 1)) return;
+	// if (!(init_card() == 1)) return;
+
+	int step_input = 0;
 
 	while (close_thread_updateInputStatus == false)
 	{
-		INPUT_X[0].setStatus(read_in_bit(4));
-		INPUT_X[1].setStatus(read_in_bit(12));
-		INPUT_X[2].setStatus(read_in_bit(5));
-		INPUT_X[3].setStatus(read_in_bit(0));
+		switch (step_input)
+		{
+		case 0:		// 等待触发
+		{
+			if (start_thread_updateInputStatus == false)
+			{
+				Sleep(2);
+				step_input = 0;
+			}
+			else
+			{
+				step_input = 10;
+			}
+		}
+		break;
 
-		INPUT_Y[0].setStatus(read_in_bit(6));
-		INPUT_Y[1].setStatus(read_in_bit(13));
-		INPUT_Y[2].setStatus(read_in_bit(7));
-		INPUT_Y[3].setStatus(read_in_bit(1));
+		case 10:	// 刷新Input
+		{
+			INPUT_X[0]->setStatus(read_in_bit(4));
+			INPUT_X[1]->setStatus(read_in_bit(12));
+			INPUT_X[2]->setStatus(read_in_bit(5));
+			INPUT_X[3]->setStatus(read_in_bit(0));
 
-		INPUT_Z[0].setStatus(read_in_bit(8));
-		INPUT_Z[1].setStatus(read_in_bit(14));
-		INPUT_Z[2].setStatus(read_in_bit(9));
-		INPUT_Z[3].setStatus(read_in_bit(2));
+			INPUT_Y[0]->setStatus(read_in_bit(6));
+			INPUT_Y[1]->setStatus(read_in_bit(13));
+			INPUT_Y[2]->setStatus(read_in_bit(7));
+			INPUT_Y[3]->setStatus(read_in_bit(1));
 
-		Sleep(10);
+			INPUT_Z[0]->setStatus(read_in_bit(8));
+			INPUT_Z[1]->setStatus(read_in_bit(14));
+			INPUT_Z[2]->setStatus(read_in_bit(9));
+			INPUT_Z[3]->setStatus(read_in_bit(2));
+
+			Sleep(10);
+
+			step_input = 0;
+		}
+		break;
+
+		case 8888:	// 退出流程
+		{
+			start_thread_updateInputStatus = false;
+			step_input = 0;
+		}
+		break;
+
+		case 9999:	// 退出线程
+		{
+			// 安全退出该线程
+			close_thread_updateInputStatus = true;
+		}
+		break;
+
+		default:
+			break;
+		}
 	}
+
 }
 
 

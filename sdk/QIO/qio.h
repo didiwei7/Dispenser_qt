@@ -10,7 +10,7 @@ class QIOSHARED_EXPORT QInput : public QWidget
 {
     Q_OBJECT
 public:
-    explicit QInput(QWidget *parent=0);
+    explicit QInput(QWidget *parent = Q_NULLPTR);
 
 public:
     void setStatus(int status);
@@ -25,6 +25,7 @@ protected:
     void paintEvent(QPaintEvent *);
 };
 
+
 class QIOSHARED_EXPORT QInputLabel : public QWidget
 {
     Q_OBJECT
@@ -37,20 +38,29 @@ public:
     void setStatus(int state);
 
 private:
-    QLabel  *label_name;
+    QLabel *label_name;
     QInput *label_state;
 };
 
 
-class QIOSHARED_EXPORT QOutputButton : public QPushButton
+class QIOSHARED_EXPORT QOutputButton : public QWidget
 {
     Q_OBJECT
 public:
-    explicit QOutputButton(QPushButton *parent=0);
-    explicit QOutputButton(const QString &name, int state = 0, QPushButton *parent = Q_NULLPTR);
+    explicit QOutputButton(QWidget *parent = Q_NULLPTR);
+    explicit QOutputButton(const QString &name, int state = 0, QWidget *parent = Q_NULLPTR);
+
+signals:
+	void wclicked();
 
 public:
     void setStatus(int state);
+
+private:
+	void on_btn_output();
+
+private:
+	QPushButton *btn_output;
 };
 
 #endif // QIO_H
