@@ -50,12 +50,13 @@ void MainWidget::setConnect()
             stackedWidget,  &QStackedWidget::setCurrentIndex);
 
 	// 【2】 自定义信号槽
-	connect(w_workflow,  &Workflow::changedRundataLabel,
-		    w_operation, &Operation::on_changedRundataLabel);
-	connect(w_workflow,  &Workflow::changedRundataText,
-		    w_operation, &Operation::on_changedRundataText);
-	connect(w_operation, &Operation::changedConfigGlue,
-			w_workflow,  &Workflow::on_changedConfigGlue);
-	connect(w_motor->w_pointDebug, &PointDebug::changedSqlModel,
-			w_workflow,  &Workflow::on_changedSqlModel);
+	connect(w_workflow,  &Workflow::changedRundataLabel, w_operation, &Operation::on_changedRundataLabel);
+	connect(w_workflow,  &Workflow::changedRundataText, w_operation, &Operation::on_changedRundataText);
+	connect(w_workflow,  &Workflow::changedOffsetChart, w_operation, &Operation::on_changedOffsetChart);	
+	connect(w_workflow,  &Workflow::changedOffset, w_operation, &Operation::on_changedOffset);
+			
+	connect(w_operation, &Operation::changedConfigGlue, w_workflow, &Workflow::on_changedConfigGlue);
+	connect(w_operation, &Operation::changedConfigGlueOffset, w_workflow, &Workflow::on_changedConfigGlueOffset);
+	connect(w_motor->w_pointDebug, &PointDebug::changedSqlModel, w_workflow, &Workflow::on_changedSqlModel);
+			
 }

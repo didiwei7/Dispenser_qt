@@ -329,6 +329,7 @@ void move_axis_continue(int axis, int dir)
 }
 
 
+
 // 单轴绝对运动, 带速度, 带加减速, 带正负限位
 void move_axis_abs(int axis, float pos, float speed, float acc, float dec)
 {
@@ -368,6 +369,23 @@ void move_axis_continue(int axis, int dir, float speed, float acc, float dec)
 	adt8949_continue_move(0, axis, dir);
 }
 
+
+// 设置插补运动速度, 带起始速度, 带加减速, 带模式
+void set_inp_speed_mode(float startv, float speed, float acc, unsigned short mode)
+{
+	adt8949_set_admode(0, 63, mode);
+	adt8949_set_startv(0, 63, startv);
+	adt8949_set_speed(0, 63, speed);
+	adt8949_set_acc(0, 63, acc);	// 加速度
+}
+
+// 设置匀速插补运动速度, 带速度
+void set_inp_speed(float speed)
+{
+	adt8949_set_admode(0, 63, 1);
+	adt8949_set_startv(0, 63, speed);
+	adt8949_set_speed(0, 63, speed);
+}
 
 // X, Y, Z三轴直线插补, by x_pos, y_pos, z_pos
 void move_inp_abs_line3(float x_pos, float y_pos, float z_pos)

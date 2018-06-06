@@ -24,6 +24,7 @@ typedef struct _CCDGlue
 	float            Z;                       // Z
 	float            center_X;				  // 圆心X
 	float            center_Y;				  // 圆心Y
+	bool			 laser;					  // 是否开启镭射
 	bool             open;					  // 是否开胶
 	int              openAdvance;			  // 提前开胶时间
 	int              openDelay;               // 延迟开胶时间
@@ -41,12 +42,13 @@ typedef struct _CCDGlue
 		Z = 0.000;                    // Z
 		center_X = 0.000;			  // 圆心X
 		center_Y = 0.000;			  // 圆心Y
+		laser = false;				  // 是否开启镭射
 		open = false;				  // 是否开胶
 		openAdvance = 0;			  // 提前开胶时间
-		openDelay = 0;                 // 延迟开胶时间
+		openDelay = 0;                // 延迟开胶时间
 		close = false;                // 是否关胶
 		closeAdvance = 0;             // 提前关胶时间
-		closeDelay = 0;                // 延后关胶时
+		closeDelay = 0;               // 延后关胶时间
 		type = 0;					  // 类型
 	}
 
@@ -61,6 +63,9 @@ typedef struct _CCDGlue
 		X = other.X;
 		Y = other.Y;
 		Z = other.Z;
+		center_X = other.center_X;
+		center_Y = other.center_Y;
+		laser = other.laser;
 		open = other.open;
 		openAdvance = other.openAdvance;
 		openDelay = other.openDelay;
@@ -199,7 +204,13 @@ enum AXISNUM
 	Z = 3
 };
 
-
+enum ADMODE
+{
+	S = 0,
+	T = 1,
+	INDEX = 2,
+	TRIAN = 3
+};
 
 // 初始化控制卡 第一次调用才初始化, 第二次调用时返回第一次初始化的结果
 int init_card();
@@ -277,6 +288,12 @@ void move_axis_offset(int axis, float distance, float speed, float acc, float de
 // 连续运动, 带方向(0+, 1-), 带速度, 带加减速, 带正负限位
 void move_axis_continue(int axis, int dir, float speed, float acc, float dec);
 
+
+// 设置插补运动, 带起始速度, 带加减速, 带模式
+void set_inp_speed_mode(float startv, float speed, float acc, unsigned short mode);
+
+// 设置匀速插补运动速度, 带速度
+void set_inp_speed(float speed);
 
 // X, Y, Z三轴直线插补, by x_pos, y_pos, z_pos
 void move_inp_abs_line3(float x_pos, float y_pos, float z_pos);

@@ -127,11 +127,7 @@ void QtCentral::on_dockWidgetDestroying(DockWidget *dockWidget)
 MainWindow::MainWindow(QWidget *parent): QMainWindow(parent)
 {
 	// 【1】 初始化板卡
-	if (init_card())
-	{
-		set_home_mode();
-		set_home_speed();
-	}
+	init_card();
 
 
 

@@ -131,6 +131,22 @@ public:		// 点胶1
 	QFuture<void> future_thread_glue_1;
 	void thread_glue_1();
 
+public:		// 点胶2
+	bool is_config_glue2;		// 是否配置  glue1
+	bool is_glue2_ok;
+	bool start_thread_glue_2;
+	bool close_thread_glue_2;
+	QFuture<void> future_thread_glue_2;
+	void thread_glue_2();
+
+public:		// 点胶3
+	bool is_config_glue3;		// 是否配置  glue1
+	bool is_glue3_ok;
+	bool start_thread_glue_3;
+	bool close_thread_glue_3;
+	QFuture<void> future_thread_glue_3;
+	void thread_glue_3();
+
 
 public:
 	// 可通过信号槽来刷新点位, 但不要在运行中设置
@@ -142,18 +158,23 @@ public:
 	float org_ccdglue_x[3];
 	float org_ccdglue_y[3];
 
+	// 可通过信号槽来刷新偏移量, 但不要在运行中设置
+	float calib_offset_x;
+	float calib_offset_y;
+	float calib_offset_z;
 
 public:
-	bool is_config_glue2;
-	bool is_config_glue3;
-	void thread_glue_2();
-	void thread_glue_3();
+	float distance_ccd_needle_x;
+	float distance_ccd_neddle_y;
 
+	float distance_ccd_laser_x;
+	float diatance_ccd_laser_y;
+
+	float distance_laser_needle_x;
+	float distance_laser_needle_y;
+	float distance_laser_needle_z;
 
 public:		// 校针
-	float glue_offset_x;
-	float glue_offset_y;
-
 	bool is_calibNeedle_ok;
 	bool start_thread_calibNeedle;
 	bool close_thread_calibNeedle;
@@ -167,13 +188,20 @@ public:		// 点位数据
 	QSqlTableModel *model_glue3;
 
 signals:	// 自定义信号
-	void changedRundataLabel(QString str);	// To Operation
-	void changedRundataText(QString str);	// To Operation
-	void changedOffsetChart(float x, float y, float A);	// To Operation
+	// To Operation
+	void changedRundataLabel(QString str);	
+	void changedRundataText(QString str);	
+	void changedOffsetChart(float x, float y, float A);	
+	void changedOffset(float offset_x, float offset_y, float offset_z);
 	
 public slots:	// 连接外部信号
-	void on_changedConfigGlue(bool glue1, bool glue2, bool glue3);			// From Operation
-	void on_changedSqlModel(int index);		// From PointDebug
+	// From Operation
+	void on_changedConfigGlue(bool glue1, bool glue2, bool glue3);			
+	void on_changedConfigGlueOffset(float offset_x, float offset_y, float offset_z);
+	
+	// From PointDebug
+	void on_changedSqlModel(int index);		
+
 
 public:
 	// 写Log文件

@@ -6,7 +6,6 @@
 #include <QtConcurrent>
 
 // 控制卡
-#include "adt8949.h"
 #include "../../adt/adtcontrol.h"
 
 #include "../../sdk/QIO/qio.h"

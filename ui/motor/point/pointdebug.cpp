@@ -417,6 +417,7 @@ void PointDebug::setViewPoint()
 										"Z varchar,"
 										"center_X varchar,"
 										"center_Y varchar,"
+										"laser bool,"
 										"open bool,"
 										"openAdvance integer,"
 										"openDelay integer,"
@@ -434,6 +435,7 @@ void PointDebug::setViewPoint()
 										"Z varchar,"
 										"center_X varchar,"
 										"center_Y varchar,"
+										"laser bool,"
 										"open bool,"
 										"openAdvance integer,"
 										"openDelay integer,"
@@ -451,6 +453,7 @@ void PointDebug::setViewPoint()
 										"Z varchar,"
 										"center_X varchar,"
 										"center_Y varchar,"
+										"laser bool,"
 										"open bool,"
 										"openAdvance integer,"
 										"openDelay integer,"
@@ -468,6 +471,7 @@ void PointDebug::setViewPoint()
 										"Z varchar,"
 										"center_X varchar,"
 										"center_Y varchar,"
+										"laser bool,"
 										"open bool,"
 										"openAdvance integer,"
 										"openDelay integer,"
@@ -709,6 +713,7 @@ void PointDebug::on_action_add()
 	record_point.setValue("Z", "0.000");
 	record_point.setValue("center_X", "0.000");
 	record_point.setValue("center_Y", "0.000");
+	record_point.setValue("laser", false);
 	record_point.setValue("open", false);
 	record_point.setValue("openAdvance", 0);
 	record_point.setValue("openDelay", 0);
@@ -779,6 +784,7 @@ void PointDebug::on_action_insert()
 	record_point.setValue("Z", "0.000");
 	record_point.setValue("center_X", "0.000");
 	record_point.setValue("center_Y", "0.000");
+	record_point.setValue("laser", false);
 	record_point.setValue("open", false);
 	record_point.setValue("openAdvance", 0);
 	record_point.setValue("openDelay", 0);

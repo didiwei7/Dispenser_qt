@@ -44,17 +44,15 @@ public:
 	void setGroupDebug();
 	void setGroupChart();
 	void setGroupConfig();
+	void setGroupDistanceOffset();
 
 	QGroupBox *group_warn;
 	QGroupBox *group_glue;
 	QGroupBox *group_debug;
 	QGroupBox *group_chart;
 	QGroupBox *group_config;
+	QGroupBox *group_distance_offset;
 
-public slots:
-	void on_changedRundataLabel(QString str);
-	void on_changedRundataText(QString str);
-	void on_changedOffsetChart(float x, float y, float A);
 
 public:
     void setChart_offset();
@@ -119,8 +117,34 @@ public:
 	QCheckBox *check_glue2;
 	QCheckBox *check_glue3;
 
+public:
+	void on_btn_saveDistanceOffset();
+
+	QLineEdit *edit_distance_ccd_needle_x;
+	QLineEdit *edit_distance_ccd_needle_y;
+
+	QLineEdit *edit_distance_ccd_laser_x;
+	QLineEdit *edit_distance_ccd_laser_y;
+
+	QLineEdit *edit_distance_laser_needle_x;
+	QLineEdit *edit_distance_laser_needle_y;
+	QLineEdit *edit_distance_laser_needle_z;
+
+	QLineEdit *edit_offset_ccd_needle_x;
+	QLineEdit *edit_offset_ccd_needle_y;
+	QLineEdit *edit_offset_laser_needle_z;
+	
+	QPushButton *btn_saveDistanceOffset;
+
 signals:
 	void changedConfigGlue(bool glue1, bool glue2, bool glue3);
+	void changedConfigGlueOffset(float offset_x, float offset_y, float offset_z);
+
+public slots:
+	void on_changedRundataLabel(QString str);
+	void on_changedRundataText(QString str);
+	void on_changedOffsetChart(float x, float y, float A);
+	void on_changedOffset(float offset_x, float offset_y, float offset_z);
 
 public:
 	// 获取当前时间
