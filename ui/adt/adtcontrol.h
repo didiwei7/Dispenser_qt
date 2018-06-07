@@ -307,7 +307,6 @@ void move_imp_abs_helix2(float pos_x, float pos_y, float pos_z, float center_x, 
 // X, Y‘≤ª°≤Â≤π by pos_x, pos_y, center_x, center_y
 void move_inp_abs_arc2(float pos_x, float pos_y, float center_x, float center_y);
 
-
 // ‘À∂Ø, 
 bool axis_isMoving(int axis);
 

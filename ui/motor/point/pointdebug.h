@@ -14,6 +14,8 @@
 // 载入动态库
 #include "../../../sdk/QIO/qio.h"
 #include "../../../sdk/QNavigationBar/qnavigationbar.h"
+#include "../../../sdk/QMySlider/qmyslider.h"
+class QMySlider;
 class QInput;
 class QHNavigationBar;
 
@@ -140,7 +142,7 @@ private:
     QPushButton *Y_negative;
     QPushButton *Z_positive;
     QPushButton *Z_negative;
-    QSlider     *slider_speed;
+	QMySlider   *slider_speed;
 
 private:
 	void on_btn_stop();

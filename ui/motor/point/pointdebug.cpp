@@ -48,6 +48,13 @@ void PointDebug::setupUi()
 	layout_2_1->addSpacerItem(new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding));
 
 	setLayout(layout_1);
+
+	// 写入样式表
+	QFile file("../bin/qss/pointDebug.qss");
+	file.open(QFile::ReadOnly);
+	QString style = file.readAll();
+	setStyleSheet(style);
+	file.close();
 }
 
 // 初始化信号槽
@@ -72,7 +79,7 @@ void PointDebug::setConnect()
     connect(radio_short,    &QRadioButton::clicked, this, &PointDebug::on_radio_short);
 
 	// 【3】 Move Slider
-	connect(slider_speed,   &QSlider::valueChanged, this, &PointDebug::on_slider_speed_Changed);
+	connect(slider_speed,   &QMySlider::sliderValueChanged, this, &PointDebug::on_slider_speed_Changed);
 
 	// 【4】 Move BTN
     connect(X_positive, &QPushButton::clicked, this, &PointDebug::on_X_positive_clicked);
@@ -124,19 +131,20 @@ void PointDebug::setGroupMove()
 
     group_move = new QGroupBox(QStringLiteral("点位移动"));
 
-    slider_speed = new QSlider(Qt::Horizontal);
+    slider_speed = new QMySlider();
+	slider_speed->setText(QStringLiteral("当前速度"));
 	slider_speed->setRange(0, 1000);
-	slider_speed->setPageStep(1);
 	slider_speed->setValue(100);
+	slider_speed->setFixedWidth(250);
 
-    X_negative = new QPushButton(QStringLiteral("-X"));
-    X_positive = new QPushButton(QStringLiteral("X+"));
+	X_negative = new QPushButton(QIcon("../ui/resources/left.png"), NULL);
+    X_positive = new QPushButton(QIcon("../ui/resources/right.png"), NULL);
 
-    Y_positive = new QPushButton(QStringLiteral("Y+"));
-    Y_negative = new QPushButton(QStringLiteral("Y-"));
+    Y_positive = new QPushButton(QIcon("../ui/resources/up.png"), NULL);
+    Y_negative = new QPushButton(QIcon("../ui/resources/down.png"), NULL);
 
-    Z_positive = new QPushButton(QStringLiteral("Z+"));
-    Z_negative = new QPushButton(QStringLiteral("Z-"));
+    Z_positive = new QPushButton(QIcon("../ui/resources/up.png"), QStringLiteral("Z+"));
+    Z_negative = new QPushButton(QIcon("../ui/resources/down.png"), QStringLiteral("Z-"));
 
     QVBoxLayout *layout_1 = new QVBoxLayout();
     QHBoxLayout *layout_2 = new QHBoxLayout();      // 二级布局
@@ -144,14 +152,17 @@ void PointDebug::setGroupMove()
     QVBoxLayout *layout_3_2 = new QVBoxLayout();
 
     layout_3_1->addWidget(Y_positive);
+	layout_3_1->addSpacing(20);
     layout_3_1->addWidget(Y_negative);
     layout_3_2->addWidget(Z_positive);
+	layout_3_2->addSpacing(20);
     layout_3_2->addWidget(Z_negative);
 
     layout_2->addWidget(X_negative);
     layout_2->addLayout(layout_3_1);
     layout_2->addWidget(X_positive);
     layout_2->addLayout(layout_3_2);
+	layout_2->addSpacerItem(new QSpacerItem(0, 0, QSizePolicy::Expanding, QSizePolicy::Minimum));
 
     layout_1->addWidget(slider_speed);
     layout_1->addLayout(layout_2);

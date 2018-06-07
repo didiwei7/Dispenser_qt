@@ -147,6 +147,12 @@ public:		// 点胶3
 	QFuture<void> future_thread_glue_3;
 	void thread_glue_3();
 
+public:		// 空跑点胶轨迹
+	bool is_ccdGlue3_ok;
+	bool start_thread_ccd_glue_1;
+	bool close_thread_ccd_glue_1;
+	QFuture<void> future_ccd_glue_1;
+	void thread_ccd_glue_1();
 
 public:
 	// 可通过信号槽来刷新点位, 但不要在运行中设置
@@ -226,6 +232,8 @@ public:		// 获取点位
 
 	MatrixXf CalCCDGluePoint(const QVector<CCDGlue> vector_ccdGlue, const float offset_x, const float offset_y);
 	MatrixXf CalCCDGluePoint(const QVector<CCDGlue> vector_ccdGlue, const float offset_x, const float offset_y, const float offset_angle, const float org_x, const float org_y);
+
+	void CalCCDGlueCenterPoint(float center_pos[2], const float center_x, const float center_y, const float offset_x, const float offset_y, const float offset_angle, const float org_x, const float org_y);
 
 	float wSpeed;
 	float wAcc;

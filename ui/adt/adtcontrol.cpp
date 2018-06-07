@@ -426,7 +426,6 @@ void move_inp_abs_arc2(float pos_x, float pos_y, float center_x, float center_y)
 }
 
 
-
 // ≈–∂œ «∑Ò‘À∂Ø by axis
 bool axis_isMoving(int axis)
 {
