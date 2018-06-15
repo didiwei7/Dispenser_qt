@@ -197,6 +197,7 @@ typedef struct _PointRun
 	}
 }PointRun;
 
+
 enum AXISNUM
 {
 	X = 1,
@@ -275,17 +276,17 @@ void move_axis_abs(int axis, float pos);
 // 单轴相对运动, 不带速度设置, 需提前设置速度, 模式
 void move_axis_offset(int axis, float distance);
 
-// 单轴连续运动, 不带速度设置, 需提前设置速度, 模式
+// 单轴连续运动, 带方向(0+, 1-), 不带速度设置, 需提前设置速度, 模式
 void move_axis_continue(int axis, int dir);
 
 
-// 绝对移动, 带正负限位
+// 单轴绝对运动, 带速度, 带加减速, 带正负限位
 void move_axis_abs(int axis, float pos, float speed, float acc, float dec);
 
-// 相对移动, 带速度, 带加减速, 带正负限位
+// 单轴相对运动, 带速度, 带加减速, 带正负限位
 void move_axis_offset(int axis, float distance, float speed, float acc, float dec);
 
-// 连续运动, 带方向(0+, 1-), 带速度, 带加减速, 带正负限位
+// 单轴连续运动, 带方向(0+, 1-), 带速度, 带加减速, 带正负限位
 void move_axis_continue(int axis, int dir, float speed, float acc, float dec);
 
 

@@ -8,6 +8,7 @@ Operation::Operation(QWidget *parent) : QWidget(parent)
 
 void Operation::setupUi()
 {
+	setGroupLogo();
 	setGroupWarn();
 	setGroupGlue();
 	setGroupChart();
@@ -19,6 +20,7 @@ void Operation::setupUi()
 	QVBoxLayout *layout_2_1 = new QVBoxLayout();
 	QVBoxLayout *layout_2_2 = new QVBoxLayout();
 
+	layout_2_1->addWidget(group_logo);
 	layout_2_1->addWidget(group_warn);
 	layout_2_1->addWidget(group_glue);
 	layout_2_1->addWidget(group_config);
@@ -54,6 +56,25 @@ void Operation::setConnect()
 	connect(btn_saveDistanceOffset, &QPushButton::clicked, this, &Operation::on_btn_saveDistanceOffset);
 }
 
+void Operation::setGroupLogo()
+{
+	group_logo = new QGroupBox();
+
+	QLabel *label_logo = new QLabel();
+	label_logo->setFixedHeight(230);
+
+	QVBoxLayout *layout_1 = new QVBoxLayout();
+	layout_1->setMargin(5);
+	layout_1->setSpacing(0);
+	layout_1->addWidget(label_logo);
+
+	group_logo->setLayout(layout_1);
+
+	QImage img_logo("../ui/resources/logo.png");
+	img_logo.scaled(label_logo->size());
+	label_logo->setPixmap(QPixmap::fromImage(img_logo));
+}
+
 void Operation::setGroupWarn()
 {
 	QFont font;
@@ -66,7 +87,7 @@ void Operation::setGroupWarn()
 	label_rundata = new QLabel(QStringLiteral("请登陆"));
 	label_rundata->setFont(font);
 	label_rundata->setAlignment(Qt::AlignCenter);
-	label_rundata->setFixedHeight(200);
+	label_rundata->setFixedHeight(100);
 
 	QVBoxLayout *layout_1 = new QVBoxLayout();
 	layout_1->addWidget(label_rundata);
@@ -109,7 +130,7 @@ void Operation::setGroupGlue()
 
 	layout_1->addLayout(layout_2_1);
 	layout_1->addLayout(layout_2_2);
-	layout_1->setMargin(20);
+	layout_1->setContentsMargins(20, 3, 20, 3);
 	// layout_1->addSpacerItem(new QSpacerItem(0, 0, QSizePolicy::Expanding, QSizePolicy::Minimum));
 
 	group_glue->setLayout(layout_1);
@@ -184,6 +205,7 @@ void Operation::setGroupConfig()
 
 	layout_1->addLayout(layout_2_1);
 	layout_1->addSpacerItem(new QSpacerItem(0, 0, QSizePolicy::Expanding, QSizePolicy::Minimum));
+	layout_1->setContentsMargins(10, 3, 10, 3);
 
 	group_config->setLayout(layout_1);
 
@@ -264,9 +286,10 @@ void Operation::setGroupDistanceOffset()
 
 	QVBoxLayout *layout_1 = new QVBoxLayout();
 	layout_1->addLayout(layout_2_1);
-	layout_1->addSpacing(10);
+	layout_1->addSpacing(5);
 	layout_1->addLayout(layout_2_2);
 	layout_1->addWidget(btn_saveDistanceOffset);
+	layout_1->setMargin(3);
 
 	group_distance_offset->setLayout(layout_1);
 

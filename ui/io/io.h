@@ -6,7 +6,7 @@
 #include <QtConcurrent>
 
 // 控制卡
-#include "../../adt/adtcontrol.h"
+#include "../adt/adtcontrol.h"
 
 #include "../../sdk/QIO/qio.h"
 class QInputLabel;

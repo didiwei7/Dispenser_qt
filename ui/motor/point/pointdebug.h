@@ -158,6 +158,7 @@ private:
 	QPushButton *btn_z_home;
 
 private:
+	float start_v;
 	float speed;
 	float acc;
 	float dec;
@@ -194,11 +195,13 @@ signals:
 	void changedSqlModel(int index);
 
 public:
-	QMap<QString, PointGlue> allPoint;
-	QMap<QString, PointGlue> getPointInfo();		 // 获取所有点位信息
-	PointGlue get_point_name(QString pointName);	 // 通过点位名查找
-	PointGlue get_point_index(int index);			 // 通过Index在数据中查找
+	QMap<QString, PointRun> currentModelPoint;
+	QMap<QString, PointRun> getCurrentModelPointInfo();		 // 获取所有点位信息
+	PointRun get_point_name(QString pointName);				 // 通过点位名查找
+	PointRun get_point_index(int index);					 // 通过Index在数据中查找
 
+	QMap<QString, PointRun>  runPoint;
+	QMap<QString, PointRun>  getRunPointInfo();
 	
 	// QMap<QString, QString> getPointByname(QString pointName);
 	/*QMap<QString, QString> PointDebug::getPointByname(QString pointName)

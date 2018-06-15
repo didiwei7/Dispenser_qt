@@ -147,6 +147,13 @@ public:		// µ„Ω∫3
 	QFuture<void> future_thread_glue_3;
 	void thread_glue_3();
 
+public:		// µ„Ω∫
+	bool is_config_glue_teda;
+	bool start_thread_glue_teda;
+	bool close_thread_glue_teda;
+	QFuture<void> future_thread_glue_teda;
+	void thread_glue_teda();
+
 public:		// ø’≈‹µ„Ω∫πÏº£
 	bool is_ccdGlue3_ok;
 	bool start_thread_ccd_glue_1;

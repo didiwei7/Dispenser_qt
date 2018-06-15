@@ -21,7 +21,7 @@ int init_card()
 			QMessageBox::about(NULL, NULL, QStringLiteral("øÿ÷∆ø®Œ¥∞≤◊∞"));
 
 			// ≤‚ ‘
-			// …Ë÷√X÷·
+			/*// …Ë÷√X÷·
 			adt8949_set_pulse_mode(0, 1, 1, 0, 0);
 			adt8949_set_gear(0, 1, 1000);
 
@@ -38,7 +38,8 @@ int init_card()
 			set_home_mode();
 			set_home_speed();
 
-			// move_inp_abs_line3(1, 1, 1);
+			// move_inp_abs_line3(1, 1, 1);*/
+
 
 			return ret;
 		}
@@ -278,7 +279,6 @@ float get_current_pos_axis(int axis)
 	float fPos;
 	adt8949_get_command_pos(0, axis, &lPos);
 	fPos = lPos / 1000.0;
-
 	return fPos;
 }
 

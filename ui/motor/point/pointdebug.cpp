@@ -125,10 +125,6 @@ void PointDebug::setThread()
 // Ui
 void PointDebug::setGroupMove()
 {
-	speed = 1.00;
-	acc = 1.00;
-	dec = 1.00;
-
     group_move = new QGroupBox(QStringLiteral("点位移动"));
 
     slider_speed = new QMySlider();
@@ -136,6 +132,12 @@ void PointDebug::setGroupMove()
 	slider_speed->setRange(0, 1000);
 	slider_speed->setValue(100);
 	slider_speed->setFixedWidth(250);
+
+	start_v = 0.1;
+	speed = 1.0;
+	acc = 1.0;
+	dec = 1.0;
+	set_speed_mode(start_v, speed, acc, ADMODE::S);
 
 	X_negative = new QPushButton(QIcon("../ui/resources/left.png"), NULL);
     X_positive = new QPushButton(QIcon("../ui/resources/right.png"), NULL);
@@ -680,27 +682,30 @@ void PointDebug::on_pointview_rightClicked(const QPoint &)
 
 void PointDebug::on_action_go()
 {
+	QSqlTableModel *pointmodel = getCurrentModel();
+
 	int row = pointview->currentIndex().row();
-	PointGlue point = get_point_index(row);
-	qDebug() << point.X << point.Y << point.Z;
+	// PointGlue point = get_point_index(row);
+	
+	float fx = pointmodel->record(row).value("X").toString().toFloat();
+	float fy = pointmodel->record(row).value("Y").toString().toFloat();
+	float fz = pointmodel->record(row).value("Z").toString().toFloat();
+
+	qDebug() << fx << fy << fz;
 }
 
 void PointDebug::on_action_teach()
 {
-	long lx_axis, ly_axis, lz_axis;
-	adt8949_get_command_pos(0, 1, &lx_axis);
-	adt8949_get_command_pos(0, 2, &ly_axis);
-	adt8949_get_command_pos(0, 3, &lz_axis);
-
-	float fx_axis = lx_axis / 1000.0;
-	float fy_axis = ly_axis / 1000.0;
-	float fz_axis = lz_axis / 1000.0;
+	float fx_axis = get_current_pos_axis(AXISNUM::X);
+	float fy_axis = get_current_pos_axis(AXISNUM::Y);
+	float fz_axis = get_current_pos_axis(AXISNUM::Z);
 
 	QString sx_axis = QString::number(fx_axis, 'f', 3);
 	QString sy_axis = QString::number(fy_axis, 'f', 3);
 	QString sz_axis = QString::number(fz_axis, 'f', 3);
 
 	int row = pointview->currentIndex().row();
+
 	QSqlTableModel *pointmodel = getCurrentModel();
 	pointmodel->setData(pointmodel->index(row, 3), sx_axis);
 	pointmodel->setData(pointmodel->index(row, 4), sy_axis);
@@ -816,6 +821,7 @@ void PointDebug::on_action_save()
 
 	emit changedSqlModel(index_model);
 
+	runPoint = getRunPointInfo();
 	//allPoint.clear();
 	//allPoint = getPointInfo();
 }
@@ -883,6 +889,8 @@ void PointDebug::on_slider_speed_Changed(int pos)
 	acc = pos / float(100.0);
 	dec = pos / float(100.0);
 
+	set_speed_mode(start_v, speed, acc, ADMODE::S);
+
 	qDebug() << speed << acc << dec;
 }
 
@@ -894,8 +902,8 @@ void PointDebug::on_X_positive_clicked()
 	if (radio_continue->isChecked()) return;
 
 	float fx = edit_X_step->text().toFloat();
-	move_axis_offset(1, fx, speed, acc, dec);
-	wait_axis_stop(1);
+	move_axis_offset(AXISNUM::X, fx);
+	// wait_axis_stop(1);
 }
 
 void PointDebug::on_X_positive_pressed()
@@ -914,7 +922,7 @@ void PointDebug::on_X_positive_pressed()
 		}	
 		else
 		{
-			move_axis_continue(1, 0, speed, acc, dec);
+			move_axis_continue(AXISNUM::X, 0);
 		}
 	}
 }
@@ -935,7 +943,7 @@ void PointDebug::on_X_positive_released()
 		}
 		else
 		{
-			adt8949_dec_stop(0, 1);
+			stop_axis_dec(AXISNUM::X);
 		}
 	}
 }
@@ -947,8 +955,8 @@ void PointDebug::on_X_negative_clicked()
 	if (radio_continue->isChecked()) return;
 
 	float fx = edit_X_step->text().toFloat();
-	move_axis_offset(1, -fx, speed, acc, dec);
-	wait_axis_stop(1);
+	move_axis_offset(AXISNUM::X, -fx);
+	wait_axis_stop(AXISNUM::X);
 }
 
 void PointDebug::on_X_negative_pressed()
@@ -967,7 +975,7 @@ void PointDebug::on_X_negative_pressed()
 		}
 		else
 		{
-			move_axis_continue(1, 1, speed, acc, dec);
+			move_axis_continue(AXISNUM::X, 1);
 		}
 	}
 }
@@ -988,7 +996,7 @@ void PointDebug::on_X_negative_released()
 		}
 		else
 		{
-			adt8949_dec_stop(0, 1);
+			stop_axis_dec(AXISNUM::X);
 		}
 	}
 }
@@ -1001,8 +1009,8 @@ void PointDebug::on_Y_positive_clicked()
 	if (radio_continue->isChecked()) return;
 
 	float fy = edit_Y_step->text().toFloat();
-	move_axis_offset(2, fy, speed, acc, dec);
-	wait_axis_stop(2);
+	move_axis_offset(AXISNUM::Y, fy);
+	wait_axis_stop(AXISNUM::Y);
 }
 
 void PointDebug::on_Y_positive_pressed()
@@ -1015,13 +1023,13 @@ void PointDebug::on_Y_positive_pressed()
 	}
 	else
 	{
-		if (axis_isMoving(2))
+		if (axis_isMoving(AXISNUM::Y))
 		{
 			return;
 		}
 		else
 		{
-			move_axis_continue(2, 0, speed, acc, dec);
+			move_axis_continue(AXISNUM::Y, 0);
 		}
 	}
 }
@@ -1036,13 +1044,13 @@ void PointDebug::on_Y_positive_released()
 	}
 	else
 	{
-		if (!axis_isMoving(2))
+		if (!axis_isMoving(AXISNUM::Y))
 		{
 			return;
 		}
 		else
 		{
-			adt8949_dec_stop(0, 2);
+			stop_axis_dec(AXISNUM::Y);
 		}
 	}
 }
@@ -1054,8 +1062,8 @@ void PointDebug::on_Y_negative_clicked()
 	if (radio_continue->isChecked()) return;
 
 	float fy = edit_Y_step->text().toFloat();
-	move_axis_offset(2, -fy, speed, acc, dec);
-	wait_axis_stop(2);
+	move_axis_offset(AXISNUM::Y, -fy);
+	wait_axis_stop(AXISNUM::Y);
 }
 
 void PointDebug::on_Y_negative_pressed()
@@ -1068,13 +1076,13 @@ void PointDebug::on_Y_negative_pressed()
 	}
 	else
 	{
-		if (axis_isMoving(2))
+		if (axis_isMoving(AXISNUM::Y))
 		{
 			return;
 		}
 		else
 		{
-			move_axis_continue(2, 1, speed, acc, dec);
+			move_axis_continue(AXISNUM::Y, 1);
 		}
 	}
 }
@@ -1089,13 +1097,13 @@ void PointDebug::on_Y_negative_released()
 	}
 	else
 	{
-		if (!axis_isMoving(2))
+		if (!axis_isMoving(AXISNUM::Y))
 		{
 			return;
 		}
 		else
 		{
-			adt8949_dec_stop(0, 2);
+			stop_axis_dec(AXISNUM::Y);
 		}
 	}
 }
@@ -1108,8 +1116,8 @@ void PointDebug::on_Z_positive_clicked()
 	if (radio_continue->isChecked()) return;
 
 	float fz = edit_Z_step->text().toFloat();
-	move_axis_offset(3, fz, speed, acc, dec);
-	wait_axis_stop(3);
+	move_axis_offset(AXISNUM::Z, fz);
+	wait_axis_stop(AXISNUM::Z);
 }
 
 void PointDebug::on_Z_positive_pressed()
@@ -1122,13 +1130,13 @@ void PointDebug::on_Z_positive_pressed()
 	}
 	else
 	{
-		if (axis_isMoving(3))
+		if (axis_isMoving(AXISNUM::Z))
 		{
 			return;
 		}
 		else
 		{
-			move_axis_continue(3, 0, speed, acc, dec);
+			move_axis_continue(AXISNUM::Z, 0);
 		}
 	}
 }
@@ -1143,13 +1151,13 @@ void PointDebug::on_Z_positive_released()
 	}
 	else
 	{
-		if (!axis_isMoving(3))
+		if (!axis_isMoving(AXISNUM::Z))
 		{
 			return;
 		}
 		else
 		{
-			adt8949_dec_stop(0, 3);
+			stop_axis_dec(AXISNUM::Z);
 		}
 	}
 }
@@ -1161,8 +1169,8 @@ void PointDebug::on_Z_negative_clicked()
 	if (radio_continue->isChecked()) return;
 
 	float fz = edit_Z_step->text().toFloat();
-	move_axis_offset(3, -fz, speed, acc, dec);
-	wait_axis_stop(3);
+	move_axis_offset(AXISNUM::Z, -fz);
+	wait_axis_stop(AXISNUM::Z);
 }
 
 void PointDebug::on_Z_negative_pressed()
@@ -1175,13 +1183,14 @@ void PointDebug::on_Z_negative_pressed()
 	}
 	else
 	{
-		if (axis_isMoving(3))
+		if (axis_isMoving(AXISNUM::Z))
 		{
+			Sleep(1);
 			return;
 		}
 		else
 		{
-			move_axis_continue(3, 1, speed, acc, dec);
+			move_axis_continue(AXISNUM::Z, 1);
 		}
 	}
 }
@@ -1196,19 +1205,20 @@ void PointDebug::on_Z_negative_released()
 	}
 	else
 	{
-		if (!axis_isMoving(3))
+		if (!axis_isMoving(AXISNUM::Z))
 		{
+			Sleep(1);
 			return;
 		}
 		else
 		{
-			adt8949_dec_stop(0, 3);
+			stop_axis_dec(AXISNUM::Z);
 		}
 	}
 }
 
 
-
+// 回原
 void PointDebug::on_btn_stop()
 {
 	if (!(init_card() == 1)) return;
@@ -1294,7 +1304,7 @@ void PointDebug::thread_updateCurrentPos()
 		{
 			if (start_thread_updateCurrentPos == false)
 			{
-				Sleep(2);
+				Sleep(1);
 				step_pos = 0;
 			}
 			else
@@ -1319,12 +1329,11 @@ void PointDebug::thread_updateCurrentPos()
 			label_Z_currentpos->setText(sz_axis);
 
 			Sleep(5);
-
-			step_pos = 0;
+			step_pos = 10;
 		}
 		break;
 
-		case 8888:	// 退出流程
+		case 7777:	// 退出流程
 		{
 			start_thread_updateCurrentPos = false;
 			step_pos = 0;
@@ -1415,12 +1424,12 @@ void PointDebug::thread_updateInputStatus()
 }
 
 
-// 通过结构体存储
-QMap<QString, PointGlue> PointDebug::getPointInfo()
+// 获取当前选中的Model的数据
+QMap<QString, PointRun> PointDebug::getCurrentModelPointInfo()
 {
 	QSqlTableModel *pointmodel = getCurrentModel();
 
-	QMap<QString, PointGlue> _allPoint;
+	QMap<QString, PointRun> _allPoint;
 	int index = 0;
 	for (index; index < pointmodel->rowCount(); index++)
 	{
@@ -1429,41 +1438,27 @@ QMap<QString, PointGlue> PointDebug::getPointInfo()
 		float X = pointmodel->record(index).value("X").toString().toFloat();
 		float Y = pointmodel->record(index).value("Y").toString().toFloat();
 		float Z = pointmodel->record(index).value("Z").toString().toFloat();
-		bool open = pointmodel->record(index).value("open").toBool();
-		int openAdvance = pointmodel->record(index).value("openAdvance").toInt();
-		int openDelay = pointmodel->record(index).value("openDelay").toInt();
-		bool close = pointmodel->record(index).value("close").toBool();
-		int closeAdvance = pointmodel->record(index).value("closeAdvance").toInt();
-		int closeDelay = pointmodel->record(index).value("closeDelay").toInt();
-		int type = pointmodel->record(index).value("type").toInt();
-	
-		PointGlue point; // = { name, description, X, Y, Z, open, openAdvance, openDelay, close, closeAdvance, closeDelay, type };
+
+		PointRun point; // = { name, description, X, Y, Z, open, openAdvance, openDelay, close, closeAdvance, closeDelay, type };
 		point.name = name;
 		point.description = description;
 		point.X = X;
 		point.Y = Y;
 		point.Z = Z;
-		point.open = open;
-		point.openAdvance = openAdvance;
-		point.openDelay = openDelay;
-		point.close = close;
-		point.closeAdvance = closeAdvance;
-		point.closeDelay = closeDelay;
-		point.type = type;
 		_allPoint.insert(name, point);
 	}
 	return _allPoint;
 }
 
-PointGlue PointDebug::get_point_name(QString name)
+PointRun PointDebug::get_point_name(QString name)
 {
-	QMap<QString, PointGlue>::iterator Point_it;
-	Point_it = allPoint.find(name);
-	PointGlue point = Point_it.value();
+	QMap<QString, PointRun>::iterator Point_it;
+	Point_it = currentModelPoint.find(name);
+	PointRun point = Point_it.value();
 	return point;
 }
 
-PointGlue PointDebug::get_point_index(int index)
+PointRun PointDebug::get_point_index(int index)
 {
 	QSqlTableModel *pointmodel = getCurrentModel();
 
@@ -1472,8 +1467,88 @@ PointGlue PointDebug::get_point_index(int index)
 
 	QString name = pointmodel->record(index).value("name").toString();
 
-	QMap<QString, PointGlue>::iterator Point_it;
-	Point_it = allPoint.find(name);
-	PointGlue point = Point_it.value();
+	QMap<QString, PointRun>::iterator Point_it;
+	Point_it = currentModelPoint.find(name);
+	PointRun point = Point_it.value();
 	return point;
+}
+
+
+// 获取所有的 RunPoint
+QMap<QString, PointRun> PointDebug::getRunPointInfo()
+{
+	QMap<QString, PointRun> _allPoint;
+
+	for (int index = 0; index < model_general->rowCount(); index++)
+	{
+		QString name = model_general->record(index).value("name").toString();
+		QString description = model_general->record(index).value("description").toString();
+		float X = model_general->record(index).value("X").toString().toFloat();
+		float Y = model_general->record(index).value("Y").toString().toFloat();
+		float Z = model_general->record(index).value("Z").toString().toFloat();
+
+		PointRun point;
+		point.name = name;
+		point.description = description;
+		point.X = X;
+		point.Y = Y;
+		point.Z = Z;
+		_allPoint.insert(name, point);
+	}
+
+	for (int index = 0; index < model_glue1->rowCount(); index++)
+	{
+		QString name = model_glue1->record(index).value("name").toString();
+		QString description = model_glue1->record(index).value("description").toString();
+		float X = model_glue1->record(index).value("X").toString().toFloat();
+		float Y = model_glue1->record(index).value("Y").toString().toFloat();
+		float Z = model_glue1->record(index).value("Z").toString().toFloat();
+
+		PointRun point;
+		point.name = name;
+		point.description = description;
+		point.X = X;
+		point.Y = Y;
+		point.Z = Z;
+
+		_allPoint.insert(name, point);
+	}
+
+	for (int index = 0; index < model_glue2->rowCount(); index++)
+	{
+		QString name = model_glue2->record(index).value("name").toString();
+		QString description = model_glue2->record(index).value("description").toString();
+		float X = model_glue2->record(index).value("X").toString().toFloat();
+		float Y = model_glue2->record(index).value("Y").toString().toFloat();
+		float Z = model_glue2->record(index).value("Z").toString().toFloat();
+
+		PointRun point;
+		point.name = name;
+		point.description = description;
+		point.X = X;
+		point.Y = Y;
+		point.Z = Z;
+
+		_allPoint.insert(name, point);
+	}
+
+	for (int index = 0; index < model_glue3->rowCount(); index++)
+	{
+		QString name = model_glue3->record(index).value("name").toString();
+		QString description = model_glue3->record(index).value("description").toString();
+		float X = model_glue3->record(index).value("X").toString().toFloat();
+		float Y = model_glue3->record(index).value("Y").toString().toFloat();
+		float Z = model_glue3->record(index).value("Z").toString().toFloat();
+
+		PointRun point;
+		point.name = name;
+		point.description = description;
+		point.X = X;
+		point.Y = Y;
+		point.Z = Z;
+
+		_allPoint.insert(name, point);
+	}
+
+	return _allPoint;
 }

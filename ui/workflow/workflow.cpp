@@ -1229,6 +1229,479 @@ void Workflow::thread_glue_3()
 }
 
 
+void Workflow::thread_glue_teda()
+{
+	if (!(init_card() == 1)) return;
+
+	// 从CCD获取到的偏移 X, Y, A
+	float ccd_offset_x, ccd_offset_y, ccd_offset_A;
+
+	// 镭射获取的高度
+	float laser_num = 0;
+	float laser_z[4];
+	float laser_z_average = 0;
+
+	// 4段圆弧的圆心坐标
+	float center_result_x[4];
+	float center_result_y[4];
+
+	MatrixXf work_matrix;					// CCD点位旋转平移后的矩阵
+	QVector<CCDGlue>::iterator iter_cmd;	// Vector的头尾
+	CCDGlue current_cmd;					// 当前点位
+	int     current_cmd_num;				// 当前点位索引
+
+	int step_glue_teda = 0;
+
+	while (step_glue_teda == false)
+	{
+		switch (step_glue_teda)
+		{
+		case 0:		// 等待触发
+		{
+			if (start_thread_glue_teda == false)
+			{
+				Sleep(1);
+				step_glue_teda = 0;
+			}
+			else
+			{
+				step_glue_teda = 10;
+			}
+		}
+		break;
+
+		case 10:	// 检查是否配置了该流程
+		{
+			if (is_config_glue_teda == false)
+			{
+				step_glue_teda = 7777;
+			}
+			else
+			{
+				step_glue_teda = 20;
+			}
+		}
+		break;
+
+		case 20:	// 设置速度, 模式
+		{
+			step_glue_teda = 30;
+		}
+		break;
+
+		case 30:	// Z轴到安全位
+		{
+			move_axis_abs(AXISNUM::Z, 0);
+			step_glue_teda = 40;
+		}
+		break;
+
+		case 40:	// 提前切换图像程序
+		{
+			// 发消息
+			step_glue_teda = 50;
+		}
+		break;
+
+		case 50:	// 点前清胶
+		{
+			// 【1】 到清胶安全点
+			move_point_name("xx");
+			wait_allaxis_stop();
+
+			// 【2】 判断清胶气缸
+			if (true)
+			{
+				QMessageBox::warning(NULL, QStringLiteral("警告"), QStringLiteral("清胶气缸状态错误, 请检查"));
+				step_glue_teda = 8888;
+			}
+
+			// 【4】 到清胶点
+			move_point_name("xx");
+			wait_allaxis_stop();
+
+			// 【5】 清胶气缸夹紧
+
+
+			// 【6】 到清胶安全点, 此点位安全高度为 0
+			move_point_name("xx");
+			wait_allaxis_stop();
+
+			// 【7】 清胶气缸松开
+
+			step_glue_teda = 60;
+		}
+		break;
+
+		case 60:	// 到 "点胶1" 拍照点
+		{
+			// 到点胶1拍照点
+			move_point_name("xx");
+			wait_allaxis_stop();
+
+			step_glue_teda = 70;
+		}
+		break;
+
+		case 70:	// 拍照
+		{
+			// 发消息拍照
+
+			step_glue_teda = 80;
+		}
+		break;
+
+		case 80:	// 等待获取偏移 ccd_offset_x, ccd_offset_y, ccd_offset_z
+		{
+			if (receivedMsg_ccd == "" || receivedMsg_ccd.length() < 5)
+			{
+				step_glue_teda = 80;
+			}
+			else
+			{
+				if (receivedMsg_ccd.split("]").last() == "-1")
+				{
+					step_glue_teda = 7777;
+				}
+				else
+				{
+					ccd_offset_x = receivedMsg_ccd.split("]").at(1).toFloat();
+					ccd_offset_y = receivedMsg_ccd.split("]").at(2).toFloat();
+					ccd_offset_A = receivedMsg_ccd.split("]").at(3).toFloat();
+
+					receivedMsg_ccd = "";
+
+					step_glue_teda = 90;
+				}
+			}
+		}
+		break;
+
+		case 90:	// 计算矩阵偏移
+		{
+			work_matrix = CalCCDGluePoint(vec_ccdGlue_1, ccd_offset_x, ccd_offset_y, ccd_offset_A, org_ccdglue_x[CCDORG::GLUE1ORG], org_ccdglue_y[CCDORG::GLUE1ORG]);
+		}
+		break;
+
+		case 100:	// 初始化所有标志位, 开启速度前瞻, 设置插补速度
+		{
+			iter_cmd = vec_ccdGlue_1.begin();
+			current_cmd_num = 0;
+
+			adt8949_set_speed_pretreat_mode(0, 1);
+			set_inp_speed(1);
+
+			step_glue_teda = 110;
+
+		}
+		break;
+
+		case 110:	// 判断 "结束" 和 "CCDGlue.type"
+		{
+			if (iter_cmd == vec_ccdGlue_1.end())
+			{
+				step_glue_teda = 500;
+			}
+			else
+			{
+				if (vec_ccdGlue_1.at(current_cmd_num).type == QString("null"))
+				{
+					step_glue_teda = 500;
+				}
+				else if (current_cmd.type == QString("line"))
+				{
+					current_cmd = vec_ccdGlue_1.at(current_cmd_num);
+					step_glue_teda = 200;
+				}
+				else if (current_cmd.type == QString("circle"))
+				{
+					current_cmd = vec_ccdGlue_1.at(current_cmd_num);
+					step_glue_teda = 400;
+				}
+				else
+				{
+					QMessageBox::warning(NULL, QStringLiteral("警告"), QStringLiteral("点位解析错误"));
+					step_glue_teda = 9999;
+				}
+			}
+		}
+		break;
+
+
+		/********************** 直线插补 **********************/
+		case 200:	// 直线插补
+		{
+			// 判断 "镭射"
+			if (current_cmd.laser)
+			{
+				step_glue_teda = 300;
+			}
+			else
+			{
+				step_glue_teda = 210;
+			}
+		}
+		break;
+
+		case 210:	// 开胶, 关胶
+		{
+			if (current_cmd.open)
+			{
+				adt8949_set_fifo_io(0, 15, 1, -1);
+			}
+			else
+			{
+
+				adt8949_set_fifo_io(0, 15, 0, -1);
+			}
+
+			step_glue_teda = 230;
+		}
+		break;
+
+		/*case 210:	// 是否开胶
+		{
+		if (current_cmd.open)
+		{
+		if (current_cmd.openAdvance > 0 || current_cmd.openDelay <= 0)
+		{
+		// 提前开胶
+		}
+		else if (current_cmd.openAdvance <= 0 || current_cmd.openDelay > 0)
+		{
+		// 滞后开胶
+		}
+		else
+		{
+		// 立即开胶
+		adt8949_set_fifo_io(0, 18, 1, -1);
+		}
+		}
+
+		step_glue_teda = 220;
+		}
+		break;
+
+		case 220:	// 是否提前滞后关胶
+		{
+		if (current_cmd.closeAdvance > 0 || current_cmd.closeDelay <= 0)
+		{
+		// 提前关胶
+		}
+		else if (current_cmd.closeAdvance <= 0 || current_cmd.closeDelay > 0)
+		{
+		// 滞后关胶
+		}
+		step_glue_teda = 230;
+		}
+		break;*/
+
+		case 230:	// 直线插补
+		{
+			float move_pos[3];
+			move_pos[0] = work_matrix(current_cmd_num, 0) + distance_ccd_needle_x + calib_offset_x;
+			move_pos[1] = work_matrix(current_cmd_num, 1) + distance_ccd_neddle_y + calib_offset_y;
+			move_pos[2] = work_matrix(current_cmd_num, 2) + distance_ccd_needle_x + calib_offset_z; // +"镭射高度";
+
+																									// 直线插补
+			move_inp_abs_line3(move_pos[0], move_pos[1], move_pos[2]);
+
+			step_glue_teda = 240;
+		}
+		break;
+
+		/*case 240:	// 是否立即关胶
+		{
+		if (current_cmd.close)
+		{
+		// 关胶
+		write_out_bit(0, 0);
+		}
+
+		step_glue_teda = 250;
+		}
+		break;*/
+
+		case 250:	// 置标志位, 跳回
+		{
+			iter_cmd++;
+			current_cmd_num++;
+			step_glue_teda = 110;
+		}
+		break;
+
+
+		/********************** 镭射测量 **********************/
+		case 300:	// 镭射测量
+		{
+			float move_pos[3];
+
+			// move_pos[0] = work_matrix[current_cmd_num, 0] + ;
+		}
+		break;
+
+
+		/********************** 圆弧插补 **********************/
+		case 400:	// 圆弧插补
+		{
+			step_glue_teda = 410;
+		}
+		break;
+
+		case 410:	// 开胶, 关胶
+		{
+			if (current_cmd.open)
+			{
+				adt8949_set_fifo_io(0, 15, 1, -1);
+			}
+			else
+			{
+
+				adt8949_set_fifo_io(0, 15, 0, -1);
+			}
+
+			step_glue_teda = 430;
+		}
+		break;
+
+		case 430:	// 圆弧插补
+		{
+			float move_pos[3];
+			move_pos[0] = work_matrix(current_cmd_num, 0) + distance_ccd_needle_x + calib_offset_x;
+			move_pos[1] = work_matrix(current_cmd_num, 1) + distance_ccd_neddle_y + calib_offset_y;
+			move_pos[2] = work_matrix(current_cmd_num, 2) + distance_ccd_needle_x + calib_offset_z; // +"镭射高度";
+
+																									// 圆弧插补指令
+			move_inp_abs_line3(move_pos[0], move_pos[1], move_pos[2]);
+
+			step_glue_teda = 440;
+		}
+		break;
+
+		case 450:	// 置标志位, 跳回
+		{
+			iter_cmd++;
+			current_cmd_num++;
+
+			step_glue_teda = 110;
+		}
+		break;
+
+
+		/********************** 点位解析完毕后做的事 **********************/
+		case 500:	// 关闭速度前瞻
+		{
+			// 关闭插补缓存区
+			// adt8949_set_speed_pretreat_mode(0, 0);
+
+			step_glue_teda = 510;
+		}
+		break;
+
+		case 510:	// 设置运动速度, Z轴到安全位
+		{
+			// 【1】 等待插补完成
+			wait_inp_finish();
+			adt8949_set_speed_pretreat_mode(0, 0);
+
+			set_speed_mode(1, 1, 1, 1);
+
+			// 【2】 Z轴到安全位
+			move_axis_abs(AXISNUM::Z, 0);
+			wait_axis_stop(AXISNUM::Z);
+
+			step_glue_teda = 520;
+		}
+		break;
+
+		case 520:	// 重置计数
+		{
+			iter_cmd = vec_ccdGlue_1.begin();
+			iter_cmd = 0;
+			current_cmd_num = 0;
+
+			step_glue_teda = 6666;
+		}
+
+
+
+		case 6666:	// 流程正常执行完毕, 跳回0, 等待下次触发流程
+		{
+			// 【1】 发消息
+			emit changedRundataText(QStringLiteral("点胶1已完成"));
+			writRunningLog(QStringLiteral("点胶1已完成"));
+
+			start_thread_glue_1 = false;
+			step_glue_teda = 0;
+		}
+		break;
+
+		case 7777:	// 流程非正常执行完毕, 跳回0, 等待下次触发流程
+		{
+			// 【0】 速度设置
+			wait_inp_finish();
+			adt8949_set_speed_pretreat_mode(0, 0);
+
+			set_speed_mode(1, 1, 1, 1);
+
+			// 【1】 Z轴到安全位
+			move_axis_abs(AXISNUM::Z, 0);
+			wait_axis_stop(AXISNUM::Z);
+
+			// 【2】 刷新流程标志位
+			iter_cmd = vec_ccdGlue_1.begin();
+			current_cmd_num = 0;
+			laser_num = 0;
+
+			// 【3】 发消息
+			emit changedRundataText(QStringLiteral("点胶1流程执行失败, 正在跳过"));
+			writRunningLog(QStringLiteral("点胶1流程执行失败, 正在跳过"));
+
+			start_thread_glue_1 = false;
+			step_glue_teda = 0;
+		}
+		break;
+
+		case 8888:	// 线程正常执行完毕, 关闭该线程
+		{
+			// 【1】 Z轴到安全位
+			move_axis_abs(AXISNUM::Z, 0);
+			wait_axis_stop(AXISNUM::Z);
+
+			// 【2】 刷新流程标志位
+			iter_cmd = vec_ccdGlue_1.begin();
+			current_cmd_num = 0;
+			laser_num = 0;
+
+			emit changedRundataText(QStringLiteral("点胶1线程正常结束"));
+			writRunningLog(QStringLiteral("点胶1线程正常结束"));
+
+			start_thread_glue_1 = false;
+			close_thread_glue_1 = true;
+			step_glue_teda = 0;
+		}
+		break;
+
+		case 9999:	// 线程非正常执行完毕, 关闭该线程
+		{
+			// 安全退出该线程
+			start_thread_glue_1 = false;
+			close_thread_glue_1 = true;
+
+			// 停止所有轴
+			stop_allaxis();
+
+			step_glue_teda = 0;
+		}
+		break;
+
+		default:
+			break;
+		}
+	}
+}
+
+
 /*************** 以下线程不在WorkFlow下执行 ***************/
 // Thread 校针 执行完需要退出线程
 void Workflow::thread_calibNeedle()

@@ -39,6 +39,7 @@ private:
 	void setThread();
 
 public:
+	void setGroupLogo();
 	void setGroupWarn();
 	void setGroupGlue();
 	void setGroupDebug();
@@ -46,6 +47,7 @@ public:
 	void setGroupConfig();
 	void setGroupDistanceOffset();
 
+	QGroupBox *group_logo;
 	QGroupBox *group_warn;
 	QGroupBox *group_glue;
 	QGroupBox *group_debug;
