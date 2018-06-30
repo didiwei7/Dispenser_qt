@@ -84,22 +84,16 @@ win32:CONFIG(debug, debug|release):{
 #else:win32:CONFIG(release, debug|release): LIBS += C:/Qt/QtMyCtrls/lib/QMySlider.lib
 
 # OpenCV
-INCLUDEPATH += C:/opencv300/opencv/build/include
-INCLUDEPATH += C:/opencv300/opencv/build/include/opencv/
-INCLUDEPATH += C:/opencv300/opencv/build/include/opencv2/
-win32:CONFIG(debug, debug|release): LIBS += C:/opencv300/opencv/build/x86/vc12/lib/opencv_world300d.lib
-else:win32:CONFIG(release, debug|release): LIBS += C:/opencv300/opencv/build/x86/vc12/lib/opencv_world300.lib
+INCLUDEPATH += C:/opencv/opencv300/include
+INCLUDEPATH += C:/opencv/opencv300/include/opencv/
+INCLUDEPATH += C:/opencv/opencv300/include/opencv2/
+win32:CONFIG(debug, debug|release): LIBS += C:/opencv/opencv300/x86/vc12/lib/opencv_world300d.lib
+else:win32:CONFIG(release, debug|release): LIBS += C:/opencv/opencv300/x86/vc12/lib/opencv_world300.lib
 
 # Eigen
-INCLUDEPATH += C:/eigen3
-
-
-# DMC
-# INCLUDEPATH += C:/DMC
-# win32: LIBS += C:/DMC/LTDMC.lib
-# win32: LIBS += ../bin/control.lib
+INCLUDEPATH += C:/myPlugin/Eigen3
 
 # ADT
-INCLUDEPATH += C:/ADT
-win32: LIBS += C:/ADT/adt8949.lib
+INCLUDEPATH += C:/Motion/ADT
+win32: LIBS += C:/Motion/ADT/adt8949.lib
 

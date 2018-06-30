@@ -502,12 +502,12 @@ void PointDebug::setViewPoint()
 	}
 
 	// 【2】 模型
-	model_general = new QSqlTableModel(this);
+	model_general = new QSqlTableModel();
     // 使用 submit 时,数据库才会更改,否则做出的更改存储在缓存中
 	model_general->setEditStrategy(QSqlTableModel::OnManualSubmit);
 	model_general->setTable("point_main");
     // 设置按第0列升序排列
-	model_general->setSort(0, Qt::AscendingOrder);
+	// model_general->setSort(0, Qt::AscendingOrder);
     // 更改Model对象的 头信息
 	model_general->setHeaderData(model_general->fieldIndex("name"), Qt::Horizontal, QStringLiteral("名称"));
 	model_general->setHeaderData(model_general->fieldIndex("description"),  Qt::Horizontal, QStringLiteral("描述"));
@@ -520,7 +520,7 @@ void PointDebug::setViewPoint()
 	model_general->setHeaderData(model_general->fieldIndex("type"), Qt::Horizontal, QStringLiteral("类型"));
 	model_general->select();
 
-	model_glue1 = new QSqlTableModel(this);
+	model_glue1 = new QSqlTableModel();
 	// 使用 submit 时,数据库才会更改,否则做出的更改存储在缓存中
 	model_glue1->setEditStrategy(QSqlTableModel::OnManualSubmit);
 	model_glue1->setTable("point_glue1");
@@ -538,7 +538,7 @@ void PointDebug::setViewPoint()
 	model_glue1->setHeaderData(model_glue1->fieldIndex("type"), Qt::Horizontal, QStringLiteral("类型"));
 	model_glue1->select();
 
-	model_glue2 = new QSqlTableModel(this);
+	model_glue2 = new QSqlTableModel();
 	// 使用 submit 时,数据库才会更改,否则做出的更改存储在缓存中
 	model_glue2->setEditStrategy(QSqlTableModel::OnManualSubmit);
 	model_glue2->setTable("point_glue2");
@@ -556,7 +556,7 @@ void PointDebug::setViewPoint()
 	model_glue2->setHeaderData(model_glue2->fieldIndex("type"), Qt::Horizontal, QStringLiteral("类型"));
 	model_glue2->select();
 
-	model_glue3 = new QSqlTableModel(this);
+	model_glue3 = new QSqlTableModel();
 	// 使用 submit 时,数据库才会更改,否则做出的更改存储在缓存中
 	model_glue3->setEditStrategy(QSqlTableModel::OnManualSubmit);
 	model_glue3->setTable("point_glue3");
@@ -575,8 +575,9 @@ void PointDebug::setViewPoint()
 	model_glue3->select();
 
     // 【3】 视图
-	pointview = new QTableView(this);
+	pointview = new QTableView();
 	pointview->setModel(model_general);
+	// 样式
 	pointview->setAlternatingRowColors(true);
 	pointview->setStyleSheet("QTableView{background-color: #FFFFFF;"
 							 "alternate-background-color: #FFF0F5;}");
@@ -603,6 +604,10 @@ void PointDebug::setViewPoint()
 	pointview->setColumnWidth(12, 60);
 	pointview->setColumnWidth(13, 60);
 	pointview->setColumnWidth(14, 60);
+	pointview->setColumnHidden(10, true);
+	pointview->setColumnHidden(11, true);
+	pointview->setColumnHidden(13, true);
+	pointview->setColumnHidden(14, true);
     // 可弹出右键菜单
     pointview->setContextMenuPolicy(Qt::CustomContextMenu);
 	// 隐藏表头
@@ -1381,20 +1386,20 @@ void PointDebug::thread_updateInputStatus()
 
 		case 10:	// 刷新Input
 		{
-			INPUT_X[0]->setStatus(read_in_bit(4));
-			INPUT_X[1]->setStatus(read_in_bit(12));
-			INPUT_X[2]->setStatus(read_in_bit(5));
-			INPUT_X[3]->setStatus(read_in_bit(0));
+			INPUT_X[0]->setStatus(!read_in_bit(4));
+			INPUT_X[1]->setStatus(!read_in_bit(12));
+			INPUT_X[2]->setStatus(!read_in_bit(5));
+			INPUT_X[3]->setStatus(!read_in_bit(0));
 
-			INPUT_Y[0]->setStatus(read_in_bit(6));
-			INPUT_Y[1]->setStatus(read_in_bit(13));
-			INPUT_Y[2]->setStatus(read_in_bit(7));
-			INPUT_Y[3]->setStatus(read_in_bit(1));
+			INPUT_Y[0]->setStatus(!read_in_bit(6));
+			INPUT_Y[1]->setStatus(!read_in_bit(13));
+			INPUT_Y[2]->setStatus(!read_in_bit(7));
+			INPUT_Y[3]->setStatus(!read_in_bit(1));
 
-			INPUT_Z[0]->setStatus(read_in_bit(8));
-			INPUT_Z[1]->setStatus(read_in_bit(14));
-			INPUT_Z[2]->setStatus(read_in_bit(9));
-			INPUT_Z[3]->setStatus(read_in_bit(2));
+			INPUT_Z[0]->setStatus(!read_in_bit(8));
+			INPUT_Z[1]->setStatus(!read_in_bit(14));
+			INPUT_Z[2]->setStatus(!read_in_bit(9));
+			INPUT_Z[3]->setStatus(!read_in_bit(2));
 
 			Sleep(10);
 

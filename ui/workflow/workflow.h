@@ -21,13 +21,13 @@
 
 // 数学库
 #include <QtMath>
+#include <math.h>
 
 // 数据库
 #include <QtSql>
 
 // 运动控制
 #include "../adt/adtcontrol.h"
-#include "../io/io.h"
 
 // 点位模型
 enum MODELPOINT
@@ -194,6 +194,14 @@ public:		// 校针
 	QFuture<void> future_thread_calibNeedle;
 	void thread_calibNeedle();
 
+public:		// 清胶
+	bool is_clearNeedle_ok;
+	bool start_thread_clearNeedle;
+	bool close_thread_clearNeedle;
+	QFuture<void> future_thread_clearNeedle;
+	void thread_clearNeedle();
+
+
 public:		// 点位数据
 	QSqlTableModel *model_general;
 	QSqlTableModel *model_glue1;
@@ -208,19 +216,17 @@ signals:	// 自定义信号
 	void changedOffset(float offset_x, float offset_y, float offset_z);
 	
 public slots:	// 连接外部信号
-	// From Operation
+	// 来自 Operation
 	void on_changedConfigGlue(bool glue1, bool glue2, bool glue3);			
 	void on_changedConfigGlueOffset(float offset_x, float offset_y, float offset_z);
 	
-	// From PointDebug
+	// 来自 PointDebug
 	void on_changedSqlModel(int index);		
 
 
 public:
 	// 写Log文件
 	void writRunningLog(QString str);
-	
-	// 获取当前事件
 	QString getCurrentTime();
 
 
@@ -229,11 +235,11 @@ public:		// 获取点位
 	QMap<QString, PointGlue> allpoint_glue1;
 	QMap<QString, PointGlue> allpoint_glue2;
 	QMap<QString, PointGlue> allpoint_glue3;
-	QMap<QString, PointRun> allpoint_pointRun;
+	QMap<QString, PointRun>  allpoint_pointRun;
 	
 	QMap<QString, PointGeneral> getAllGeneralPointInfo();
 	QMap<QString, PointGlue> getAllGluePointInfo(int index);
-	QMap<QString, PointRun> getAllRunPointInfo();
+	QMap<QString, PointRun>  getAllRunPointInfo();
 	
 	QVector<CCDGlue> getCCDGluePoint2Vector(int index);
 
@@ -241,12 +247,15 @@ public:		// 获取点位
 	MatrixXf CalCCDGluePoint(const QVector<CCDGlue> vector_ccdGlue, const float offset_x, const float offset_y, const float offset_angle, const float org_x, const float org_y);
 
 	void CalCCDGlueCenterPoint(float center_pos[2], const float center_x, const float center_y, const float offset_x, const float offset_y, const float offset_angle, const float org_x, const float org_y);
+	float* CalCCDGlueCenterPoint(const float center_x, const float center_y, const float offset_x, const float offset_y, const float offset_angle, const float org_x, const float org_y);
 
 	float wSpeed;
 	float wAcc;
 	float wDec;
 
-	void set_speed(float speed, float acc, float dec);
+	void set_speed(float speed, float acc, float admode);
+	void set_speed(float speed, float acc);
+
 	bool move_point_name(QString pointname, int type, int z_flag);
 	bool move_point_name(QString pointname, int z_flag = 0);		// 移动到点, by point
 

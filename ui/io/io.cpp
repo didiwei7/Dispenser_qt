@@ -316,7 +316,7 @@ void IO::thread_updateInputStatus()
 		{
 			for (int i = IN_VISIBLE_BEGIN; i < IN_COUNT; i++)
 			{
-				INPUT[i]->setStatus(read_in_bit(i));
+				INPUT[i]->setStatus(!read_in_bit(i));
 				Sleep(10);
 			}
 

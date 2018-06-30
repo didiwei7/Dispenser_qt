@@ -4,15 +4,13 @@
 #include <Windows.h>
 #include <QtWidgets>
 #include <QDebug>
+#include <Eigen/Dense>
 #include <iostream>
 #include <stdio.h>
-#include <Eigen/Dense>
+#include <adt8949.h>
 
 using namespace std;
 using namespace Eigen;
-
-#include "adt8949.h"
-
 
 // CCD点胶点(描点)
 typedef struct _CCDGlue
@@ -202,7 +200,8 @@ enum AXISNUM
 {
 	X = 1,
 	Y = 2,
-	Z = 3
+	Z = 3,
+	A = 4
 };
 
 enum ADMODE
@@ -216,9 +215,26 @@ enum ADMODE
 // 初始化控制卡 第一次调用才初始化, 第二次调用时返回第一次初始化的结果
 int init_card();
 
+// 载入控制卡配置
+void load_card();
+
+
+// 设置回原模式
+void set_home_mode();
+
+// 设置回原速度
+void set_home_speed();
+
+// 轴回原
+void home_axis(int axis);
+
+// 等待回原完成
+void wait_axis_homeOk(int axis);
+
+
+
 // 减速停止
 void stop_axis_dec(int axis);
-
 
 // 停止轴, by axis
 void stop_axis(int axis);
@@ -244,20 +260,6 @@ void write_out_bit(int bit, int status);
 // 改变输出点状态, by bit
 void change_out_bit(int bit);
 
-
-
-
-// 设置回原模式
-void set_home_mode();
-
-// 设置回原速度
-void set_home_speed();
-
-// 轴回原
-void home_axis(int axis);
-
-// 等待回原完成
-void wait_axis_homeOk(int axis);
 
 
 // 获取单轴绝对位置
@@ -303,13 +305,16 @@ void move_inp_abs_line3(float x_pos, float y_pos, float z_pos);
 void move_inp_abs_line2(float x_pos, float y_pos);
 
 // X, Y圆弧插补, Z轴直线插补 by pos_x, pos_y, pos_z, center_x, center_y
-void move_imp_abs_helix2(float pos_x, float pos_y, float pos_z, float center_x, float center_y);
+void move_inp_abs_helix2(float pos_x, float pos_y, float pos_z, float center_x, float center_y);
 
 // X, Y圆弧插补 by pos_x, pos_y, center_x, center_y
 void move_inp_abs_arc2(float pos_x, float pos_y, float center_x, float center_y);
 
-// 运动, 
+// 单轴是否正在运动 返回 0停止, 1运动
 bool axis_isMoving(int axis);
+
+// 是否正在运动 返回 0停止, 1运动
+bool card_isMoving();
 
 // 等待单轴停止
 void wait_axis_stop(int axis);
@@ -319,5 +324,9 @@ void wait_allaxis_stop();
 
 // 等待插补完成
 void wait_inp_finish();
+
+// 等待步进轴停止
+void wait_stepmotor_stop();
+
 
 #endif // ADTCONTROL_H
