@@ -41,6 +41,7 @@ private:
     void setupUi();
     void setConnect();
 	void setThread();
+	void setTimer();
 
 public:
 	QThreadPool thread_pool;
@@ -56,6 +57,9 @@ public:
 	bool close_thread_updateInputStatus;
 	QFuture<void> future_thread_updateInputStatus;
 	void thread_updateInputStatus();
+
+	void timer_updateCurrentPos();
+	void timer_updateInputStatus();
 
 private:
 	// 点位窗口
@@ -203,6 +207,8 @@ public:
 	QMap<QString, PointRun>  runPoint;
 	QMap<QString, PointRun>  getRunPointInfo();
 	
+	int move_thread_xyz(float x_pos, float y_pos, float z_pos);
+
 	// QMap<QString, QString> getPointByname(QString pointName);
 	/*QMap<QString, QString> PointDebug::getPointByname(QString pointName)
 	{

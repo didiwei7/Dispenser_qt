@@ -1,5 +1,13 @@
 ﻿#include "qcommunication.h"
 
+int char2number(char ch)
+{
+	if ((ch >= '0') && (ch <= '9')) return int(ch - 0x30);	
+	else if ((ch >= 'A') && (ch <= 'F')) return int(ch - 'A' + 10);
+	else if ((ch >= 'a') && (ch <= 'f')) return int(ch - 'a' + 10);
+	else return 0;
+}
+
 QMySocket::QMySocket(QWidget *parent) : QWidget(parent)
 {
     setSocket();
@@ -254,6 +262,15 @@ QMySerial::QMySerial(QWidget *parent) : QWidget(parent)
     setThread();
 }
 
+QMySerial::~QMySerial()
+{
+	g_flag_serialThread = false;
+
+	thread_pool.waitForDone();
+	thread_pool.clear();
+	thread_pool.destroyed();
+}
+
 // 初始化
 void QMySerial::setupUi()
 {
@@ -309,6 +326,8 @@ void QMySerial::setupUi()
     text_send = new QTextEdit();
     btn_send  = new QPushButton(QStringLiteral("发送"));
     btn_send->setEnabled(false);
+	btn_hex = new QCheckBox(QStringLiteral("16进制"));
+	btn_hex->setChecked(true);
 	btn_clear = new QCheckBox(QStringLiteral("发送后清空"));
 	btn_clear->setChecked(true);
 
@@ -340,8 +359,9 @@ void QMySerial::setupUi()
 
     layout_2_2->addWidget(text_send);
     layout_2_2->addWidget(btn_send);
+	layout_2_2->addWidget(btn_hex);
 	layout_2_2->addWidget(btn_clear);
-
+	
     layout_1->addLayout(layout_2_1);
     layout_1->addWidget(text_receive);
     layout_1->addLayout(layout_2_2);
@@ -355,6 +375,8 @@ void QMySerial::setConnect()
     connect(btn_start, &QPushButton::clicked, this, &QMySerial::on_btn_start);
     connect(btn_send,  &QPushButton::clicked, this, &QMySerial::on_btn_send);
     connect(btn_stop,  &QPushButton::clicked, this, &QMySerial::on_btn_stop);
+
+	connect(this, &QMySerial::serialportReceived, this, &QMySerial::on_serialportReceived);
 }
 
 void QMySerial::setSerial()
@@ -371,20 +393,16 @@ void QMySerial::setThread()
 // 线程
 void QMySerial::thread_receive()
 {
-    while (true)
+    while (g_flag_serialThread == true)
     {
-        QByteArray readData = serial->readAll();
-        if(!readData.isNull())
+        QByteArray readData = serial->read(10);
+        if( readData.size() > 5 )  //!readData.isNull() && readData != ""
         {
-            qDebug() << readData;
-            QString stime = getCurrentTime();
-            QString sdate = QString(readData);
-            QString str = QString("%1: %2").arg(stime).arg(sdate);
-            text_receive->append(str);
+			// QString str1 = QString(readData).remove(0, 1);
+            serialportReceived( QString(readData).remove(QChar(2)).remove(QChar(3)) );
             readData.clear();
         }
-        Sleep(10);
-        if(g_flag_serialThread == false) break;
+        Sleep(5);
     }
 }
 
@@ -431,6 +449,9 @@ void QMySerial::on_btn_stop()
 
 void QMySerial::on_btn_send()
 {
+	// char laser_data[10] = { 02, 'M', 'E', 'A', 'S', 'U', 'R', 'E', 03 };
+	// serial->write(laser_data);
+
     QString str = text_send->toPlainText();
     if(str == "")
     {
@@ -439,14 +460,44 @@ void QMySerial::on_btn_send()
     }
     else
     {
-        QByteArray data = str.toLatin1();
-        serial->write(data);
+		if (!btn_hex->isChecked())
+		{
+			QByteArray data = str.toLatin1();
+			serial->write(data);
+		}
+		else
+		{
+			QStringList ldata = str.trimmed().split(" ");
+			int length = ldata.length();
+			char hex_data[1024];
+			char lstr, hstr;
+			int lnum, hnum;
+			for (int i = 0; i < length; i++)
+			{
+				hstr = ldata.at(i)[0].toLatin1();
+				lstr = ldata.at(i)[1].toLatin1();
+
+				hnum = char2number(hstr);
+				lnum = char2number(lstr);
+
+				hex_data[i] = (char)(hnum * 16 + lnum);
+			}
+			serial->write(hex_data, length);
+		}
+
 		if (btn_clear->isChecked())
 		{
 			text_send->clear();
 		}
     }
 
+}
+
+void QMySerial::on_serialportReceived(QString rdata)
+{
+	QString stime = getCurrentTime();
+	QString str = QString("%1: %2").arg(stime).arg(rdata);
+	text_receive->append(str);
 }
 
 // 获取ComboBox状态

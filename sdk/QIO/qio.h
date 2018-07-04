@@ -15,6 +15,7 @@ public:
 public:
     void setStatus(int status);
     void setSize(int w, int h);
+	int  getStatus();
 
 private:
     int  m_width;
@@ -36,6 +37,7 @@ public:
 public:
     void setName(const QString &name);
     void setStatus(int state);
+	int  getStatus();
 
 private:
     QLabel *label_name;
@@ -54,13 +56,15 @@ signals:
 	void wclicked();
 
 public:
-    void setStatus(int state);
+	void setStatus(int state);
+	int  getStatus();
 
 private:
 	void on_btn_output();
 
 private:
 	QPushButton *btn_output;
+	int m_istatus;
 };
 
 #endif // QIO_H

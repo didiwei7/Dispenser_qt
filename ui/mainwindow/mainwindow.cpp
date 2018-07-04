@@ -129,8 +129,6 @@ MainWindow::MainWindow(QWidget *parent): QMainWindow(parent)
 	// 【1】 初始化板卡
 	init_card();
 
-
-
     setupUi();
     setExtras();
     setConnect();
@@ -138,7 +136,7 @@ MainWindow::MainWindow(QWidget *parent): QMainWindow(parent)
 
 MainWindow::~MainWindow()
 {
-
+	// estop();
 }
 
 void MainWindow::closeEvent(QCloseEvent *event)
@@ -171,17 +169,23 @@ void MainWindow::closeEvent(QCloseEvent *event)
 // Init
 void MainWindow::setupUi()
 {
+
     // 【0】 初始化Menu, Action
     setMenubar();
 	setStateBar();
     setShortcuts();
 
-    // 【1】 载入QFlex样式.
+	/* 使用QFlex
+	// 【1】 载入QFlex样式.
     qApp->setProperty("window", QVariant::fromValue<QObject*>(this));
 
     // 【2】 载入中心窗口
     wQtCentral = new QtCentral(this);
     this->setCentralWidget(wQtCentral);
+	*/
+
+	// 【2】 设置中心窗体
+	this->setCentralWidget(new MainWidget());
 
     // 【3】 读配置文件
     readSettings();
@@ -195,7 +199,8 @@ void MainWindow::setExtras()
 void MainWindow::setConnect()
 {
     // 【1】 Menubar
-    connect(action_file_new,  &QAction::triggered, this, &MainWindow::on_action_file_new);
+	/*
+	connect(action_file_new,  &QAction::triggered, this, &MainWindow::on_action_file_new);
     connect(action_file_open, &QAction::triggered, this, &MainWindow::on_action_file_open);
     connect(action_file_save, &QAction::triggered, this, &MainWindow::on_action_file_save);
     connect(action_file_save_all, &QAction::triggered, this, &MainWindow::on_action_file_save_all);
@@ -204,7 +209,8 @@ void MainWindow::setConnect()
     connect(action_view_mainwidget, &QAction::triggered, this, &MainWindow::on_action_view_mainwidget);
     connect(action_view_vision, &QAction::triggered, this, &MainWindow::on_action_view_vision);
     connect(action_view_photo, &QAction::triggered, this, &MainWindow::on_action_view_photo);
-
+	*/
+    
     connect(action_help_help, &QAction::triggered, this, &MainWindow::on_action_help_help);
     connect(action_help_about, &QAction::triggered, this, &MainWindow::on_action_help_about);
     connect(action_help_aboutQt, &QAction::triggered, this, &MainWindow::on_action_help_aboutQt);

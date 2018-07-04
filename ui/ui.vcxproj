@@ -14,7 +14,6 @@
     <ProjectGuid>{B3A92A8D-C931-3614-9E4C-B28629228259}</ProjectGuid>
     <RootNamespace>ui</RootNamespace>
     <Keyword>Qt4VSv1.0</Keyword>
-    <WindowsTargetPlatformVersion>10.0.17134.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
@@ -150,6 +149,7 @@
       <SubSystem>Windows</SubSystem>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <Version>1.0</Version>
+      <UACExecutionLevel>RequireAdministrator</UACExecutionLevel>
     </Link>
     <Midl>
       <DefaultCharType>Unsigned</DefaultCharType>
@@ -170,6 +170,9 @@
       <DynamicSource>output</DynamicSource>
       <IncludePath>.\GeneratedFiles\$(ConfigurationName);.\GeneratedFiles;$(QTDIR)\mkspecs/$(Platform)-msvc;.;C:/opencv/opencv300/include;C:/opencv/opencv300/include/opencv;C:/opencv/opencv300/include/opencv2;C:/myPlugin/Eigen3;C:/Motion/ADT;$(QTDIR)\include;$(QTDIR)\include/QtMultimedia;$(QTDIR)\include/QtCharts;$(QTDIR)\include/QtWidgets;$(QTDIR)\include/QtWinExtras;$(QTDIR)\include/QtGui;$(QTDIR)\include/QtANGLE;$(QTDIR)\include/QtSql;$(QTDIR)\include/QtXml;$(QTDIR)\include/QtNetwork;$(QTDIR)\include/QtConcurrent;$(QTDIR)\include/QtCore;C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\INCLUDE;C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\ATLMFC\INCLUDE;C:\Program Files (x86)\Windows Kits\10\include\10.0.16299.0\ucrt;C:\Program Files (x86)\Windows Kits\NETFXSDK\4.6.1\include\um;C:\Program Files (x86)\Windows Kits\10\include\10.0.16299.0\shared;C:\Program Files (x86)\Windows Kits\10\include\10.0.16299.0\um;C:\Program Files (x86)\Windows Kits\10\include\10.0.16299.0\winrt</IncludePath>
     </QtMoc>
+    <PostBuildEvent>
+      <Command>editbin /subsystem:console $(OutDir)\$(TargetName).exe</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="adt\adtcontrol.cpp" />

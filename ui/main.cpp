@@ -7,8 +7,8 @@ int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
 
-    qsrand(clock());
-    QApplication::setStyle(new FlexStyle());
+    // qsrand(clock());
+    // QApplication::setStyle(new FlexStyle());
 
     MainWindow w;
     w.show();

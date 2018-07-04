@@ -5,11 +5,15 @@ PointDebug::PointDebug(QWidget *parent) : QWidget(parent)
 {
     setupUi();
 	setConnect();
-	setThread();
+	// setThread();
+	
+	// 由于Qt中Ui对象是线程不安全的, 所以还是在计时器中刷新
+	setTimer();
 }
 
 PointDebug::~PointDebug()
 {
+	/*
 	// 关闭线程
 	close_thread_updateCurrentPos = true;
 	close_thread_updateInputStatus = true;
@@ -18,6 +22,8 @@ PointDebug::~PointDebug()
 	thread_pool.waitForDone();
 	thread_pool.clear();
 	thread_pool.destroyed();
+	*/
+
 }
 
 // 初始化Ui
@@ -103,6 +109,12 @@ void PointDebug::setConnect()
     connect(Z_negative, &QPushButton::pressed, this, &PointDebug::on_Z_negative_pressed);
     connect(Z_negative, &QPushButton::released, this, &PointDebug::on_Z_negative_released);
 
+	// 【5】 回原 BTN
+	connect(btn_x_home, &QPushButton::clicked, this, &PointDebug::on_btn_x_home);
+	connect(btn_y_home, &QPushButton::clicked, this, &PointDebug::on_btn_y_home);
+	connect(btn_z_home, &QPushButton::clicked, this, &PointDebug::on_btn_z_home);
+	connect(btn_stop, &QPushButton::clicked, this, &PointDebug::on_btn_stop);
+	connect(btn_station_home, &QPushButton::clicked, this, &PointDebug::on_btn_station_home);
 }
 
 // 初始化线程
@@ -122,6 +134,18 @@ void PointDebug::setThread()
 	future_thread_updateInputStatus = QtConcurrent::run(&thread_pool, [&]() { thread_updateInputStatus(); });
 }
 
+// 初始化计时器
+void PointDebug::setTimer()
+{
+	QTimer *timer_pos = new QTimer(this);
+	connect(timer_pos, &QTimer::timeout, this, &PointDebug::timer_updateCurrentPos);
+	timer_pos->start(10);
+
+	QTimer *timer_io = new QTimer(this);
+	connect(timer_io, &QTimer::timeout, this, &PointDebug::timer_updateInputStatus);
+	timer_io->start(10);
+}
+
 // Ui
 void PointDebug::setGroupMove()
 {
@@ -129,15 +153,15 @@ void PointDebug::setGroupMove()
 
     slider_speed = new QMySlider();
 	slider_speed->setText(QStringLiteral("当前速度"));
-	slider_speed->setRange(0, 1000);
+	slider_speed->setRange(0, 10000);
 	slider_speed->setValue(100);
 	slider_speed->setFixedWidth(250);
 
-	start_v = 0.1;
+	start_v = float(0.1);
 	speed = 1.0;
 	acc = 1.0;
 	dec = 1.0;
-	set_speed_mode(start_v, speed, acc, ADMODE::S);
+	set_speed_mode(start_v, speed, acc, ADMODE::T);
 
 	X_negative = new QPushButton(QIcon("../ui/resources/left.png"), NULL);
     X_positive = new QPushButton(QIcon("../ui/resources/right.png"), NULL);
@@ -507,7 +531,7 @@ void PointDebug::setViewPoint()
 	model_general->setEditStrategy(QSqlTableModel::OnManualSubmit);
 	model_general->setTable("point_main");
     // 设置按第0列升序排列
-	// model_general->setSort(0, Qt::AscendingOrder);
+	model_general->setSort(0, Qt::AscendingOrder);
     // 更改Model对象的 头信息
 	model_general->setHeaderData(model_general->fieldIndex("name"), Qt::Horizontal, QStringLiteral("名称"));
 	model_general->setHeaderData(model_general->fieldIndex("description"),  Qt::Horizontal, QStringLiteral("描述"));
@@ -690,13 +714,22 @@ void PointDebug::on_action_go()
 	QSqlTableModel *pointmodel = getCurrentModel();
 
 	int row = pointview->currentIndex().row();
-	// PointGlue point = get_point_index(row);
 	
 	float fx = pointmodel->record(row).value("X").toString().toFloat();
 	float fy = pointmodel->record(row).value("Y").toString().toFloat();
 	float fz = pointmodel->record(row).value("Z").toString().toFloat();
-
 	qDebug() << fx << fy << fz;
+
+	QtConcurrent::run( [fx, fy, fz] () {
+		qDebug() << "thread" << fx << fy << fz;
+
+		move_axis_abs(AXISNUM::X, fx);
+		move_axis_abs(AXISNUM::Y, fy);
+		move_axis_abs(AXISNUM::Z, fz);
+		wait_axis_stop(AXISNUM::X);
+		wait_axis_stop(AXISNUM::Y);
+		wait_axis_stop(AXISNUM::Z);
+	});
 }
 
 void PointDebug::on_action_teach()
@@ -894,7 +927,7 @@ void PointDebug::on_slider_speed_Changed(int pos)
 	acc = pos / float(100.0);
 	dec = pos / float(100.0);
 
-	set_speed_mode(start_v, speed, acc, ADMODE::S);
+	set_speed_mode(start_v, speed, acc, ADMODE::T);
 
 	qDebug() << speed << acc << dec;
 }
@@ -908,7 +941,7 @@ void PointDebug::on_X_positive_clicked()
 
 	float fx = edit_X_step->text().toFloat();
 	move_axis_offset(AXISNUM::X, fx);
-	// wait_axis_stop(1);
+	
 }
 
 void PointDebug::on_X_positive_pressed()
@@ -948,7 +981,7 @@ void PointDebug::on_X_positive_released()
 		}
 		else
 		{
-			stop_axis_dec(AXISNUM::X);
+			stop_axis(AXISNUM::X);
 		}
 	}
 }
@@ -961,7 +994,7 @@ void PointDebug::on_X_negative_clicked()
 
 	float fx = edit_X_step->text().toFloat();
 	move_axis_offset(AXISNUM::X, -fx);
-	wait_axis_stop(AXISNUM::X);
+	// wait_axis_stop(AXISNUM::X);
 }
 
 void PointDebug::on_X_negative_pressed()
@@ -1001,7 +1034,7 @@ void PointDebug::on_X_negative_released()
 		}
 		else
 		{
-			stop_axis_dec(AXISNUM::X);
+			stop_axis(AXISNUM::X);
 		}
 	}
 }
@@ -1015,7 +1048,7 @@ void PointDebug::on_Y_positive_clicked()
 
 	float fy = edit_Y_step->text().toFloat();
 	move_axis_offset(AXISNUM::Y, fy);
-	wait_axis_stop(AXISNUM::Y);
+	// wait_axis_stop(AXISNUM::Y);
 }
 
 void PointDebug::on_Y_positive_pressed()
@@ -1055,7 +1088,7 @@ void PointDebug::on_Y_positive_released()
 		}
 		else
 		{
-			stop_axis_dec(AXISNUM::Y);
+			stop_axis(AXISNUM::Y);
 		}
 	}
 }
@@ -1068,7 +1101,7 @@ void PointDebug::on_Y_negative_clicked()
 
 	float fy = edit_Y_step->text().toFloat();
 	move_axis_offset(AXISNUM::Y, -fy);
-	wait_axis_stop(AXISNUM::Y);
+	// wait_axis_stop(AXISNUM::Y);
 }
 
 void PointDebug::on_Y_negative_pressed()
@@ -1108,7 +1141,7 @@ void PointDebug::on_Y_negative_released()
 		}
 		else
 		{
-			stop_axis_dec(AXISNUM::Y);
+			stop_axis(AXISNUM::Y);
 		}
 	}
 }
@@ -1122,7 +1155,7 @@ void PointDebug::on_Z_positive_clicked()
 
 	float fz = edit_Z_step->text().toFloat();
 	move_axis_offset(AXISNUM::Z, fz);
-	wait_axis_stop(AXISNUM::Z);
+	// wait_axis_stop(AXISNUM::Z);
 }
 
 void PointDebug::on_Z_positive_pressed()
@@ -1162,7 +1195,7 @@ void PointDebug::on_Z_positive_released()
 		}
 		else
 		{
-			stop_axis_dec(AXISNUM::Z);
+			stop_axis(AXISNUM::Z);
 		}
 	}
 }
@@ -1175,7 +1208,7 @@ void PointDebug::on_Z_negative_clicked()
 
 	float fz = edit_Z_step->text().toFloat();
 	move_axis_offset(AXISNUM::Z, -fz);
-	wait_axis_stop(AXISNUM::Z);
+	// wait_axis_stop(AXISNUM::Z);
 }
 
 void PointDebug::on_Z_negative_pressed()
@@ -1217,7 +1250,7 @@ void PointDebug::on_Z_negative_released()
 		}
 		else
 		{
-			stop_axis_dec(AXISNUM::Z);
+			stop_axis(AXISNUM::Z);
 		}
 	}
 }
@@ -1227,22 +1260,6 @@ void PointDebug::on_Z_negative_released()
 void PointDebug::on_btn_stop()
 {
 	if (!(init_card() == 1)) return;
-
-	/*if (axis_isMoving(1))
-	{
-		stop_axis(AXISNUM::X);
-		Sleep(1);
-	}
-	if (axis_isMoving(2))
-	{
-		stop_axis(AXISNUM::Y);
-		Sleep(1);
-	}
-	if (axis_isMoving(3))
-	{
-		stop_axis(AXISNUM::Z);
-		Sleep(1);
-	}*/
 
 	stop_axis(AXISNUM::X);
 	Sleep(1);
@@ -1255,42 +1272,56 @@ void PointDebug::on_btn_station_home()
 {
 	if (!(init_card() == 1)) return;
 
-	home_axis(AXISNUM::X);
-	home_axis(AXISNUM::Y);
-	home_axis(AXISNUM::Z);
-	wait_axis_stop(AXISNUM::X);
-	wait_axis_stop(AXISNUM::X);
-	wait_axis_stop(AXISNUM::X);
+	QtConcurrent::run([&]() {
+		home_axis(AXISNUM::X);
+		wait_axis_homeOk(AXISNUM::X);
+	});
+
+	QtConcurrent::run([&]() {
+		home_axis(AXISNUM::Y);
+		wait_axis_homeOk(AXISNUM::Y);
+	});
+
 }
 
 void PointDebug::on_btn_x_home()
 {
+	// set_home_mode();
+	// set_home_speed();
 	if (!(init_card() == 1)) return;
-	
-	home_axis(AXISNUM::X);
-	
-	// 去掉等待, 还可以点停止, 以免撞机
-	// wait_axis_stop(AXISNUM::X);
+
+	adt8949_SetHomeMode_Ex(0, 1, 3, 0, 1, -1, 15, 20, 0);
+	adt8949_SetHomeSpeed_Ex(0, 1, 5, 20, 5, 20, 0.5);
+
+	QtConcurrent::run([&]() { 
+		home_axis(AXISNUM::X);
+		wait_axis_homeOk(AXISNUM::X);
+	});
 }
 
 void PointDebug::on_btn_y_home()
 {
 	if (!(init_card() == 1)) return;
 
-	home_axis(AXISNUM::Y);
+	int	i1 = adt8949_SetHomeMode_Ex(0, 2, 3, 0, 1, -1, 15, 30, 0);
+	int i2 = adt8949_SetHomeSpeed_Ex(0, 2, 5, 20, 5, 20, 0.5);
 
-	// 去掉等待, 还可以点停止, 以免撞机
-	// wait_axis_stop(AXISNUM::Y);
+	qDebug() << i1 << i2;
+
+	QtConcurrent::run([&]() {
+		home_axis(AXISNUM::Y);
+		wait_axis_homeOk(AXISNUM::Y);
+	});
 }
 
 void PointDebug::on_btn_z_home()
 {
 	if (!(init_card() == 1)) return;
 
-	home_axis(AXISNUM::Y);
-
-	// 去掉等待, 还可以点停止, 以免撞机
-	// wait_axis_stop(AXISNUM::Y);
+	QtConcurrent::run([&]() {
+		home_axis(AXISNUM::Z);
+		wait_axis_homeOk(AXISNUM::Z);
+	});
 }
 
 
@@ -1428,6 +1459,39 @@ void PointDebug::thread_updateInputStatus()
 
 }
 
+void PointDebug::timer_updateCurrentPos()
+{
+	float fx_axis = get_current_pos_axis(AXISNUM::X);
+	float fy_axis = get_current_pos_axis(AXISNUM::Y);
+	float fz_axis = get_current_pos_axis(AXISNUM::Z);
+
+	QString sx_axis = QString::number(fx_axis, 'f', 3);
+	QString sy_axis = QString::number(fy_axis, 'f', 3);
+	QString sz_axis = QString::number(fz_axis, 'f', 3);
+
+	if ((label_X_currentpos->text() != sx_axis)) label_X_currentpos->setText(sx_axis);
+	if ((label_Y_currentpos->text() != sy_axis)) label_Y_currentpos->setText(sy_axis);
+	if ((label_Z_currentpos->text() != sz_axis)) label_Z_currentpos->setText(sz_axis);
+}
+
+void PointDebug::timer_updateInputStatus()
+{
+	if (INPUT_X[0]->getStatus() != read_in_bit(4))  INPUT_X[0]->setStatus(read_in_bit(4));
+	if (INPUT_X[1]->getStatus() != !read_in_bit(12)) INPUT_X[1]->setStatus(!read_in_bit(12));
+	if (INPUT_X[2]->getStatus() != read_in_bit(5))  INPUT_X[2]->setStatus(read_in_bit(5));
+	if (INPUT_X[3]->getStatus() != !read_in_bit(0))  INPUT_X[3]->setStatus(!read_in_bit(0));
+
+	if (INPUT_Y[0]->getStatus() != read_in_bit(6))  INPUT_Y[0]->setStatus(read_in_bit(6));
+	if (INPUT_Y[1]->getStatus() != !read_in_bit(13)) INPUT_Y[1]->setStatus(!read_in_bit(13));
+	if (INPUT_Y[2]->getStatus() != read_in_bit(7))  INPUT_Y[2]->setStatus(read_in_bit(7));
+	if (INPUT_Y[3]->getStatus() != !read_in_bit(1))  INPUT_Y[3]->setStatus(!read_in_bit(1));
+
+	if (INPUT_Z[0]->getStatus() != read_in_bit(8))  INPUT_Z[0]->setStatus(read_in_bit(8));
+	if (INPUT_Z[1]->getStatus() != !read_in_bit(14)) INPUT_Z[1]->setStatus(!read_in_bit(14));
+	if (INPUT_Z[2]->getStatus() != read_in_bit(9))  INPUT_Z[2]->setStatus(read_in_bit(9));
+	if (INPUT_Z[3]->getStatus() != !read_in_bit(2))  INPUT_Z[3]->setStatus(!read_in_bit(2));
+}
+
 
 // 获取当前选中的Model的数据
 QMap<QString, PointRun> PointDebug::getCurrentModelPointInfo()
@@ -1556,4 +1620,17 @@ QMap<QString, PointRun> PointDebug::getRunPointInfo()
 	}
 
 	return _allPoint;
+}
+
+
+int PointDebug::move_thread_xyz(float x_pos, float y_pos, float z_pos)
+{
+	move_axis_abs(AXISNUM::X, x_pos);
+	move_axis_abs(AXISNUM::Y, y_pos);
+	move_axis_abs(AXISNUM::Z, z_pos);
+	wait_axis_stop(AXISNUM::X);
+	wait_axis_stop(AXISNUM::Y);
+	wait_axis_stop(AXISNUM::Z);
+
+	return 0;
 }

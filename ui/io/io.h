@@ -13,7 +13,7 @@ class QInputLabel;
 class QOutputButton;
 
 #define IN_COUNT  36
-#define OUT_COUNT 16
+#define OUT_COUNT 18
 #define IN_VISIBLE_BEGIN  16
 #define OUT_VISIBLE_BEGIN 0
 
@@ -28,6 +28,7 @@ private:
 	void setupUi();
 	void setConnect();
 	void setThread();
+	void setTimer();
 
 private:
 	void setInput();
@@ -43,8 +44,11 @@ private:
 	QFuture<void> future_thread_updateInputStatus;
 	void thread_updateInputStatus();
 
+	void timer_updateInputStatus();
+	void timer_updateOutputStatus();
+	
 	void updateOutputStatus();
-		
+	
 private:
 	void  on_btn_output();
 	void  changeOutputStatus(int bit);

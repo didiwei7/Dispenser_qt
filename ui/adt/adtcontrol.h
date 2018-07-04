@@ -29,7 +29,7 @@ typedef struct _CCDGlue
 	bool             close;                   // 是否关胶
 	int              closeAdvance;            // 提前关胶时间
 	int              closeDelay;              // 延后关胶时间
-	int			     type;					  // 类型
+	QString			 type;					  // 类型
 
 	_CCDGlue()
 	{
@@ -47,7 +47,7 @@ typedef struct _CCDGlue
 		close = false;                // 是否关胶
 		closeAdvance = 0;             // 提前关胶时间
 		closeDelay = 0;               // 延后关胶时间
-		type = 0;					  // 类型
+		type = "null";				  // 类型
 	}
 
 	_CCDGlue & operator = (const _CCDGlue &other)

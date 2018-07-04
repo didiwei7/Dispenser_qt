@@ -1,54 +1,54 @@
 {
     "HomeMode": { 
         "X_axis": {
-            "m_nHomeDir": 1, 
-            "m_nStop0Active": 1, 
+            "m_nHomeDir": 3, 
+            "m_nStop0Active": 0, 
             "m_nLimitActive": 1, 
             "m_nStop1Active": -1,
-            "m_fBackRange": 50,
-            "m_fEncoderZRange": 30,
+            "m_fBackRange": 15,
+            "m_fEncoderZRange": 20,
             "m_fOffset": 0
         },
         "Y_axis": {
-            "m_nHomeDir": 1, 
-            "m_nStop0Active": 1, 
+            "m_nHomeDir": 3, 
+            "m_nStop0Active": 0, 
             "m_nLimitActive": 1, 
             "m_nStop1Active": -1,
-            "m_fBackRange": 50,
-            "m_fEncoderZRange": 30,
+            "m_fBackRange": 15,
+            "m_fEncoderZRange": 20,
             "m_fOffset": 0
         },
         "Z_axis": {
-            "m_nHomeDir": 1, 
-            "m_nStop0Active": 1, 
+            "m_nHomeDir": 3, 
+            "m_nStop0Active": 0, 
             "m_nLimitActive": 1, 
             "m_nStop1Active": -1,
-            "m_fBackRange": 50,
-            "m_fEncoderZRange": 30,
+            "m_fBackRange": 15,
+            "m_fEncoderZRange": 20,
             "m_fOffset": 0
         }
     },
     "HomeSpeed": {
         "X_axis":{
-            "m_fStartSpeed": 10,
+            "m_fStartSpeed": 5,
             "m_fSearchSpeed": 20,
             "m_fHomeSpeed": 5,
-            "m_fAcc": 10,
-            "m_fZPhaseSpeed": 10
+            "m_fAcc": 20,
+            "m_fZPhaseSpeed": 0.5
         },
         "Y_axis":{
-            "m_fStartSpeed": 10,
+            "m_fStartSpeed": 5,
             "m_fSearchSpeed": 20,
             "m_fHomeSpeed": 5,
-            "m_fAcc": 10,
-            "m_fZPhaseSpeed": 10
+            "m_fAcc": 20,
+            "m_fZPhaseSpeed": 0.5
         },
         "Z_axis":{
-            "m_fStartSpeed": 10,
+            "m_fStartSpeed": 5,
             "m_fSearchSpeed": 20,
             "m_fHomeSpeed": 5,
-            "m_fAcc": 10,
-            "m_fZPhaseSpeed": 10
+            "m_fAcc": 20,
+            "m_fZPhaseSpeed": 0.5
         }
     }
 }

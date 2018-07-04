@@ -41,14 +41,13 @@ int init_card()
 
 void load_card()
 {
+	// 【0】
+	adt8949_reset_card(0);
+
 	// 【1】 设置急停模式
 	adt8949_set_emergency_stop_mode(0, 16, 1);
 
-	// 【2】 设置回原模式, 速度
-	set_home_mode();
-	set_home_speed();
-
-	// 【3】 设置 X, Y, Z, A 轴
+	// 【2】 设置 X, Y, Z, A 轴
 	adt8949_set_pulse_mode(0, 1, 1, 0, 0);
 	adt8949_set_pulse_mode(0, 2, 1, 0, 0);
 	adt8949_set_pulse_mode(0, 3, 1, 0, 0);
@@ -59,8 +58,11 @@ void load_card()
 	adt8949_set_gear(0, 3, 1000);
 	adt8949_set_gear(0, 4, 3200);
 
+	// 【3】 设置回原模式, 速度
+	set_home_mode();
+	set_home_speed();
 	// 【4】 设置限位锁模式
-	// adt8949_set_limit_lock(0, 1);
+	// adt8949_set_limit_lock(0, 0);
 }
 
 
@@ -110,13 +112,13 @@ void set_home_mode()
 	float m_fBackRange[3], m_fEncoderZRange[3], m_fOffset[3];
 
 	QJsonObject x_obj = obj.value("HomeMode").toObject().value("X_axis").toObject();
-	m_nHomeDir[0] = x_obj.value("m_nHomeDir").toInt();
+	m_nHomeDir[0]     = x_obj.value("m_nHomeDir").toInt();
 	m_nStop0Active[0] = x_obj.value("m_nStop0Active").toInt();
 	m_nLimitActive[0] = x_obj.value("m_nLimitActive").toInt();
 	m_nStop1Active[0] = x_obj.value("m_nStop1Active").toInt();
-	m_fBackRange[0] = x_obj.value("m_fBackRange").toDouble();
+	m_fBackRange[0]   = x_obj.value("m_fBackRange").toDouble();
 	m_fEncoderZRange[0] = x_obj.value("m_fEncoderZRange").toDouble();
-	m_fOffset[0] = x_obj.value("m_fOffset").toDouble();
+	m_fOffset[0]        = x_obj.value("m_fOffset").toDouble();
 	adt8949_SetHomeMode_Ex(0, AXISNUM::X,
 		m_nHomeDir[0], m_nStop0Active[0], m_nLimitActive[0], m_nStop1Active[0],
 		m_fBackRange[0], m_fEncoderZRange[0], m_fOffset[0]);
@@ -134,23 +136,18 @@ void set_home_mode()
 		m_fBackRange[1], m_fEncoderZRange[1], m_fOffset[1]);
 
 	QJsonObject z_obj = obj.value("HomeMode").toObject().value("Z_axis").toObject();
-	m_nHomeDir[2] = z_obj.value("m_nHomeDir").toInt();
+	m_nHomeDir[2]     = z_obj.value("m_nHomeDir").toInt();
 	m_nStop0Active[2] = z_obj.value("m_nStop0Active").toInt();
 	m_nLimitActive[2] = z_obj.value("m_nLimitActive").toInt();
 	m_nStop1Active[2] = z_obj.value("m_nStop1Active").toInt();
-	m_fBackRange[2] = z_obj.value("m_fBackRange").toDouble();
+	m_fBackRange[2]   = z_obj.value("m_fBackRange").toDouble();
 	m_fEncoderZRange[2] = z_obj.value("m_fEncoderZRange").toDouble();
-	m_fOffset[2] = z_obj.value("m_fOffset").toDouble();
+	m_fOffset[2]        = z_obj.value("m_fOffset").toDouble();
 	adt8949_SetHomeMode_Ex(0, AXISNUM::Z,
 		m_nHomeDir[2], m_nStop0Active[2], m_nLimitActive[2], m_nStop1Active[2],
 		m_fBackRange[2], m_fEncoderZRange[2], m_fOffset[2]);
 
 	file.close();
-
-	QFile file2("../config/motor2.json");
-	file2.open((QIODevice::WriteOnly));
-	QJsonDocument doc_save(obj);
-	file2.write(doc_save.toJson());
 }
 
 // 设置回原速度
@@ -310,7 +307,7 @@ void move_axis_abs(int axis, float pos)
 // 单轴相对运动, 不带速度设置, 需提前设置速度, 模式
 void move_axis_offset(int axis, float distance)
 {
-	adt8949_abs_pmove(0, axis, distance);
+	adt8949_pmove(0, axis, distance);
 }
 
 // 单轴连续运动, 不带速度设置, 需提前设置速度, 模式
@@ -344,7 +341,7 @@ void move_axis_offset(int axis, float distance, float speed, float acc, float de
 	adt8949_set_acc(0, axis, acc);	// 加速度 
 	adt8949_set_dec(0, axis, dec);	// 减速度 
 	adt8949_set_jcc(0, axis, 3);	// 加加速度, 值越小, 加减速效果越明显
-	adt8949_abs_pmove(0, axis, distance);
+	adt8949_pmove(0, axis, distance);
 }
 
 // 单轴连续运动, 带方向(0+, 1-), 带速度, 带加减速, 带正负限位

@@ -32,6 +32,11 @@ void QInput::setStatus(int status)
     }
 }
 
+int  QInput::getStatus()
+{
+	return m_status;
+}
+
 void QInput::paintEvent(QPaintEvent *)
 {
     QPainter painter(this);
@@ -133,9 +138,17 @@ void QInputLabel::setStatus(int state)
     label_state->setStatus(state);
 }
 
+int  QInputLabel::getStatus()
+{
+	return label_state->getStatus();
+}
+
+
 
 QOutputButton::QOutputButton(QWidget *parent) : QWidget(parent)
 {
+	m_istatus = 0;
+
 	setFixedSize(150, 20);
 
 	btn_output = new QPushButton(this);
@@ -146,6 +159,8 @@ QOutputButton::QOutputButton(QWidget *parent) : QWidget(parent)
 
 QOutputButton::QOutputButton(const QString &name, int state, QWidget *parent) : QWidget(parent)
 {
+	m_istatus = 0;
+
 	setFixedSize(150, 20);
 
 	btn_output = new QPushButton(this);
@@ -160,15 +175,24 @@ void QOutputButton::setStatus(int state)
 {
     if(state <= 0)
     {
+		m_istatus = 0;
+
 		btn_output->setStyleSheet(QStringLiteral("background-color: #D1D1D1;"
-                                           "border-radius: 5px;"));
+												 "border-radius: 5px;"));
     }
     else if(state == 1)
     {
+		m_istatus = 1;
+
 		btn_output->setStyleSheet(QStringLiteral("background-color: #5CACEE;"
-                                     "color: #eff0f1;"
-                                     "border-radius: 5px;"));
+												 "color: #eff0f1;"
+												 "border-radius: 5px;"));
     }
+}
+
+int  QOutputButton::getStatus()
+{
+	return m_istatus;
 }
 
 void QOutputButton::on_btn_output()

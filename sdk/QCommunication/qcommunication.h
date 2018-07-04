@@ -73,6 +73,7 @@ class QCOMMUNICATIONSHARED_EXPORT QMySerial : public QWidget
     Q_OBJECT
 public:
     explicit QMySerial(QWidget *parent = 0);
+	~QMySerial();
 
 private:
     void setSerial();
@@ -86,7 +87,7 @@ private:
 private:
     QThreadPool thread_pool;
     void thread_receive();
-    bool g_flag_serialThread;   // 线程开启/关闭
+	bool g_flag_serialThread;
 
 private:
     QString getCurrentTime();
@@ -104,6 +105,13 @@ private:
     QComboBox *combo_stop;
     QComboBox *combo_flow;
 
+signals:
+	void serialportReceived(QString rdata);
+
+private slots:
+	void on_serialportReceived(QString rdata);
+	
+
 private:
     void on_btn_start();
     void on_btn_send();
@@ -113,6 +121,7 @@ private:
     QTextEdit    *text_send;
 
     QPushButton  *btn_send;
+	QCheckBox    *btn_hex;
 	QCheckBox    *btn_clear;
     QPushButton  *btn_start;
     QPushButton  *btn_stop;

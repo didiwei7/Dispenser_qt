@@ -17,6 +17,7 @@ Workflow::~Workflow()
 	close_thread_watch_estop = true;
 	close_thread_exchangeTrays = true;
 	close_thread_workflow = true;
+	close_thread_glue_teda = true;
 
 	thread_pool.waitForDone();
 	thread_pool.clear();
@@ -118,20 +119,21 @@ void Workflow::setThread()
 
 	thread_pool.setMaxThreadCount(20);
 
+	// 【1】 监视 input
 	is_start_ok = false;
-	start_thread_watch_start = false;
+	start_thread_watch_start = true;
 	close_thread_watch_start = false;
 
 	is_reset_ok = false;
-	start_thread_watch_reset = false;
+	start_thread_watch_reset = true;
 	close_thread_watch_reset = false;
 
 	is_stop_ok = false;
-	close_thread_watch_stop = false;
+	start_thread_watch_stop = false;
 	close_thread_watch_stop = false;
 
 	is_estop_ok = false;
-	close_thread_watch_estop = false;
+	start_thread_watch_estop = true;
 	close_thread_watch_estop = false;
 
 	is_workflow_ok = false;
@@ -141,14 +143,235 @@ void Workflow::setThread()
 	is_exchangeTrays_ok = false;
 	start_thread_exchangeTrays = false;
 	close_thread_exchangeTrays = false;
-	
-	future_thread_watch_start = QtConcurrent::run(&thread_pool, [&]() { thread_watch_start(); });
+
+	// 【2】 点胶  
+	is_glue_teda_ok = false;
+	start_thread_glue_teda = true;
+	close_thread_glue_teda = false;
+
+
+    future_thread_watch_estop = QtConcurrent::run(&thread_pool, [&]() { thread_watch_estop(); });
 	future_thread_watch_reset = QtConcurrent::run(&thread_pool, [&]() { thread_watch_reset(); });
-	future_thread_watch_stop  = QtConcurrent::run(&thread_pool, [&]() { thread_watch_stop(); });
-	future_thread_watch_estop = QtConcurrent::run(&thread_pool, [&]() { thread_watch_estop(); });
+	// future_thread_watch_stop  = QtConcurrent::run(&thread_pool, [&]() { thread_watch_stop(); });
+	future_thread_watch_start = QtConcurrent::run(&thread_pool, [&]() { thread_watch_start(); });
 	
-	future_thread_workflow = QtConcurrent::run(&thread_pool, [&]() { thread_workflow(); });
-	future_thread_exchangeTrays = QtConcurrent::run(&thread_pool, [&]() { thread_exchangeTrays(); });
+	
+	
+	// future_thread_workflow = QtConcurrent::run(&thread_pool, [&]() { thread_workflow(); });
+	// future_thread_exchangeTrays = QtConcurrent::run(&thread_pool, [&]() { thread_exchangeTrays(); });
+
+	// 点胶流程
+	// future_thread_glue_teda = QtConcurrent::run(&thread_pool, [&]() { thread_glue_teda(); });
+	future_thread_glue_teda_test = QtConcurrent::run(&thread_pool, [&]() { thread_glue_teda_test(); });
+}
+
+// Thread 急停
+void Workflow::thread_watch_estop()
+{
+	if (!(init_card() == 1)) return;
+
+	int step_estop = 0;
+
+	while (close_thread_watch_estop == false)
+	{
+		switch (step_estop)
+		{
+		case 0:		// 检测急停
+		{
+			if ( (true == start_thread_watch_estop) && (1 == read_in_bit(16)))
+			{
+				step_estop = 10;
+			}
+			else
+			{
+				Sleep(5);
+				step_estop = 0;
+			}
+		}
+		break;
+
+		case 10:	// 急停操作
+		{
+			// 急停
+			stop_allaxis();
+			// estop();
+
+			// 消息更新
+			Sleep(300);
+			emit changedRundataLabel(QStringLiteral("急停已按下"));
+			emit changedRundataText(QStringLiteral("急停已按下, 请重新启动软件"));
+			writRunningLog(QStringLiteral("急停已按下, 请重新启动软件"));
+
+			// 关闭线程
+			step_estop = 9999;
+		}
+		break;
+
+		case 8888:	// 线程: 流程执行完毕, 等待下次开始
+		{
+			step_estop = 0;
+		}
+		break;
+
+		case 9999:	// 线程: 线程退出
+		{
+			close_thread_watch_reset = true;
+		}
+		break;
+
+		default:
+			break;
+		}
+	}
+}
+
+// Thread 复位
+void Workflow::thread_watch_reset()
+{
+	if (!(init_card() == 1)) return;
+
+	int step_reset = 0;
+
+	while (close_thread_watch_reset == false)
+	{
+		switch (step_reset)
+		{
+		case 0:		// 检测复位信号
+		{
+			if ((true == start_thread_watch_reset) && (0 == read_in_bit(20)))
+			{
+
+				step_reset = 5;
+			}
+			else
+			{
+				Sleep(5);
+				step_reset = 0;
+			}
+		}
+		break;
+
+		case 5:		// 消息更新
+		{
+			emit changedRundataLabel(QStringLiteral("复位开始..."));
+			emit changedRundataText(QStringLiteral("复位开始..."));
+			writRunningLog(QStringLiteral("复位开始"));
+			step_reset = 10;
+		}
+		break;
+
+		case 10:	// 工站复位
+		{
+			// 工站复位
+			// home_axis(AXISNUM::Z);		
+			// wait_axis_homeOk(AXISNUM::Z);
+
+			home_axis(AXISNUM::X);
+			wait_axis_homeOk(AXISNUM::X);
+
+			home_axis(AXISNUM::Y);
+			wait_axis_homeOk(AXISNUM::Y);
+
+			emit changedRundataLabel(QStringLiteral("工站复位完成"));
+			emit changedRundataText(QStringLiteral("工站复位完成"));
+			writRunningLog(QStringLiteral("工站复位完成"));
+
+			step_reset = 50;
+		}
+		break;
+
+		case 50:	// 消息更新
+		{
+			emit changedRundataLabel(QStringLiteral("复位完成, 已就绪"));
+			emit changedRundataText(QStringLiteral("复位完成"));
+			writRunningLog(QStringLiteral("复位完成"));
+
+			step_reset = 8888;
+
+		}
+		break;
+
+		case 8888:	// 线程: 流程执行完毕, 等待下次开始
+		{
+			is_reset_ok = true;
+			step_reset = 0;
+		}
+		break;
+
+		case 9999:	// 线程: 线程退出
+		{
+			close_thread_watch_reset = true;
+		}
+		break;
+
+		default:
+			break;
+		}
+
+	}
+}
+
+// Thread 停止
+void Workflow::thread_watch_stop()
+{
+	if (!(init_card() == 1)) return;
+
+	int step_stop = 0;
+
+	while (close_thread_watch_stop == false)
+	{
+		switch (step_stop)
+		{
+		case 0:		// 检测暂停信号
+		{
+			if ( (start_thread_watch_stop == true) || (read_in_bit(16) == 1) )
+			{
+				step_stop = 5;
+			}
+			else
+			{
+				Sleep(1);
+				step_stop = 0;
+			}
+		}
+		break;
+
+		case 5:		// 消息更新
+		{
+			// 消息更新
+			emit changedRundataLabel(QStringLiteral("暂停"));
+			emit changedRundataText(QStringLiteral("暂停"));
+			writRunningLog(QStringLiteral("暂停"));
+
+			step_stop = 10;
+		}
+		break;
+
+		case 10:	// 暂停
+		{
+			stop_allaxis();
+			step_stop = 9999;
+		}
+		break;
+
+		case 8888:	// 线程: 流程执行完毕, 等待下次开始
+		{
+			start_thread_watch_estop = false;
+			step_stop = 0;
+		}
+		break;
+
+		case 9999:	// 线程: 线程退出
+		{
+			close_thread_watch_reset = true;
+		}
+		break;
+
+		default:
+			break;
+		}
+	}
+	
 }
 
 // Thread 启动
@@ -164,7 +387,7 @@ void Workflow::thread_watch_start()
 		{
 		case 0:		// 等待触发
 		{
-			if (start_thread_watch_start == true || (read_in_bit(20) == 1))
+			if ( (true == start_thread_watch_start) && (0 == read_in_bit(17)) )
 			{
 				if (true == is_reset_ok)
 				{
@@ -177,10 +400,10 @@ void Workflow::thread_watch_start()
 					emit changedRundataText(QStringLiteral("未复位, 无法启动"));
 					writRunningLog(QStringLiteral("未复位, 无法启动"));
 
-					Sleep(2);
+					Sleep(1000);
 					step_start = 0;
 				}
-				
+
 			}
 			else
 			{
@@ -193,10 +416,10 @@ void Workflow::thread_watch_start()
 		case 5:		// 消息更新
 		{
 			emit changedRundataLabel(QStringLiteral("运行中..."));
-			emit changedRundataText(QStringLiteral("校针开始"));
-			writRunningLog(QStringLiteral("校针开始"));
+			emit changedRundataText(QStringLiteral("开始点胶流程"));
+			writRunningLog(QStringLiteral("开始点胶流程"));
 
-			step_start = 10;
+			step_start = 20;
 		}
 		break;
 
@@ -204,7 +427,7 @@ void Workflow::thread_watch_start()
 		{
 			// 【1】 设置速度, 模式
 			// set_speed_mode()
-			
+
 			// 【2】 到清胶安全点
 			move_point_name("xx");
 			wait_allaxis_stop();
@@ -232,9 +455,10 @@ void Workflow::thread_watch_start()
 		}
 		break;
 
-		case 20:	// 点胶1开始
+		case 20:	// 点胶泰达开始
 		{
-			start_thread_glue_1 = true;
+			start_thread_glue_teda = true;
+			Sleep(50);
 			step_start = 30;
 		}
 		break;
@@ -242,8 +466,9 @@ void Workflow::thread_watch_start()
 		case 30:	// 等待点胶1完成
 		{
 			// 判断点胶1是否完成
-			if (start_thread_glue_1 == false)
+			if (is_glue_teda_ok == false)
 			{
+				Sleep(5);
 				step_start = 30;
 			}
 			else
@@ -323,216 +548,6 @@ void Workflow::thread_watch_start()
 	}
 }
 
-// Thread 复位
-void Workflow::thread_watch_reset()
-{
-	if (!(init_card() == 1)) return;
-
-	int step_reset = 0;
-
-	while (close_thread_watch_reset == false)
-	{
-		switch (step_reset)
-		{
-		case 0:		// 检测复位信号
-		{
-			if (start_thread_watch_reset == true || (read_in_bit(20) == 1))
-			{
-				step_reset = 5;
-			}
-			else
-			{
-				Sleep(1);
-				step_reset = 0;
-			}		
-		}
-		break;
-
-		case 5:		// 消息更新
-		{
-			emit changedRundataLabel(QStringLiteral("复位开始..."));
-			emit changedRundataText(QStringLiteral("复位开始..."));
-			writRunningLog(QStringLiteral("复位开始"));
-			step_reset = 10;
-		}
-		break;
-
-		case 10: // 工站复位
-		{ 
-			// 工站复位
-			home_axis(AXISNUM::Z);		
-			wait_axis_homeOk(AXISNUM::Z);
-
-			home_axis(AXISNUM::X);
-			home_axis(AXISNUM::Y);
-			wait_axis_homeOk(AXISNUM::X);
-			wait_axis_homeOk(AXISNUM::Y);
-
-			emit changedRundataLabel(QStringLiteral("工站复位完成"));
-			emit changedRundataText(QStringLiteral("工站复位完成"));
-			writRunningLog(QStringLiteral("工站复位完成"));
-
-			step_reset = 50;
-		}
-		break;
-
-		case 50: // 复位完成
-			{
-				emit changedRundataLabel(QStringLiteral("复位完成, 已就绪"));
-				emit changedRundataText(QStringLiteral("复位完成"));
-				writRunningLog(QStringLiteral("复位完成"));
-
-				step_reset = 8888;
-					
-			}
-			break;
-
-		case 8888:	// 线程: 流程执行完毕, 等待下次开始
-			{
-				start_thread_watch_reset = false;
-				step_reset = 0;
-			}
-			break;
-
-		case 9999:	// 线程: 线程退出
-			{
-				close_thread_watch_reset = true;
-			}
-			break;
-			
-		default:
-			break;
-		}
-		
-	}
-}
-
-// Thread 停止
-void Workflow::thread_watch_stop()
-{
-	if (!(init_card() == 1)) return;
-
-	int step_stop = 0;
-
-	while (close_thread_watch_estop == false)
-	{
-		switch (step_stop)
-		{
-		case 0:		// 检测暂停信号
-		{
-			if (start_thread_watch_stop == true || (read_in_bit(16) == 1))
-			{
-				step_stop = 5;
-			}
-			else
-			{
-				Sleep(1);
-				step_stop = 0;
-			}
-		}
-		break;
-
-		case 5:		// 消息更新
-		{
-			// 消息更新
-			emit changedRundataLabel(QStringLiteral("暂停"));
-			emit changedRundataText(QStringLiteral("暂停"));
-			writRunningLog(QStringLiteral("暂停"));
-
-			step_stop = 10;
-		}
-		break;
-
-		case 10:	// 暂停
-		{
-			stop_allaxis();
-			step_stop = 9999;
-		}
-		break;
-
-		case 8888:	// 线程: 流程执行完毕, 等待下次开始
-		{
-			start_thread_watch_estop = false;
-			step_stop = 0;
-		}
-		break;
-
-		case 9999:	// 线程: 线程退出
-		{
-			close_thread_watch_reset = true;
-		}
-		break;
-
-		default:
-			break;
-		}
-	}
-	
-}
-
-// Thread 急停
-void Workflow::thread_watch_estop()
-{
-	if (!(init_card() == 1)) return;
-
-	int step_estop = 0;
-
-	while (close_thread_watch_estop == false)
-	{
-		switch (step_estop)
-		{
-		case 0:	// 复位开始
-		{
-			if (start_thread_watch_reset == true || (read_in_bit(16) == 1))
-			{
-				step_estop = 5;
-			}
-			else
-			{
-				Sleep(1);
-				step_estop = 0;
-			}
-		}
-		break;
-
-		case 5:	// 消息更新
-		{
-			// 消息更新
-			emit changedRundataLabel(QStringLiteral("急停已按下"));
-			emit changedRundataText(QStringLiteral("急停已按下"));
-			writRunningLog(QStringLiteral("急停已按下"));
-
-			step_estop = 10;
-		}
-		break;
-
-		case 10:
-		{
-			// 急停
-			stop_allaxis();
-			estop();
-			step_estop = 9999;
-		}
-		break;
-
-		case 8888:	// 线程: 流程执行完毕, 等待下次开始
-		{
-			start_thread_watch_estop = false;
-			step_estop = 0;
-		}
-		break;
-
-		case 9999:	// 线程: 线程退出
-		{
-			close_thread_watch_reset = true;
-		}
-		break;
-
-		default:
-			break;
-		}
-	}
-}
 
 // Thread 工作流程
 void Workflow::thread_workflow()
@@ -1139,7 +1154,7 @@ void Workflow::thread_glue_teda()
 
 	int step_glue_teda = 0;
 
-	while (step_glue_teda == false)
+	while (close_thread_glue_teda == false)
 	{
 		switch (step_glue_teda)
 		{
@@ -1147,11 +1162,12 @@ void Workflow::thread_glue_teda()
 		{
 			if (start_thread_glue_teda == false)
 			{
-				Sleep(1);
+				Sleep(5);
 				step_glue_teda = 0;
 			}
 			else
 			{
+				start_thread_glue_teda = false;
 				step_glue_teda = 10;
 			}
 		}
@@ -1172,7 +1188,11 @@ void Workflow::thread_glue_teda()
 
 		case 20:	// 设置速度, 模式
 		{
-			// 设置速度模式
+			// 设置运动速度
+			set_speed_mode(0.1, 5, 5, ADMODE::T);
+			
+			// 设置插补速度
+			set_inp_speed_mode(0.1, 5, 5, ADMODE::T);
 
 			step_glue_teda = 30;
 		}
@@ -1181,7 +1201,7 @@ void Workflow::thread_glue_teda()
 		case 30:	// Z轴到安全位
 		{
 			move_axis_abs(AXISNUM::Z, 0);
-			step_glue_teda = 40;
+			step_glue_teda = 90;
 		}
 		break;
 
@@ -1255,9 +1275,9 @@ void Workflow::thread_glue_teda()
 				}
 				else
 				{
-					ccd_offset_x = receivedMsg_ccd.split("]").at(1).toFloat();
-					ccd_offset_y = receivedMsg_ccd.split("]").at(2).toFloat();
-					ccd_offset_A = receivedMsg_ccd.split("]").at(3).toFloat();
+					ccd_offset_x = receivedMsg_ccd.split("]").at(0).toFloat();
+					ccd_offset_y = receivedMsg_ccd.split("]").at(1).toFloat();
+					ccd_offset_A = receivedMsg_ccd.split("]").at(2).toFloat();
 
 					receivedMsg_ccd = "";
 
@@ -1269,7 +1289,9 @@ void Workflow::thread_glue_teda()
 
 		case 90:	// 计算矩阵偏移
 		{
-			work_matrix = CalCCDGluePoint(vec_ccdGlue_1, ccd_offset_x, ccd_offset_y, ccd_offset_A, org_ccdglue_x[CCDORG::GLUE1ORG], org_ccdglue_y[CCDORG::GLUE1ORG]);
+			// work_matrix = CalCCDGluePoint(vec_ccdGlue_1, ccd_offset_x, ccd_offset_y, ccd_offset_A, org_ccdglue_x[CCDORG::GLUE1ORG], org_ccdglue_y[CCDORG::GLUE1ORG]);
+			work_matrix = CalCCDGluePoint(vec_ccdGlue_1, 0, 0, 0, 0, 0);
+			step_glue_teda = 100;
 		}
 		break;
 
@@ -1294,38 +1316,34 @@ void Workflow::thread_glue_teda()
 			}
 			else
 			{
-				if (vec_ccdGlue_1.at(current_cmd_num).type == QString("null"))
+				current_cmd = vec_ccdGlue_1.at(current_cmd_num);
+
+				if (current_cmd.type == QString("null"))
 				{
 					step_glue_teda = 7777;
 				}
 				else if (current_cmd.type == QString("line"))	// 直线插补
 				{
-					current_cmd = vec_ccdGlue_1.at(current_cmd_num);
 					step_glue_teda = 200;
 				}
 				else if (current_cmd.type == QString("circle"))	// 圆弧插补
 				{
-					current_cmd = vec_ccdGlue_1.at(current_cmd_num);
 					step_glue_teda = 400;
 				}
 				else if (current_cmd.type == QString("up_abs"))		// Z轴向上定位
 				{
-					current_cmd = vec_ccdGlue_1.at(current_cmd_num);
 					step_glue_teda = 500;
 				}
 				else if (current_cmd.type == QString("up_offset"))	// Z轴向上偏移
 				{
-					current_cmd = vec_ccdGlue_1.at(current_cmd_num);
 					step_glue_teda = 600;
 				}
 				else if (current_cmd.type == QString("move_abs"))		// 轴定位指令
 				{
-					current_cmd = vec_ccdGlue_1.at(current_cmd_num);
 					step_glue_teda = 700;
 				}
 				else if (current_cmd.type == QString("move_offset"))	// 轴偏移指令
 				{
-					current_cmd = vec_ccdGlue_1.at(current_cmd_num);
 					step_glue_teda = 800;
 				}
 				else
@@ -1780,6 +1798,567 @@ void Workflow::thread_glue_teda()
 
 		default:
 			break;
+		}
+	}
+}
+
+void Workflow::thread_glue_teda_test()
+{
+	// if (!(init_card() == 1)) return;
+
+	int laser_num = 0;
+
+	float center_result_x[4];
+	float center_result_y[4];
+
+	MatrixXf work_matrix;					// CCD点位旋转平移后的矩阵
+
+	QVector<CCDGlue>::iterator iter_cmd;	// Vector的头尾
+	CCDGlue current_cmd;					// 当前点位
+	int     current_cmd_num;				// 当前点位索引
+
+	int step_glue_teda = 0;
+	while (close_thread_glue_teda == false)
+	{
+		switch (step_glue_teda)
+		{
+		case 0:		// 等待触发
+		{
+			if (start_thread_glue_teda == false)
+			{
+				Sleep(5);
+				step_glue_teda = 0;
+			}
+			else
+			{
+				start_thread_glue_teda = false;
+				step_glue_teda = 10;
+			}
+		}
+		break;
+
+		case 10:	// 检查是否配置了该流程
+		{
+			if (is_config_glue_teda == false)
+			{
+				step_glue_teda = 7777;
+			}
+			else
+			{
+				step_glue_teda = 20;
+			}
+		}
+		break;
+
+		case 20:	// 设置速度, 模式
+		{
+			// 设置运动速度
+			set_speed_mode(0.1, 5, 5, ADMODE::T);
+
+			// 设置插补速度
+			set_inp_speed_mode(0.1, 5, 5, ADMODE::T);
+
+			step_glue_teda = 30;
+		}
+		break;
+
+		case 30:	// Z轴到安全位
+		{
+			move_axis_abs(AXISNUM::Z, 0);
+			step_glue_teda = 90;
+		}
+		break;
+
+		case 90:	// 计算矩阵偏移
+		{
+			// work_matrix = CalCCDGluePoint(vec_ccdGlue_1, ccd_offset_x, ccd_offset_y, ccd_offset_A, org_ccdglue_x[CCDORG::GLUE1ORG], org_ccdglue_y[CCDORG::GLUE1ORG]);
+			work_matrix = CalCCDGluePoint(vec_ccdGlue_1, 0, 0, 0, 0, 0);
+			cout << work_matrix;
+			step_glue_teda = 100;
+		}
+		break;
+
+		case 100:	// 初始化所有标志位, 开启速度前瞻, 设置插补速度
+		{
+			iter_cmd = vec_ccdGlue_1.begin();
+			current_cmd_num = 0;
+
+			adt8949_set_speed_pretreat_mode(0, 1);
+
+			step_glue_teda = 110;
+		}
+		break;
+
+		case 110:	// 判断 "结束" 和 "CCDGlue.type"
+		{
+			if (iter_cmd == vec_ccdGlue_1.end())
+			{
+				step_glue_teda = 7777;
+			}
+			else
+			{
+				current_cmd = vec_ccdGlue_1.at(current_cmd_num);
+
+				if (current_cmd.type == QString("null"))
+				{
+					step_glue_teda = 6666;
+				}
+				else if (current_cmd.type == QString("line"))		// 直线插补
+				{
+					step_glue_teda = 200;
+				}
+				else if (current_cmd.type == QString("circle"))		// 圆弧插补
+				{
+					step_glue_teda = 300;
+				}
+				else if (current_cmd.type == QString("laser"))		// 镭射测量
+				{
+					step_glue_teda = 400;
+				}
+				else if (current_cmd.type == QString("up_abs"))		// Z轴定位运动
+				{
+					step_glue_teda = 500;
+				}
+				else if (current_cmd.type == QString("up_offset"))	// Z轴偏移运动
+				{
+					step_glue_teda = 600;
+				}
+				else if (current_cmd.type == QString("move_abs"))	// 轴定位指令
+				{
+					step_glue_teda = 700;
+				}
+				else if (current_cmd.type == QString("move_offset"))// 轴偏移指令
+				{
+					step_glue_teda = 800;
+				}
+				else
+				{
+					QMessageBox::warning(NULL, QStringLiteral("警告"), QStringLiteral("点位解析错误"));
+					step_glue_teda = 9999;
+				}
+			}
+		}
+		break;
+
+
+
+		/********************** 直线插补 **********************/
+		case 200:	// 开胶, 关胶
+		{
+			if (current_cmd.open)
+			{
+				adt8949_set_fifo_io(0, 15, 1, -1);
+			}
+			else
+			{
+				adt8949_set_fifo_io(0, 15, 0, -1);
+			}
+
+			step_glue_teda = 230;
+		}
+		break;
+
+		case 210:	// 直线插补
+		{
+			float move_pos[3];
+			move_pos[0] = work_matrix(current_cmd_num, 0) + distance_ccd_needle_x + calib_offset_x;
+			move_pos[1] = work_matrix(current_cmd_num, 1) + distance_ccd_neddle_y + calib_offset_y;
+			move_pos[2] = work_matrix(current_cmd_num, 2) + distance_ccd_needle_x + calib_offset_z; 
+
+																									// 直线插补
+			move_inp_abs_line3(move_pos[0], move_pos[1], move_pos[2]);
+
+			step_glue_teda = 240;
+		}
+		break;
+
+		case 220:	// 置标志位, 跳回
+		{
+			iter_cmd++;
+			current_cmd_num++;
+
+			step_glue_teda = 110;
+		}
+		break;
+
+
+		/********************** 圆弧插补 **********************/
+		case 300:	// 开胶, 关胶
+		{
+			if (current_cmd.open)
+			{
+				adt8949_set_fifo_io(0, 15, 1, -1);
+			}
+			else if (current_cmd.close)
+			{
+				adt8949_set_fifo_io(0, 15, 0, -1);
+			}
+			step_glue_teda = 310;
+		}
+		break;
+
+		case 310:	// 圆弧插补
+		{
+			float move_pos[3];
+			move_pos[0] = work_matrix(current_cmd_num, 0) + distance_ccd_needle_x + calib_offset_x;
+			move_pos[1] = work_matrix(current_cmd_num, 1) + distance_ccd_neddle_y + calib_offset_y;
+
+			float center_pos[2];
+			CalCCDGlueCenterPoint(center_pos, current_cmd.center_X, current_cmd.center_Y, 0, 0, 0, 0, 0);
+
+			move_inp_abs_arc2(move_pos[0], move_pos[1], center_pos[0], center_pos[1]);
+
+			step_glue_teda = 320;
+		}
+		break;
+
+		case 320:	// 置标志位, 跳回
+		{
+			iter_cmd++;
+			current_cmd_num++;
+
+			step_glue_teda = 110;
+		}
+		break;
+
+
+
+		/********************** 镭射测量 **********************/
+		case 400:	// 等待插补结束
+		{
+			wait_inp_finish();
+			step_glue_teda = 410;
+		}
+		break;
+
+		case 410:	// 
+		{
+			step_glue_teda = 420;
+		}
+		break;
+
+		case 420:	// 
+		{
+			step_glue_teda = 430;
+		}
+		break;
+
+		case 430:	// 置标志位跳回
+		{
+			iter_cmd++;
+			current_cmd_num++;
+
+			step_glue_teda = 110;
+		}
+		break;
+
+
+		/********************** Z轴定位运动 **********************/
+		case 500:	// 等待插补结束
+		{
+			wait_inp_finish();
+			step_glue_teda = 510;
+		}
+		break;
+
+		case 510:	// 开胶, 关胶
+		{
+			if (current_cmd.open)
+			{
+				write_out_bit(15, 1);
+			}
+			else if (current_cmd.close)
+			{
+				write_out_bit(15, 0);
+			}
+
+			step_glue_teda = 520;
+		}
+		break;
+
+		case 520:	// Z轴定位运动
+		{
+			float move_pos_z = current_cmd.Z;
+
+			move_axis_abs(AXISNUM::Z, move_pos_z);
+			wait_axis_stop(AXISNUM::Z);
+
+			step_glue_teda = 530;
+		}
+		break;
+
+		case 530:	// 置标志位跳回
+		{
+			iter_cmd++;
+			current_cmd_num++;
+
+			step_glue_teda = 110;
+		}
+		break;
+
+
+		/********************** Z轴偏移指令 **********************/
+		case 600:	// 等待插补结束
+		{
+			wait_inp_finish();
+			step_glue_teda = 610;
+		}
+		break;
+
+		case 610:	// 开胶, 关胶
+		{
+			if (current_cmd.open)
+			{
+				write_out_bit(15, 1);
+			}
+			else if (current_cmd.close)
+			{
+				write_out_bit(15, 0);
+			}
+
+			step_glue_teda = 620;
+		}
+		break;
+
+		case 620:	// Z轴偏移运动
+		{
+			float move_pos_z = current_cmd.Z;
+
+			move_axis_offset(AXISNUM::Z, move_pos_z);
+			wait_axis_stop(AXISNUM::Z);
+
+			step_glue_teda = 630;
+		}
+		break;
+
+		case 630:	// 置标志位跳回
+		{
+			iter_cmd++;
+			current_cmd_num++;
+
+			step_glue_teda = 110;
+		}
+		break;
+
+
+		/********************** 轴定位指令 **********************/
+		case 700:	// 等待插补结束
+		{
+			wait_inp_finish();
+			step_glue_teda = 710;
+		}
+		break;
+
+		case 710:	// 开胶, 关胶
+		{
+			if (current_cmd.open)
+			{
+				write_out_bit(15, 1);
+			}
+			else if (current_cmd.close)
+			{
+				write_out_bit(15, 0);
+			}
+
+			step_glue_teda = 720;
+		}
+		break;
+
+		case 720:	// 轴绝对运动
+		{
+			float move_pos[3];
+			move_pos[0] = current_cmd.X;
+			move_pos[1] = current_cmd.Y;
+			move_pos[2] = current_cmd.Z;
+
+			move_axis_abs(AXISNUM::X, move_pos[0]);
+			move_axis_abs(AXISNUM::Y, move_pos[1]);
+			move_axis_abs(AXISNUM::Z, move_pos[2]);
+
+			wait_axis_stop(AXISNUM::X);
+			wait_axis_stop(AXISNUM::Y);
+			wait_axis_stop(AXISNUM::Z);
+
+			step_glue_teda = 730;
+		}
+		break;
+
+		case 730:	// 置标志位跳回
+		{
+			iter_cmd++;
+			current_cmd_num++;
+
+			step_glue_teda = 110;
+		}
+		break;
+
+
+
+		/********************** 轴偏移指令 **********************/
+		case 800:	// 等待插补结束
+		{
+			wait_inp_finish();
+			step_glue_teda = 810;
+		}
+		break;
+
+		case 810:	// 开胶, 关胶
+		{
+			if (current_cmd.open)
+			{
+				write_out_bit(15, 1);
+			}
+			else if (current_cmd.close)
+			{
+				write_out_bit(15, 0);
+			}
+
+			step_glue_teda = 820;
+		}
+		break;
+
+		case 820:	// 轴偏移运动
+		{
+			float move_pos[3];
+			move_pos[0] = current_cmd.X;
+			move_pos[1] = current_cmd.Y;
+			move_pos[2] = current_cmd.Z;
+
+			move_axis_offset(AXISNUM::X, move_pos[0]);
+			move_axis_offset(AXISNUM::Y, move_pos[1]);
+			move_axis_offset(AXISNUM::Z, move_pos[2]);
+
+			wait_axis_stop(AXISNUM::X);
+			wait_axis_stop(AXISNUM::Y);
+			wait_axis_stop(AXISNUM::Z);
+
+			step_glue_teda = 830;
+		}
+		break;
+
+		case 830:	// 置标志位跳回
+		{
+			iter_cmd++;
+			current_cmd_num++;
+
+			step_glue_teda = 110;
+		}
+		break;
+
+
+		case 6666:	// 流程正常执行完毕, 跳回0, 等待下次触发流程
+		{
+			// 【1】 等待插补结束
+			wait_inp_finish();
+
+			// 【2】 关闭插补速度预处理
+			adt8949_set_speed_pretreat_mode(0, 0);
+
+			// 【3】 Z轴到安全位
+			move_axis_abs(AXISNUM::Z, 0);
+			wait_axis_stop(AXISNUM::Z);
+
+			// 【4】 刷新流程标志位
+			iter_cmd = vec_ccdGlue_1.begin();
+			current_cmd_num = 0;
+			laser_num = 0;
+
+			// 【5】 消息更新
+			emit changedRundataText(QStringLiteral("点胶1已完成"));
+			writRunningLog(QStringLiteral("点胶1已完成"));
+
+			// 【6】 刷新线程标记位
+			start_thread_glue_1 = false;
+			step_glue_teda = 0;
+		}
+		break;
+
+		case 7777:	// 流程异常执行完毕, 跳回0, 等待下次触发流程
+		{
+			// 【1】 等待插补结束
+			wait_inp_finish();
+
+			// 【2】 关闭插补速度预处理
+			adt8949_set_speed_pretreat_mode(0, 0);
+
+			// 【3】 Z轴到安全位
+			move_axis_abs(AXISNUM::Z, 0);
+			wait_axis_stop(AXISNUM::Z);
+
+			// 【4】 刷新流程标志位
+			iter_cmd = vec_ccdGlue_1.begin();
+			current_cmd_num = 0;
+			laser_num = 0;
+
+			// 【5】 消息更新
+			emit changedRundataText(QStringLiteral("点胶1流程异常, 正在跳过"));
+			writRunningLog(QStringLiteral("点胶1流程异常, 正在跳过"));
+
+			// 【6】 刷新线程标记位
+			start_thread_glue_1 = false;
+			step_glue_teda = 0;
+		}
+		break;
+
+		case 8888:	// 线程正常执行完毕, 关闭该线程
+		{
+			// 【1】 等待插补结束
+			wait_inp_finish();
+
+			// 【2】 关闭插补速度预处理
+			adt8949_set_speed_pretreat_mode(0, 0);
+
+			// 【3】 Z轴到安全位
+			move_axis_abs(AXISNUM::Z, 0);
+			wait_axis_stop(AXISNUM::Z);
+
+			// 【4】 刷新流程标志位
+			iter_cmd = vec_ccdGlue_1.begin();
+			current_cmd_num = 0;
+			laser_num = 0;
+
+			// 【5】 消息更新
+			emit changedRundataText(QStringLiteral("点胶1线程正常结束"));
+			writRunningLog(QStringLiteral("点胶1线程正常结束"));
+
+			// 【6】 刷新线程标记位
+			start_thread_glue_1 = false;
+			close_thread_glue_1 = true;
+			step_glue_teda = 0;
+		}
+		break;
+
+		case 9999:	// 线程异常执行完毕, 关闭该线程
+		{
+			// 【1】 等待插补结束
+			wait_inp_finish();
+
+			// 【2】 关闭插补速度预处理
+			adt8949_set_speed_pretreat_mode(0, 0);
+
+			// 【3】 Z轴到安全位
+			move_axis_abs(AXISNUM::Z, 0);
+			wait_axis_stop(AXISNUM::Z);
+
+			// 【4】 刷新流程标志位
+			iter_cmd = vec_ccdGlue_1.begin();
+			current_cmd_num = 0;
+			laser_num = 0;
+
+			// 【5】 消息更新
+			emit changedRundataText(QStringLiteral("点胶1线程异常, 已关闭该线程"));
+			writRunningLog(QStringLiteral("点胶1线程异常, 已关闭该线程"));
+			
+			// 【6】 刷新线程标记位
+			start_thread_glue_1 = false;
+			close_thread_glue_1 = true;
+			step_glue_teda = 0;
+		}
+		break;
+
+		default:
+			break;
+
 		}
 	}
 }
@@ -2854,13 +3433,15 @@ QVector<CCDGlue> Workflow::getCCDGluePoint2Vector(int index)
 		float X = pointmodel->record(index).value("X").toString().toFloat();
 		float Y = pointmodel->record(index).value("Y").toString().toFloat();
 		float Z = pointmodel->record(index).value("Z").toString().toFloat();
+		float center_X = pointmodel->record(index).value("center_X").toString().toFloat();
+		float center_Y = pointmodel->record(index).value("center_Y").toString().toFloat();
 		bool open = pointmodel->record(index).value("open").toBool();
 		int openAdvance = pointmodel->record(index).value("openAdvance").toInt();
 		int openDelay = pointmodel->record(index).value("openDelay").toInt();
 		bool close = pointmodel->record(index).value("close").toBool();
 		int closeAdvance = pointmodel->record(index).value("closeAdvance").toInt();
 		int closeDelay = pointmodel->record(index).value("closeDelay").toInt();
-		int type = pointmodel->record(index).value("type").toInt();
+		QString type = pointmodel->record(index).value("type").toString();
 
 		CCDGlue point; // = { name, description, X, Y, Z, open, openAdvance, openDelay, close, closeAdvance, closeDelay, type };
 		point.name = name;
@@ -2868,6 +3449,8 @@ QVector<CCDGlue> Workflow::getCCDGluePoint2Vector(int index)
 		point.X = X;
 		point.Y = Y;
 		point.Z = Z;
+		point.center_X = center_X;
+		point.center_Y = center_Y;
 		point.open = open;
 		point.openAdvance = openAdvance;
 		point.openDelay = openDelay;

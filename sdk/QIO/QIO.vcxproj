@@ -14,7 +14,6 @@
     <ProjectGuid>{553DCD6E-3591-3D32-B0C5-190AE3682614}</ProjectGuid>
     <RootNamespace>QIO</RootNamespace>
     <Keyword>Qt4VSv1.0</Keyword>
-    <WindowsTargetPlatformVersion>10.0.17134.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">

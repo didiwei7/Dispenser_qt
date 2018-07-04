@@ -6,22 +6,25 @@ IO::IO(QWidget *parent) : QWidget(parent)
 	setupUi();
 
 	// 【2】 更新输出状态
-	updateOutputStatus();
+	// updateOutputStatus();
 
 	// 【3】 设置线程
-	setThread();
+	// setThread();
 
 	// 【4】 连接信号槽
 	setConnect();
+
+	// 【5】 设置计时器
+	setTimer();
 }
 
 IO::~IO()
 {
-	close_thread_updateInputStatus = true;
+	//close_thread_updateInputStatus = true;
 
-	thread_pool.waitForDone();
-	thread_pool.clear();
-	thread_pool.destroyed();
+	//thread_pool.waitForDone();
+	//thread_pool.clear();
+	//thread_pool.destroyed();
 }
 
 void IO::setupUi()
@@ -39,10 +42,6 @@ void IO::setupUi()
 	layout_1->addSpacerItem(new QSpacerItem(0, 0, QSizePolicy::Expanding, QSizePolicy::Minimum));
 
 	setLayout(layout_1);
-
-	// readConfig();
-	// QPushButton *btn = findChild<QPushButton*>("dispen");
-	// btn->connect(btn, &QPushButton::clicked, this, &IO::updateIoStatus);
 
 	setInput();
 	setOutput();
@@ -67,6 +66,17 @@ void IO::setThread()
 
 	future_thread_updateInputStatus = QtConcurrent::run(&thread_pool, [&]() { thread_updateInputStatus(); });
 	// qDebug() << thread_updateOutputStatus.isRunning();
+}
+
+void IO::setTimer()
+{
+	QTimer *timer_input = new QTimer(this);
+	connect(timer_input, &QTimer::timeout, this, &IO::timer_updateInputStatus);
+	timer_input->start(10);
+
+	QTimer *timer_output = new QTimer(this);
+	connect(timer_output, &QTimer::timeout, this, &IO::timer_updateOutputStatus);
+	timer_output->start(300);
 }
 
 void IO::setInput()
@@ -106,65 +116,6 @@ void IO::setInput()
 		layout_2_1->addWidget(INPUT[i]);
 	}
 	file.close();
-
-    /*INPUT[0] = new QInputLabel(QStringLiteral("X轴报警"));
-    INPUT[1] = new QInputLabel(QStringLiteral("Y轴报警"));
-    INPUT[2] = new QInputLabel(QStringLiteral("Z轴报警"));
-    INPUT[3] = new QInputLabel(QStringLiteral("A轴报警"));
-    INPUT[4] = new QInputLabel(QStringLiteral("X正限位"));
-    INPUT[5] = new QInputLabel(QStringLiteral("X负限位"));
-    INPUT[6] = new QInputLabel(QStringLiteral("Y正限位"));
-    INPUT[7] = new QInputLabel(QStringLiteral("Y负限位"));
-    INPUT[8] = new QInputLabel(QStringLiteral("Z正限位"));
-    INPUT[9] = new QInputLabel(QStringLiteral("Z负限位"));
-    INPUT[10] = new QInputLabel(QStringLiteral("A正限位"));
-    INPUT[11] = new QInputLabel(QStringLiteral("A负限位"));
-    INPUT[12] = new QInputLabel(QStringLiteral("X原点"));
-    INPUT[13] = new QInputLabel(QStringLiteral("Y原点"));
-    INPUT[14] = new QInputLabel(QStringLiteral("Z原点"));
-    INPUT[15] = new QInputLabel(QStringLiteral("A原点"));
-    INPUT[16] = new QInputLabel(QStringLiteral("急停"));
-    INPUT[17] = new QInputLabel(QStringLiteral("启动"));
-    INPUT[18] = new QInputLabel(QStringLiteral("点胶"));
-    INPUT[19] = new QInputLabel(QStringLiteral("擦胶"));
-    INPUT[20] = new QInputLabel(QStringLiteral("复位"));
-    INPUT[21] = new QInputLabel(QStringLiteral("照明"));
-    INPUT[22] = new QInputLabel(QStringLiteral("擦胶-无尘布感应"));
-    INPUT[23] = new QInputLabel(QStringLiteral("擦胶-A轴行程感应"));
-    INPUT[24] = new QInputLabel(QStringLiteral("擦胶-擦胶感应器"));
-    INPUT[25] = new QInputLabel(QStringLiteral("擦胶-气缸推进感应"));
-    INPUT[26] = new QInputLabel(QStringLiteral("擦胶-气缸后退感应"));
-    INPUT[27] = new QInputLabel(QStringLiteral("校针-接触式位移传感器"));
-    INPUT[28] = new QInputLabel(QStringLiteral("校针-X对射光纤"));
-    INPUT[29] = new QInputLabel(QStringLiteral("校针-Y对射光纤"));
-    INPUT[30] = new QInputLabel(QStringLiteral("加热-温控器报警"));
-    INPUT[31] = new QInputLabel(QStringLiteral("加热-负压表1"));
-    INPUT[32] = new QInputLabel(QStringLiteral("加热-负压表2"));
-    INPUT[33] = new QInputLabel(QStringLiteral("备用"));*/
-
-    /*INPUT[0] = new QInputLabel(QStringLiteral("急停"));
-    INPUT[1] = new QInputLabel(QStringLiteral("启动"));
-    INPUT[2] = new QInputLabel(QStringLiteral("点胶"));
-    INPUT[3] = new QInputLabel(QStringLiteral("擦胶"));
-    INPUT[4] = new QInputLabel(QStringLiteral("复位"));
-    INPUT[5] = new QInputLabel(QStringLiteral("照明"));
-    INPUT[6] = new QInputLabel(QStringLiteral("擦胶-无尘布感应"));
-    INPUT[7] = new QInputLabel(QStringLiteral("擦胶-A轴行程感应"));
-    INPUT[8] = new QInputLabel(QStringLiteral("擦胶-擦胶感应器"));
-    INPUT[9] = new QInputLabel(QStringLiteral("擦胶-气缸推进感应"));
-    INPUT[10] = new QInputLabel(QStringLiteral("擦胶-气缸后退感应"));
-    INPUT[11] = new QInputLabel(QStringLiteral("校针-接触式位移传感器"));
-    INPUT[12] = new QInputLabel(QStringLiteral("校针-X对射光纤"));
-    INPUT[13] = new QInputLabel(QStringLiteral("校针-Y对射光纤"));
-    INPUT[14] = new QInputLabel(QStringLiteral("加热-温控器报警"));
-    INPUT[15] = new QInputLabel(QStringLiteral("加热-负压表1"));
-    INPUT[16] = new QInputLabel(QStringLiteral("加热-负压表2"));
-    INPUT[17] = new QInputLabel(QStringLiteral("备用"));
-
-	for (int i = 0; i < IN_COUNT; i++)
-	{
-		layout_2_1->addWidget( INPUT[i] );
-	}*/
 
     layout_2_1->addSpacerItem(new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding));
 }
@@ -207,68 +158,6 @@ void IO::setOutput()
 		layout_2_2->addWidget(OUTPUT[i]);
 	}
 	file.close();
-
-	/*OUTPUT[0] = new QOutputButton(QStringLiteral("X轴使能"));
-	OUTPUT[1] = new QOutputButton(QStringLiteral("X轴报警清除"));
-	OUTPUT[2] = new QOutputButton(QStringLiteral("Y轴使能"));
-	OUTPUT[3] = new QOutputButton(QStringLiteral("Y轴报警清除"));
-	OUTPUT[4] = new QOutputButton(QStringLiteral("Z轴使能"));
-	OUTPUT[5] = new QOutputButton(QStringLiteral("Z轴报警清除"));
-	OUTPUT[6] = new QOutputButton(QStringLiteral("A轴使能"));
-	OUTPUT[7] = new QOutputButton(QStringLiteral("A轴报警清除"));
-	OUTPUT[8] = new QOutputButton(QStringLiteral("点胶阀开关"));
-	OUTPUT[9] = new QOutputButton(QStringLiteral("加热-温控开关"));
-	OUTPUT[10] = new QOutputButton(QStringLiteral("加热-真空吸1"));
-	OUTPUT[11] = new QOutputButton(QStringLiteral("加热-真空吸2"));
-	OUTPUT[12] = new QOutputButton(QStringLiteral("擦胶气缸"));
-	OUTPUT[13] = new QOutputButton(QStringLiteral("备用"));
-	OUTPUT[14] = new QOutputButton(QStringLiteral("备用"));*/
-
-	/*OUT0 = new QOutputButton(QStringLiteral("X轴使能"));
-	layout_2_2->addWidget(OUT0);
-
-	OUT1 = new QOutputButton(QStringLiteral("X轴报警清除"));
-	layout_2_2->addWidget(OUT1);
-	OUT1->setStatus(1);
-
-	OUT2 = new QOutputButton(QStringLiteral("Y轴使能"));
-	layout_2_2->addWidget(OUT2);
-
-	OUT3 = new QOutputButton(QStringLiteral("Y轴报警清除"));
-	layout_2_2->addWidget(OUT3);
-
-	OUT4 = new QOutputButton(QStringLiteral("Z轴使能"));
-	layout_2_2->addWidget(OUT4);
-
-	OUT5 = new QOutputButton(QStringLiteral("Z轴报警清除"));
-	layout_2_2->addWidget(OUT5);
-
-	OUT6 = new QOutputButton(QStringLiteral("A轴使能"));
-	layout_2_2->addWidget(OUT6);
-
-	OUT7 = new QOutputButton(QStringLiteral("A轴报警清除"));
-	layout_2_2->addWidget(OUT7);
-
-	OUT8 = new QOutputButton(QStringLiteral("点胶阀开关"));
-	layout_2_2->addWidget(OUT8);
-
-	OUT9 = new QOutputButton(QStringLiteral("加热-温控开关"));
-	layout_2_2->addWidget(OUT9);
-
-	OUT10 = new QOutputButton(QStringLiteral("加热-真空吸1"));
-	layout_2_2->addWidget(OUT10);
-
-	OUT11 = new QOutputButton(QStringLiteral("加热-真空吸2"));
-	layout_2_2->addWidget(OUT11);
-
-	OUT12 = new QOutputButton(QStringLiteral("擦胶气缸"));
-	layout_2_2->addWidget(OUT12);
-
-	OUT13 = new QOutputButton(QStringLiteral("备用"));
-	layout_2_2->addWidget(OUT13);
-
-	OUT14 = new QOutputButton(QStringLiteral("备用"));
-	layout_2_2->addWidget(OUT14);*/
 
     layout_2_2->addSpacerItem(new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding));
 }
@@ -317,7 +206,6 @@ void IO::thread_updateInputStatus()
 			for (int i = IN_VISIBLE_BEGIN; i < IN_COUNT; i++)
 			{
 				INPUT[i]->setStatus(!read_in_bit(i));
-				Sleep(10);
 			}
 
 			step_input = 0;
@@ -344,13 +232,37 @@ void IO::thread_updateInputStatus()
 	}
 }
 
+void IO::timer_updateInputStatus()
+{
+	for (int i = IN_VISIBLE_BEGIN; i < IN_COUNT; i++)
+	{
+		// 不取反, 急停信号
+		if (16 == i)
+		{
+			if (INPUT[i]->getStatus() != read_in_bit(i)) INPUT[i]->setStatus(read_in_bit(i));
+		}
+		else
+		{
+			if (INPUT[i]->getStatus() != !read_in_bit(i)) INPUT[i]->setStatus(!read_in_bit(i));
+		}
+	}
+}
+
+void IO::timer_updateOutputStatus()
+{
+	for (int i = OUT_VISIBLE_BEGIN; i < OUT_COUNT; i++)
+	{
+		if (OUTPUT[i]->getStatus() != read_out_bit(i)) OUTPUT[i]->setStatus(read_out_bit(i));
+	}
+}
+
 void IO::updateOutputStatus() // 读取一次
 {
 	if (init_card() == 1)
 	{
 		for (int i = OUT_VISIBLE_BEGIN; i < OUT_COUNT; i++)
 		{
-			OUTPUT[i]->setStatus(adt8949_read_bit(0, i));
+			OUTPUT[i]->setStatus(read_out_bit(i));
 		}
 	}
 }
@@ -378,6 +290,8 @@ void IO::on_btn_output()
 	else if ("OUTPUT13" == out->objectName()) changeOutputStatus(13);
 	else if ("OUTPUT14" == out->objectName()) changeOutputStatus(14);
 	else if ("OUTPUT15" == out->objectName()) changeOutputStatus(15);
+	else if ("OUTPUT16" == out->objectName()) changeOutputStatus(16);
+	else if ("OUTPUT17" == out->objectName()) changeOutputStatus(17);
 	else
 	{
 		qDebug() << QStringLiteral("IO: 输出信号有误, 请检查");
@@ -397,21 +311,21 @@ void IO::changeOutputStatus(int bit)
 	if (adt8949_get_out(0, bit) == 1)
 	{
 		adt8949_write_bit(0, bit, 0);
-		Sleep(5);
-		if (adt8949_get_out(0, bit) == 0)
-		{
-			OUTPUT[bit]->setStatus(0);
-		}
-		else
-		{
-			qDebug() << QStringLiteral("IO: 输出信号有误, 请检查");
-		}	
+		//Sleep(5);
+		//if (adt8949_get_out(0, bit) == 0)
+		//{
+		//	OUTPUT[bit]->setStatus(0);
+		//}
+		//else
+		//{
+		//	qDebug() << QStringLiteral("IO: 输出信号有误, 请检查");
+		//}	
 	}
 	else
 	{
 		// 调试用
 		adt8949_write_bit(0, bit, 1);
-		OUTPUT[bit]->setStatus(1);
+		// OUTPUT[bit]->setStatus(1);
 
 		// 正确的代码
 		//adt8949_write_bit(0, bit, 1);
@@ -426,47 +340,3 @@ void IO::changeOutputStatus(int bit)
 		//}
 	}
 }
-
-
-/*
-void IO::readConfig()
-{
-QFile file("../config/io.json");
-
-if(!file.exists())
-{
-return;
-}
-
-file.open((QIODevice::ReadOnly));
-QByteArray date = file.readAll();
-QJsonDocument doc = QJsonDocument::fromJson(date);
-QJsonObject obj = doc.object();
-
-foreach (QJsonValue vobj, obj)
-{
-int card  = vobj.toObject().value("card").toInt();
-int index = vobj.toObject().value("index").toInt();
-QString name = vobj.toObject().value("name").toString();
-int state = vobj.toObject().value("state").toInt();
-qDebug() << card << index << name << state;
-
-QPushButton *btn = new QPushButton(this);
-btn->setObjectName(name);
-btn->setText(name);
-layout_2_1->addWidget(btn);
-}
-
-layout_2_1->addSpacerItem(new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding));
-// QJsonObject::Iterator i;
-// for(i=obj.begin(); i!=obj.end(); i++)
-// {
-//     QJsonObject i_obj = i.value().toObject();
-//     int card  = i_obj.value("card").toInt();
-//     int index = i_obj.value("index").toInt();
-//     int index = i_obj.value("index").toInt();
-//     int index = i_obj.value("index").toInt();
-//     int index = i_obj.value("index").toInt();
-// }
-}
-*/
