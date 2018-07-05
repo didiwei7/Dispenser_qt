@@ -718,10 +718,10 @@ void PointDebug::on_action_go()
 	float fx = pointmodel->record(row).value("X").toString().toFloat();
 	float fy = pointmodel->record(row).value("Y").toString().toFloat();
 	float fz = pointmodel->record(row).value("Z").toString().toFloat();
-	qDebug() << fx << fy << fz;
+	// qDebug() << fx << fy << fz;
 
 	QtConcurrent::run( [fx, fy, fz] () {
-		qDebug() << "thread" << fx << fy << fz;
+		// qDebug() << "thread" << fx << fy << fz;
 
 		move_axis_abs(AXISNUM::X, fx);
 		move_axis_abs(AXISNUM::Y, fy);
@@ -929,7 +929,7 @@ void PointDebug::on_slider_speed_Changed(int pos)
 
 	set_speed_mode(start_v, speed, acc, ADMODE::T);
 
-	qDebug() << speed << acc << dec;
+	qDebug() << QStringLiteral("当前速度:") << speed << acc << dec;
 }
 
 
@@ -1290,8 +1290,8 @@ void PointDebug::on_btn_x_home()
 	// set_home_speed();
 	if (!(init_card() == 1)) return;
 
-	adt8949_SetHomeMode_Ex(0, 1, 3, 0, 1, -1, 15, 20, 0);
-	adt8949_SetHomeSpeed_Ex(0, 1, 5, 20, 5, 20, 0.5);
+	// adt8949_SetHomeMode_Ex(0, 1, 3, 0, 1, -1, 15, 20, 0);
+	// adt8949_SetHomeSpeed_Ex(0, 1, 5, 20, 5, 20, 0.5);
 
 	QtConcurrent::run([&]() { 
 		home_axis(AXISNUM::X);
@@ -1302,11 +1302,6 @@ void PointDebug::on_btn_x_home()
 void PointDebug::on_btn_y_home()
 {
 	if (!(init_card() == 1)) return;
-
-	int	i1 = adt8949_SetHomeMode_Ex(0, 2, 3, 0, 1, -1, 15, 30, 0);
-	int i2 = adt8949_SetHomeSpeed_Ex(0, 2, 5, 20, 5, 20, 0.5);
-
-	qDebug() << i1 << i2;
 
 	QtConcurrent::run([&]() {
 		home_axis(AXISNUM::Y);

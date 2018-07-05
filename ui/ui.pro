@@ -2,6 +2,7 @@ QT       += core gui
 QT       += sql
 QT       += xml
 QT       += network
+QT       += serialport
 QT       += multimedia
 QT       += charts
 QT       += concurrent

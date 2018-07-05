@@ -14,6 +14,7 @@
     <ProjectGuid>{3EAA64B8-F74E-33A8-B6C8-F35FEC461D8A}</ProjectGuid>
     <RootNamespace>QCommunication</RootNamespace>
     <Keyword>Qt4VSv1.0</Keyword>
+    <WindowsTargetPlatformVersion>10.0.17134.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">

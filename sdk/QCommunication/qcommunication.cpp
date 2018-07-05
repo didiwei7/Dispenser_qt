@@ -254,8 +254,6 @@ QString QMySocket::getCurrentTime()
 
 QMySerial::QMySerial(QWidget *parent) : QWidget(parent)
 {
-    g_flag_serialThread = false;
-
     setSerial();
     setupUi();
     setConnect();
@@ -264,7 +262,7 @@ QMySerial::QMySerial(QWidget *parent) : QWidget(parent)
 
 QMySerial::~QMySerial()
 {
-	g_flag_serialThread = false;
+	clse_thread_receive = true;
 
 	thread_pool.waitForDone();
 	thread_pool.clear();
@@ -387,13 +385,13 @@ void QMySerial::setSerial()
 void QMySerial::setThread()
 {
     thread_pool.setMaxThreadCount(1);
-    g_flag_serialThread = true;
+	clse_thread_receive = false;
 }
 
 // 线程
 void QMySerial::thread_receive()
 {
-    while (g_flag_serialThread == true)
+    while (clse_thread_receive == false)
     {
         QByteArray readData = serial->read(10);
         if( readData.size() > 5 )  //!readData.isNull() && readData != ""
@@ -428,7 +426,6 @@ void QMySerial::on_btn_start()
 
     // 启动接收线程
     QtConcurrent::run(&thread_pool, [&]() { thread_receive(); });
-    qDebug() << thread_pool.activeThreadCount();
 }
 
 void QMySerial::on_btn_stop()
@@ -438,10 +435,9 @@ void QMySerial::on_btn_stop()
     btn_start->setEnabled(true);
 
     // 关闭接收线程
-    g_flag_serialThread = false;
+    clse_thread_receive = true;
     Sleep(10);
     thread_pool.waitForDone();
-    qDebug() << thread_pool.activeThreadCount();
 
     // 关闭串口
     serial->close();
@@ -455,7 +451,6 @@ void QMySerial::on_btn_send()
     QString str = text_send->toPlainText();
     if(str == "")
     {
-        qDebug() << "null";
         return;
     }
     else

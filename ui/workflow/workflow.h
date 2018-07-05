@@ -38,12 +38,6 @@ enum MODELPOINT
 	GLUE3   = 3
 };
 
-// 点位类型
-enum POINTTYPE
-{
-
-};
-
 // Z轴优先优先类型
 enum ZMOVETYPE
 {
@@ -71,9 +65,9 @@ private:
 	void setConfig();
 	void setPoint();
 	void setIOStatus();
-	void setSocketMsg();
 	void setThread();
 	void setConnect();
+	void setCommunication();
 
 public:
 	QThreadPool thread_pool;
@@ -106,6 +100,18 @@ public:		// 急停
 	QFuture<void> future_thread_watch_estop;	
 	void thread_watch_estop();
 
+public:		// 通讯
+	QTcpSocket  *socket_ccd;
+	QString receivedMsg_ccd;
+	void socket_ccd_receive();
+
+
+	QSerialPort *serial_laser;
+	QString receivedMsg_laser;
+
+	bool close_thread_serialLaserReceive;
+	void thread_serialLaserReceive();
+
 public:		// 工作流程
 	bool is_workflow_ok;
 	bool start_thread_workflow;
@@ -119,9 +125,6 @@ public:		// 换料盘
 	bool close_thread_exchangeTrays;
 	QFuture<void> future_thread_exchangeTrays;
 	void thread_exchangeTrays();
-
-public:
-	QString receivedMsg_ccd;
 
 public:		// 点胶1
 	bool is_config_gluel;		// 是否配置  glue1
@@ -252,7 +255,6 @@ public:		// 获取点位
 	MatrixXf CalCCDGluePoint(const QVector<CCDGlue> vector_ccdGlue, const float offset_x, const float offset_y, const float offset_angle, const float org_x, const float org_y);
 
 	void CalCCDGlueCenterPoint(float center_pos[2], const float center_x, const float center_y, const float offset_x, const float offset_y, const float offset_angle, const float org_x, const float org_y);
-	float* CalCCDGlueCenterPoint(const float center_x, const float center_y, const float offset_x, const float offset_y, const float offset_angle, const float org_x, const float org_y);
 
 	float wSpeed;
 	float wAcc;

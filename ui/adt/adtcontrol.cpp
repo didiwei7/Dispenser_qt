@@ -23,7 +23,7 @@ int init_card()
 		}
 		else
 		{
-			qDebug() << ret;
+			qDebug() << QStringLiteral("控制卡初始化成功: ") << ret;
 			QMessageBox::about(NULL, NULL, QStringLiteral("控制卡初始化成功"));
 			
 			// 载入卡配置
@@ -61,6 +61,7 @@ void load_card()
 	// 【3】 设置回原模式, 速度
 	set_home_mode();
 	set_home_speed();
+
 	// 【4】 设置限位锁模式
 	// adt8949_set_limit_lock(0, 0);
 }
@@ -379,7 +380,7 @@ void set_inp_speed(float speed)
 void move_inp_abs_line3(float x_pos, float y_pos, float z_pos)
 {
 	unsigned char axismap = 7;
-	adt8949_set_precount(0, 30);
+
 	adt8949_inp_abs_move4(0, 0, axismap, x_pos, y_pos, z_pos, 0);
 }
 
@@ -387,7 +388,7 @@ void move_inp_abs_line3(float x_pos, float y_pos, float z_pos)
 void move_inp_abs_line2(float x_pos, float y_pos)
 {
 	unsigned char axismap = 3;
-	adt8949_set_precount(0, 30);
+
 	adt8949_inp_abs_move4(0, 0, axismap, x_pos, y_pos, 0, 0);
 }
 
@@ -398,7 +399,6 @@ void move_inp_abs_helix2(float pos_x, float pos_y, float pos_z, float center_x, 
 	float pos[4] = { pos_x, pos_y, pos_z, 0 };
 	float center[2] = { center_x, center_y};
 
-	adt8949_set_precount(0, 30);
 	adt8949_inp_abs_helix2(0, 0, AxisList, pos, center, 0);
 }
 
@@ -409,8 +409,7 @@ void move_inp_abs_arc2(float pos_x, float pos_y, float center_x, float center_y)
 	float pos[4] = { pos_x, pos_y, 0, 0 };
 	float center[2] = { center_x, center_y };
 
-	adt8949_set_precount(0, 30);
-	adt8949_inp_abs_arc2(0, 0, axismap, pos, center, 1);
+	adt8949_inp_abs_arc2(0, 0, axismap, pos, center, 0);
 }
 
 

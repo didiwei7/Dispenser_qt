@@ -87,7 +87,7 @@ private:
 private:
     QThreadPool thread_pool;
     void thread_receive();
-	bool g_flag_serialThread;
+	bool clse_thread_receive;
 
 private:
     QString getCurrentTime();
