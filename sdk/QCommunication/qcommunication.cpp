@@ -445,9 +445,6 @@ void QMySerial::on_btn_stop()
 
 void QMySerial::on_btn_send()
 {
-	// char laser_data[10] = { 02, 'M', 'E', 'A', 'S', 'U', 'R', 'E', 03 };
-	// serial->write(laser_data);
-
     QString str = text_send->toPlainText();
     if(str == "")
     {

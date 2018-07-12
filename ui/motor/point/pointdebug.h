@@ -40,39 +40,16 @@ public:
 private:
     void setupUi();
     void setConnect();
-	void setThread();
 	void setTimer();
 
-public:
-	QThreadPool thread_pool;
-
-	bool is_updateCurrentPos_ok;
-	bool start_thread_updateCurrentPos;
-	bool close_thread_updateCurrentPos;
-	QFuture<void> future_thread_updateCurrentPos;
-	void thread_updateCurrentPos();
-
-	bool is_updateInputStatus_ok;
-	bool start_thread_updateInputStatus;
-	bool close_thread_updateInputStatus;
-	QFuture<void> future_thread_updateInputStatus;
-	void thread_updateInputStatus();
-
-	void timer_updateCurrentPos();
-	void timer_updateInputStatus();
-
-private:
-	// 点位窗口
+private:	// ui初始化
 	void setGroupPoint();
 	void setViewPoint();
 	void setActions();
 
-	// 点位调试
 	void setGroupMove();
 	void setGroupIO();
 	void setGroupHome();
-
-	void setGroupPos();
 	void setGroupCurrentpos();
 	void setGroupStep();
 
@@ -84,24 +61,23 @@ private:
     QGroupBox *group_currentpos;
     QGroupBox *group_step;
 
-private:
-	int index_model;
+private:	// 点位
 	void setCurrentModel(int index);
 	QSqlTableModel *getCurrentModel();
 
 	void on_pointview_rightClicked(const QPoint &);
-	
 	void on_action_go();
+	void on_action_go_location();
+	void on_action_go_laser();
 	void on_action_teach();
-	
 	void on_action_add();
 	void on_action_insert();
 	void on_action_del();
 	void on_action_save();
 
-	QWidget        *w_pointview;
+	QWidget         *w_pointview;
 	QHNavigationBar *hnavigationbar;
-	QTableView     *pointview;
+	QTableView      *pointview;
 	QSqlTableModel *model_general;
 	QSqlTableModel *model_glue1;
 	QSqlTableModel *model_glue2;
@@ -109,6 +85,8 @@ private:
 
 	QList<QAction *> list_action;
 	QAction *action_go;
+	QAction *action_go_location;
+	QAction *action_go_laser;
 	QAction *action_teach;
 	QAction *action_sepa;
 	QAction *action_add;
@@ -116,7 +94,16 @@ private:
 	QAction *action_del;
 	QAction *action_save;
 
-private:
+	// 当前数据库模型的索引, 0:通用点位, 1:工位1, 2:工位2, 3:工位3
+	int index_model;
+
+	float distance_ccd_needle_x;
+	float distance_ccd_neddle_y;
+
+	float distance_ccd_laser_x;
+	float diatance_ccd_laser_y;
+
+private:	// X+- Y+- Z+-
     void on_X_positive_clicked();
     void on_X_positive_pressed();
     void on_X_positive_released();
@@ -138,7 +125,12 @@ private:
     void on_Z_negative_pressed();
     void on_Z_negative_released();
 
-    void on_slider_speed_Changed(int pos);
+	void on_A_positive_clicked();
+	void on_A_positive_pressed();
+	void on_A_positive_released();
+	void on_A_negative_clicked();
+	void on_A_negative_pressed();
+	void on_A_negative_released();
 
     QPushButton *X_positive;
     QPushButton *X_negative;
@@ -146,9 +138,20 @@ private:
     QPushButton *Y_negative;
     QPushButton *Z_positive;
     QPushButton *Z_negative;
-	QMySlider   *slider_speed;
+	QPushButton	*A_positive;
+	QPushButton *A_negative;
+	
+private:	// 速度
+	void on_slider_speed_Changed(int pos);
 
-private:
+	float debug_startv;
+	float debug_speed;
+	float debug_acc;
+	float debug_admode;
+
+	QMySlider *slider_speed;
+
+private:	// 回原
 	void on_btn_stop();
 	void on_btn_station_home();
 	void on_btn_x_home();
@@ -161,20 +164,13 @@ private:
 	QPushButton *btn_y_home;
 	QPushButton *btn_z_home;
 
-private:
-	float start_v;
-	float speed;
-	float acc;
-	float dec;
+private:	// 移动步进
+	void setMoveType(int moveType);
 
 	void on_radio_continue();
 	void on_radio_long();
 	void on_radio_middle();
 	void on_radio_short();
-
-	QLabel *label_X_currentpos;
-	QLabel *label_Y_currentpos;
-	QLabel *label_Z_currentpos;
 
     QRadioButton *radio_continue;
     QRadioButton *radio_long;
@@ -184,60 +180,23 @@ private:
     QLineEdit *edit_X_step;
     QLineEdit *edit_Y_step;
     QLineEdit *edit_Z_step;
+	QLineEdit *edit_A_step;
 
-public:
+private:	// 更新数据
+	void timer_updateCurrentPos();
+	void timer_updateInputStatus();
+
+	QLabel *label_X_currentpos;
+	QLabel *label_Y_currentpos;
+	QLabel *label_Z_currentpos;
+
 	QInput *INPUT_X[4];
 	QInput *INPUT_Y[4];
 	QInput *INPUT_Z[4];
 	QInput *INPUT_A[4];
 
-public:
-    // 设置运动模式
-    void setMoveType(int moveType);
-
-signals:
-	void changedSqlModel(int index);
-
-public:
-	QMap<QString, PointRun> currentModelPoint;
-	QMap<QString, PointRun> getCurrentModelPointInfo();		 // 获取所有点位信息
-	PointRun get_point_name(QString pointName);				 // 通过点位名查找
-	PointRun get_point_index(int index);					 // 通过Index在数据中查找
-
-	QMap<QString, PointRun>  runPoint;
-	QMap<QString, PointRun>  getRunPointInfo();
-	
-	int move_thread_xyz(float x_pos, float y_pos, float z_pos);
-
-	// QMap<QString, QString> getPointByname(QString pointName);
-	/*QMap<QString, QString> PointDebug::getPointByname(QString pointName)
-	{
-	int index = 0;
-	for (int index = 0; index < pointmodel->rowCount(); index++)
-	{
-	if (pointName == pointmodel->record(index).value("name").toString())
-	{
-	break;
-	}
-	}
-	qDebug() << index;
-
-	QMap<QString, QString> map;
-	map.insert("X", pointmodel->record(index).value("X").toString());
-	map.insert("Y", pointmodel->record(index).value("X").toString());
-	map.insert("Z", pointmodel->record(index).value("X").toString());
-	map.insert("open", pointmodel->record(index).value("open").toString());
-	map.insert("openAdvance", pointmodel->record(index).value("openAdvance").toString());
-	map.insert("openDelay", pointmodel->record(index).value("openDelay").toString());
-	map.insert("close", pointmodel->record(index).value("close").toString());
-	map.insert("closeAdvance", pointmodel->record(index).value("closeAdvance").toString());
-	map.insert("closeDelay", pointmodel->record(index).value("closeDelay").toString());
-	map.insert("type", pointmodel->record(index).value("type").toString());
-
-	qDebug() << map;
-
-	return map;
-	}*/
+signals:	// 自定义信号槽
+	void changedSqlModel(int index);	// 连接 Workflow, 应用当前修改
 };
 
 #endif // POINTDEBUG_H

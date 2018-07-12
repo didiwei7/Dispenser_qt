@@ -1,4 +1,5 @@
-QT       += core gui
+QT       += core
+QT       += gui
 QT       += sql
 QT       += xml
 QT       += network
@@ -65,7 +66,7 @@ win32:CONFIG(debug, debug|release):{
     LIBS += ../bin/QFlex.lib
     LIBS += ../bin/QNavigationBar.lib
     LIBS += ../bin/QMySlider.lib
-    LIBS += ../bin/QCommunicationd.lib
+    LIBS += ../bin/QCommunication.lib
     LIBS += ../bin/QIO.lib
 }
 

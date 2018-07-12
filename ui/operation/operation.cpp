@@ -49,9 +49,18 @@ void Operation::setupUi()
 
 void Operation::setConnect()
 {
-	connect(check_glue1, &QCheckBox::clicked, this, &Operation::on_check_glue);
-	connect(check_glue2, &QCheckBox::clicked, this, &Operation::on_check_glue);
-	connect(check_glue3, &QCheckBox::clicked, this, &Operation::on_check_glue);
+	connect(btn_station_home,  &QPushButton::clicked, this, &Operation::on_btn_station_home);
+	connect(btn_ccd_calib,     &QPushButton::clicked, this, &Operation::on_btn_ccd_calib);
+	connect(btn_ccd_runEmpty,  &QPushButton::clicked, this, &Operation::on_btn_ccd_runEmpty);
+	connect(btn_runEmpty,      &QPushButton::clicked, this, &Operation::on_btn_runEmpty);
+	connect(btn_clearGlue,     &QPushButton::clicked, this, &Operation::on_btn_clearGlue);
+	connect(btn_dischargeGlue, &QPushButton::clicked, this, &Operation::on_btn_dischargeGlue);
+	connect(btn_needleCalib_1, &QPushButton::clicked, this, &Operation::on_btn_needleCalib_1);
+	connect(btn_needleCalib_2, &QPushButton::clicked, this, &Operation::on_btn_needleCalib_2);
+
+	connect(check_glue1, &QCheckBox::clicked, this, &Operation::on_check_flowConfig);
+	connect(check_glue2, &QCheckBox::clicked, this, &Operation::on_check_flowConfig);
+	connect(check_glue3, &QCheckBox::clicked, this, &Operation::on_check_flowConfig);
 
 	connect(btn_saveDistanceOffset, &QPushButton::clicked, this, &Operation::on_btn_saveDistanceOffset);
 }
@@ -108,25 +117,25 @@ void Operation::setGroupGlue()
 	QVBoxLayout *layout_2_1 = new QVBoxLayout();
 	QVBoxLayout *layout_2_2 = new QVBoxLayout();
 
-	btn_ccd_calibration = new QPushButton(QStringLiteral("CCD_标定"));
-	btn_ccd_laser		= new QPushButton(QStringLiteral("CCD_Laser探高"));
-	btn_ccd_runEmpty    = new QPushButton(QStringLiteral("CCD_空跑点胶"));
-	btn_pin_calibration = new QPushButton(QStringLiteral("针头校准"));
-	
-	btn_glueAxisHome  = new QPushButton(QStringLiteral("点胶轴复位"));
-	btn_glueClear     = new QPushButton(QStringLiteral("清胶"));
-	btn_glueAutoClear = new QPushButton(QStringLiteral("自动排胶"));
-	btn_runEmpty	  = new QPushButton(QStringLiteral("空跑点胶"));
+	btn_station_home = new QPushButton(QStringLiteral("点胶轴复位"));
+	btn_ccd_calib    = new QPushButton(QStringLiteral("CCD_标定"));
+	btn_ccd_runEmpty = new QPushButton(QStringLiteral("CCD_空跑"));
+	btn_runEmpty     = new QPushButton(QStringLiteral("空跑不点胶"));
 
-	layout_2_1->addWidget(btn_ccd_calibration);
-	layout_2_1->addWidget(btn_ccd_laser);
+	btn_clearGlue     = new QPushButton(QStringLiteral("清胶"));
+	btn_dischargeGlue = new QPushButton(QStringLiteral("自动排胶"));
+	btn_needleCalib_1 = new QPushButton(QStringLiteral("校针-首次校准"));
+	btn_needleCalib_2 = new QPushButton(QStringLiteral("校针-自动保存"));
+
+	layout_2_1->addWidget(btn_station_home);
+	layout_2_1->addWidget(btn_ccd_calib);
 	layout_2_1->addWidget(btn_ccd_runEmpty);
-	layout_2_1->addWidget(btn_pin_calibration);
+	layout_2_1->addWidget(btn_runEmpty);
 
-	layout_2_2->addWidget(btn_glueAxisHome);
-	layout_2_2->addWidget(btn_glueClear);
-	layout_2_2->addWidget(btn_glueAutoClear);
-	layout_2_2->addWidget(btn_runEmpty);
+	layout_2_2->addWidget(btn_clearGlue);
+	layout_2_2->addWidget(btn_dischargeGlue);
+	layout_2_2->addWidget(btn_needleCalib_1);
+	layout_2_2->addWidget(btn_needleCalib_2);
 
 	layout_1->addLayout(layout_2_1);
 	layout_1->addLayout(layout_2_2);
@@ -316,52 +325,6 @@ void Operation::setGroupDistanceOffset()
 }
 
 
-void Operation::on_changedRundataLabel(QString str)
-{
-	label_rundata->setText(str);
-}
-
-void Operation::on_changedRundataText(QString str)
-{
-	QString s_currentTime = getCurrentTime();
-	QString s_str = s_currentTime + ":  " + str;
-	text_rundata->append(s_str);
-}
-
-void Operation::on_changedOffsetChart(float x, float y, float A)
-{
-	index_offset += 1;
-
-	lseries_offset_x->append(index_offset, x);
-	lseries_offset_y->append(index_offset, y);
-	lseries_offset_A->append(index_offset, A);
-
-	chart_offset->removeSeries(lseries_offset_x);
-	chart_offset->removeSeries(lseries_offset_y);
-	chart_offset->removeSeries(lseries_offset_A);
-
-	chart_offset->addSeries(lseries_offset_x);
-	chart_offset->addSeries(lseries_offset_y);
-	chart_offset->addSeries(lseries_offset_A);
-	chart_offset->createDefaultAxes();
-}
-
-void Operation::on_changedOffset(float offset_x, float offset_y, float offset_z)
-{
-	offset_x = offset_x * 1000;
-	offset_y = offset_x * 1000;
-	offset_z = offset_z * 1000;
-
-	QString str_x = QString::number(offset_x, 'f', 0);
-	QString str_y = QString::number(offset_y, 'f', 0);
-	QString str_z = QString::number(offset_z, 'f', 0);
-
-	edit_offset_ccd_needle_x->setText(str_x);
-	edit_offset_ccd_needle_y->setText(str_y);
-	edit_offset_laser_needle_z->setText(str_z);
-}
-
-
 void Operation::setChart_offset()
 {
 	index_offset = 0;
@@ -417,7 +380,6 @@ void Operation::setChart_pass()
 	chartView_quality = new QChartView();
 	chartView_quality->setChart(chart_quality);
 }
-
 
 
 QChart *Operation::setChart_2()
@@ -506,7 +468,9 @@ QString Operation::getCurrentTime()
 }
 
 
-void Operation::on_check_glue()
+
+//	Check glue1, glue2, glue3
+void Operation::on_check_flowConfig()
 {
 	QSettings setting("../config/workflow_glue.ini", QSettings::IniFormat);
 	setting.beginGroup("workflow_glue");
@@ -515,9 +479,10 @@ void Operation::on_check_glue()
 	setting.setValue("is_config_glue3", check_glue3->isChecked());
 	setting.endGroup();
 
-	emit changedConfigGlue(check_glue1->isChecked(), check_glue2->isChecked(), check_glue3->isChecked());
+	emit clicked_check_flowConfig();
 }
 
+// BTN 保存距离偏移
 void Operation::on_btn_saveDistanceOffset()
 {
 	QSettings setting("../config/workflow_glue.ini", QSettings::IniFormat);
@@ -551,5 +516,122 @@ void Operation::on_btn_saveDistanceOffset()
 	float offset_y = edit_offset_ccd_needle_y->text().toInt() / 1000.0;
 	float offset_z = edit_offset_laser_needle_z->text().toInt() / 1000.0;
 
-	changedConfigGlueOffset(offset_x, offset_y, offset_z);
+	emit clicked_btn_saveDistanceOffset();
+}
+
+// BTN 点胶轴复位
+void Operation::on_btn_station_home()
+{
+	if (!(init_card() == 1)) return;
+
+	QtConcurrent::run([&]() {
+		home_axis(AXISNUM::Z);
+		wait_axis_homeOk(AXISNUM::Z);
+
+		home_axis(AXISNUM::X);
+		wait_axis_homeOk(AXISNUM::X);
+
+		home_axis(AXISNUM::Y);
+		wait_axis_homeOk(AXISNUM::Y);
+	});
+}
+
+// BTN CCD 标定
+void Operation::on_btn_ccd_calib()
+{
+	emit clicked_btn_ccd_calib();
+}
+
+// BTN CCD 空跑
+void Operation::on_btn_ccd_runEmpty()
+{
+	emit clicked_btn_ccd_runEmpty();
+}
+
+// BTN 空跑不点胶
+void Operation::on_btn_runEmpty()
+{
+	emit clicked_btn_runEmpty();
+}
+
+// BTN 清胶
+void Operation::on_btn_clearGlue()
+{
+	emit clicked_btn_clearGlue();
+}
+
+// BTN 自动排胶
+void Operation::on_btn_dischargeGlue()
+{
+	emit clicked_btn_dischargeGlue();
+}
+
+// BTN 校针1
+void Operation::on_btn_needleCalib_1()
+{
+	emit clicked_btn_needleCalib_1();
+}
+
+// BTN 校针2
+void Operation::on_btn_needleCalib_2()
+{
+	emit clicked_btn_needleCalib_2();
+}
+
+// 连接Workflow  
+void Operation::on_changedRundataLabel(QString str)
+{
+	label_rundata->setText(str);
+}
+
+// 连接Workflow
+void Operation::on_changedRundataText(QString str)
+{
+	QString s_currentTime = getCurrentTime();
+	QString s_str = s_currentTime + ":  " + str;
+	text_rundata->append(s_str);
+}
+
+// 连接Workflow
+void Operation::on_changedDistanceOffset()
+{
+	QFile file("../config/workflow_glue.ini");
+	if (!file.exists()) return;
+	else
+	{
+		QSettings setting("../config/workflow_glue.ini", QSettings::IniFormat);
+		edit_distance_ccd_needle_x->setText(setting.value("ccd_needle_diatance/offset_x").toString());
+		edit_distance_ccd_needle_y->setText(setting.value("ccd_needle_diatance/offset_y").toString());
+
+		edit_distance_ccd_laser_x->setText(setting.value("ccd_laser_diatance/offset_x").toString());
+		edit_distance_ccd_laser_y->setText(setting.value("ccd_laser_diatance/offset_y").toString());
+
+		edit_distance_laser_needle_x->setText(setting.value("laser_needle_diatance/offset_x").toString());
+		edit_distance_laser_needle_y->setText(setting.value("laser_needle_diatance/offset_y").toString());
+		edit_distance_laser_needle_z->setText(setting.value("laser_needle_diatance/offset_z").toString());
+
+		edit_offset_ccd_needle_x->setText(setting.value("calib_needle_optical/calib_offset_x").toString());
+		edit_offset_ccd_needle_y->setText(setting.value("calib_needle_optical/calib_offset_y").toString());
+		edit_offset_laser_needle_z->setText(setting.value("calib_needle_attach/calib_offset_z").toString());
+	}
+	file.close();
+}
+
+// 连接Workflow
+void Operation::on_changedOffsetChart(float x, float y, float A)
+{
+	index_offset += 1;
+
+	lseries_offset_x->append(index_offset, x);
+	lseries_offset_y->append(index_offset, y);
+	lseries_offset_A->append(index_offset, A);
+
+	chart_offset->removeSeries(lseries_offset_x);
+	chart_offset->removeSeries(lseries_offset_y);
+	chart_offset->removeSeries(lseries_offset_A);
+
+	chart_offset->addSeries(lseries_offset_x);
+	chart_offset->addSeries(lseries_offset_y);
+	chart_offset->addSeries(lseries_offset_A);
+	chart_offset->createDefaultAxes();
 }

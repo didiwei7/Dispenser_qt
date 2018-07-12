@@ -5,25 +5,13 @@ PointDebug::PointDebug(QWidget *parent) : QWidget(parent)
 {
     setupUi();
 	setConnect();
-	// setThread();
-	
-	// 由于Qt中Ui对象是线程不安全的, 所以还是在计时器中刷新
+
+	// 由于Qt中所有的ui对象都是线程不安全的, 所以由线程改为在计时器中刷新
 	setTimer();
 }
 
 PointDebug::~PointDebug()
 {
-	/*
-	// 关闭线程
-	close_thread_updateCurrentPos = true;
-	close_thread_updateInputStatus = true;
-
-	// 销毁线程池
-	thread_pool.waitForDone();
-	thread_pool.clear();
-	thread_pool.destroyed();
-	*/
-
 }
 
 // 初始化Ui
@@ -32,7 +20,8 @@ void PointDebug::setupUi()
 	setGroupPoint();
     setGroupMove();
 	setGroupIO();
-	setGroupPos();
+	setGroupCurrentpos();
+	setGroupStep();
 	setGroupHome();
 
 	QHBoxLayout *layout_1   = new QHBoxLayout();
@@ -49,7 +38,8 @@ void PointDebug::setupUi()
 
 	layout_2_1->addWidget(group_move);
 	layout_2_1->addWidget(group_home);
-	layout_2_1->addWidget(group_pos);
+	layout_2_1->addWidget(group_currentpos);
+	layout_2_1->addWidget(group_step);
 	layout_2_1->addWidget(group_io);
 	layout_2_1->addSpacerItem(new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding));
 
@@ -70,6 +60,8 @@ void PointDebug::setConnect()
 	connect(hnavigationbar, &QHNavigationBar::currentItemChanged,
 		    this,           &PointDebug::setCurrentModel);
 	connect(action_go,	  &QAction::triggered, this, &PointDebug::on_action_go);
+	connect(action_go_location, &QAction::triggered, this, &PointDebug::on_action_go_location);
+	connect(action_go_laser, &QAction::triggered, this, &PointDebug::on_action_go_laser);
 	connect(action_teach, &QAction::triggered, this, &PointDebug::on_action_teach);
 	connect(action_add,	  &QAction::triggered, this, &PointDebug::on_action_add);
 	connect(action_insert, &QAction::triggered, this, &PointDebug::on_action_insert);
@@ -109,29 +101,19 @@ void PointDebug::setConnect()
     connect(Z_negative, &QPushButton::pressed, this, &PointDebug::on_Z_negative_pressed);
     connect(Z_negative, &QPushButton::released, this, &PointDebug::on_Z_negative_released);
 
+	connect(A_positive, &QPushButton::clicked, this, &PointDebug::on_A_positive_clicked);
+	connect(A_positive, &QPushButton::pressed, this, &PointDebug::on_A_positive_pressed);
+	connect(A_positive, &QPushButton::released, this, &PointDebug::on_A_positive_released);
+	connect(A_negative, &QPushButton::clicked, this, &PointDebug::on_A_negative_clicked);
+	connect(A_negative, &QPushButton::pressed, this, &PointDebug::on_A_negative_pressed);
+	connect(A_negative, &QPushButton::released, this, &PointDebug::on_A_negative_released);
+
 	// 【5】 回原 BTN
 	connect(btn_x_home, &QPushButton::clicked, this, &PointDebug::on_btn_x_home);
 	connect(btn_y_home, &QPushButton::clicked, this, &PointDebug::on_btn_y_home);
 	connect(btn_z_home, &QPushButton::clicked, this, &PointDebug::on_btn_z_home);
 	connect(btn_stop, &QPushButton::clicked, this, &PointDebug::on_btn_stop);
 	connect(btn_station_home, &QPushButton::clicked, this, &PointDebug::on_btn_station_home);
-}
-
-// 初始化线程
-void PointDebug::setThread()
-{
-	thread_pool.setMaxThreadCount(2);
-
-	is_updateCurrentPos_ok = false;
-	start_thread_updateCurrentPos = true;
-	close_thread_updateCurrentPos = false;
-
-	is_updateInputStatus_ok = false;
-	start_thread_updateInputStatus = true;
-	close_thread_updateInputStatus = false;
-
-	future_thread_updateCurrentPos = QtConcurrent::run(&thread_pool, [&]() { thread_updateCurrentPos(); });
-	future_thread_updateInputStatus = QtConcurrent::run(&thread_pool, [&]() { thread_updateInputStatus(); });
 }
 
 // 初始化计时器
@@ -151,17 +133,23 @@ void PointDebug::setGroupMove()
 {
     group_move = new QGroupBox(QStringLiteral("点位移动"));
 
+	QFont font;
+	font.setFamily("MicroSoft Yahei");
+	font.setPointSize(8);
+	font.setBold(true);
+	group_move->setFont(font);
+
     slider_speed = new QMySlider();
 	slider_speed->setText(QStringLiteral("当前速度"));
 	slider_speed->setRange(0, 10000);
-	slider_speed->setValue(100);
-	slider_speed->setFixedWidth(250);
+	slider_speed->setValue(500);
+	slider_speed->setFixedWidth(320);
 
-	start_v = float(0.1);
-	speed = 1.0;
-	acc = 1.0;
-	dec = 1.0;
-	set_speed_mode(start_v, speed, acc, ADMODE::T);
+	debug_startv = float(0.1);
+	debug_speed = float(5.0);
+	debug_acc = float(5.0);
+	debug_admode = ADMODE::T;
+	set_speed_mode(debug_startv, debug_speed, debug_acc, debug_admode);
 
 	X_negative = new QPushButton(QIcon("../ui/resources/left.png"), NULL);
     X_positive = new QPushButton(QIcon("../ui/resources/right.png"), NULL);
@@ -172,22 +160,32 @@ void PointDebug::setGroupMove()
     Z_positive = new QPushButton(QIcon("../ui/resources/up.png"), QStringLiteral("Z+"));
     Z_negative = new QPushButton(QIcon("../ui/resources/down.png"), QStringLiteral("Z-"));
 
+	A_positive = new QPushButton(QIcon("../ui/resources/up.png"), QStringLiteral("A+"));
+	A_negative = new QPushButton(QIcon("../ui/resources/down.png"), QStringLiteral("A-"));
+
     QVBoxLayout *layout_1 = new QVBoxLayout();
     QHBoxLayout *layout_2 = new QHBoxLayout();      // 二级布局
     QVBoxLayout *layout_3_1 = new QVBoxLayout();
     QVBoxLayout *layout_3_2 = new QVBoxLayout();
+	QVBoxLayout *layout_3_3 = new QVBoxLayout();
 
     layout_3_1->addWidget(Y_positive);
 	layout_3_1->addSpacing(20);
     layout_3_1->addWidget(Y_negative);
+
     layout_3_2->addWidget(Z_positive);
 	layout_3_2->addSpacing(20);
     layout_3_2->addWidget(Z_negative);
+
+	layout_3_3->addWidget(A_positive);
+	layout_3_3->addSpacing(20);
+	layout_3_3->addWidget(A_negative);
 
     layout_2->addWidget(X_negative);
     layout_2->addLayout(layout_3_1);
     layout_2->addWidget(X_positive);
     layout_2->addLayout(layout_3_2);
+	layout_2->addLayout(layout_3_3);
 	layout_2->addSpacerItem(new QSpacerItem(0, 0, QSizePolicy::Expanding, QSizePolicy::Minimum));
 
     layout_1->addWidget(slider_speed);
@@ -199,11 +197,12 @@ void PointDebug::setGroupMove()
 void PointDebug::setGroupHome()
 {
 	group_home = new QGroupBox(QStringLiteral("回原"));
-	//QFont font;
-	//font.setFamily("MicroSoft Yahei");
-	//font.setPointSize(8);
-	//font.setBold(true);
-	//group_home->setFont(font);
+
+	QFont font;
+	font.setFamily("MicroSoft Yahei");
+	font.setPointSize(8);
+	font.setBold(true);
+	group_home->setFont(font);
 	
 	QHBoxLayout *layout_1 = new QHBoxLayout();
 
@@ -225,6 +224,14 @@ void PointDebug::setGroupHome()
 
 void PointDebug::setGroupIO()
 {
+	group_io = new QGroupBox(QStringLiteral("IO信号监视"));
+
+	QFont font;
+	font.setFamily("MicroSoft Yahei");
+	font.setPointSize(8);
+	font.setBold(true);
+	group_io->setFont(font);
+
 	// 【1】 初始化Label
 	QLabel *label_p = new QLabel(QStringLiteral("正限位"));
 	label_p->setAlignment(Qt::AlignCenter);
@@ -293,27 +300,18 @@ void PointDebug::setGroupIO()
 	layout_1->addLayout(layout_2_1);
 	layout_1->addSpacerItem(new QSpacerItem(0, 0, QSizePolicy::Expanding, QSizePolicy::Minimum));
 
-	group_io = new QGroupBox(QStringLiteral("IO信号监视"));
 	group_io->setLayout(layout_1);
-}
-
-void PointDebug::setGroupPos()
-{
-	setGroupCurrentpos();
-	setGroupStep();
-
-	QVBoxLayout *layout_1 = new QVBoxLayout();
-	layout_1->addWidget(group_currentpos);
-	layout_1->addWidget(group_step);
-	layout_1->addSpacerItem(new QSpacerItem(0, 0, QSizePolicy::Expanding, QSizePolicy::Minimum));
-
-	group_pos = new QGroupBox(QStringLiteral("位置"));
-	group_pos->setLayout(layout_1);
 }
 
 void PointDebug::setGroupCurrentpos()
 {
     group_currentpos = new QGroupBox(QStringLiteral("当前位置"));
+
+	QFont font;
+	font.setFamily("MicroSoft Yahei");
+	font.setPointSize(8);
+	font.setBold(true);
+	group_currentpos->setFont(font);
 
     QLabel *labelx = new QLabel(QStringLiteral("X(mm):"), this);
     QLabel *labely = new QLabel(QStringLiteral("Y(mm):"), this);
@@ -349,10 +347,19 @@ void PointDebug::setGroupStep()
 {
     group_step = new QGroupBox(QStringLiteral("步进距离"));
 
+	QFont font;
+	font.setFamily("MicroSoft Yahei");
+	font.setPointSize(8);
+	font.setBold(true);
+	group_step->setFont(font);
+
     QHBoxLayout *layout_1 = new QHBoxLayout();
-	layout_1->setSpacing(1);
 	QVBoxLayout *layout_2_1 = new QVBoxLayout();
-	layout_2_1->setSpacing(5);
+	QVBoxLayout *layout_2_2 = new QVBoxLayout();
+	QVBoxLayout *layout_2_3 = new QVBoxLayout();
+	QVBoxLayout *layout_2_4 = new QVBoxLayout();
+	QVBoxLayout *layout_2_5 = new QVBoxLayout();
+
 
     QLabel *labelx = new QLabel(QStringLiteral("X(mm)"));
     labelx->setAlignment(Qt::AlignCenter);
@@ -363,6 +370,9 @@ void PointDebug::setGroupStep()
     QLabel *labelz = new QLabel(QStringLiteral("Z(mm)"));
     labelz->setAlignment(Qt::AlignCenter);
     labelz->setFixedWidth(50);
+	QLabel *labela = new QLabel(QStringLiteral("A(mm)"));
+	labela->setAlignment(Qt::AlignCenter);
+	labela->setFixedWidth(50);
 
     edit_X_step = new QLineEdit();
     edit_X_step->setAlignment(Qt::AlignCenter);
@@ -379,33 +389,57 @@ void PointDebug::setGroupStep()
     edit_Z_step->setFixedWidth(50);
 	edit_Z_step->setText(QStringLiteral("0.1"));
 
+	edit_A_step = new QLineEdit();
+	edit_A_step->setAlignment(Qt::AlignCenter);
+	edit_A_step->setFixedWidth(50);
+	edit_A_step->setText(QStringLiteral("0.1"));
+
     radio_continue = new QRadioButton(QStringLiteral("连续运动"));
     radio_long   = new QRadioButton(QStringLiteral("长距离"));
     radio_middle = new QRadioButton(QStringLiteral("中距离"));
     radio_short  = new QRadioButton(QStringLiteral("短距离"));
 	radio_short->setChecked(true);
 
-	layout_1->addWidget(labelx);
-	layout_1->addWidget(edit_X_step);
-	layout_1->addSpacing(20);
+	layout_2_1->addSpacerItem(new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding));
+	layout_2_1->addWidget(labelx);
+	layout_2_1->addWidget(edit_X_step);
+	layout_2_1->addSpacerItem(new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding));
+	
+	layout_2_2->addSpacerItem(new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding));
+	layout_2_2->addWidget(labely);
+	layout_2_2->addWidget(edit_Y_step);
+	layout_2_2->addSpacerItem(new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding));
 
-	layout_1->addWidget(labely);
-	layout_1->addWidget(edit_Y_step);
-	layout_1->addSpacing(20);
-	
-	layout_1->addWidget(labelz);
-	layout_1->addWidget(edit_Z_step);
-	layout_1->addSpacing(20);
-	
-	layout_2_1->addWidget(radio_continue);
-	layout_2_1->addWidget(radio_long);
-	layout_2_1->addWidget(radio_middle);
-	layout_2_1->addWidget(radio_short);
+	layout_2_3->addSpacerItem(new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding));
+	layout_2_3->addWidget(labelz);
+	layout_2_3->addWidget(edit_Z_step);
+	layout_2_3->addSpacerItem(new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding));
+
+	layout_2_4->addSpacerItem(new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding));
+	layout_2_4->addWidget(labela);
+	layout_2_4->addWidget(edit_A_step);
+	layout_2_4->addSpacerItem(new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding));
+
+	layout_2_5->addSpacerItem(new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding));
+	layout_2_5->addWidget(radio_continue);
+	layout_2_5->addWidget(radio_long);
+	layout_2_5->addWidget(radio_middle);
+	layout_2_5->addWidget(radio_short);
+	layout_2_5->addSpacerItem(new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding));
 
 	layout_1->addLayout(layout_2_1);
+	layout_1->addSpacing(10);
+	layout_1->addLayout(layout_2_2);
+	layout_1->addSpacing(10);
+	layout_1->addLayout(layout_2_3);
+	layout_1->addSpacing(10);
+	layout_1->addLayout(layout_2_4);
+	layout_1->addSpacing(30);
+	layout_1->addLayout(layout_2_5);
 	layout_1->addSpacerItem(new QSpacerItem(0, 0, QSizePolicy::Expanding, QSizePolicy::Minimum));
 	
     group_step->setLayout(layout_1);
+	group_step->setFixedHeight(120);
 }
 
 void PointDebug::setGroupPoint()
@@ -454,6 +488,7 @@ void PointDebug::setViewPoint()
 										"Z varchar,"
 										"center_X varchar,"
 										"center_Y varchar,"
+										"extra_offset_z varchar,"
 										"laser bool,"
 										"open bool,"
 										"openAdvance integer,"
@@ -472,6 +507,7 @@ void PointDebug::setViewPoint()
 										"Z varchar,"
 										"center_X varchar,"
 										"center_Y varchar,"
+										"extra_offset_z varchar,"
 										"laser bool,"
 										"open bool,"
 										"openAdvance integer,"
@@ -490,6 +526,7 @@ void PointDebug::setViewPoint()
 										"Z varchar,"
 										"center_X varchar,"
 										"center_Y varchar,"
+										"extra_offset_z varchar,"
 										"laser bool,"
 										"open bool,"
 										"openAdvance integer,"
@@ -508,6 +545,7 @@ void PointDebug::setViewPoint()
 										"Z varchar,"
 										"center_X varchar,"
 										"center_Y varchar,"
+										"extra_offset_z varchar,"
 										"laser bool,"
 										"open bool,"
 										"openAdvance integer,"
@@ -535,6 +573,7 @@ void PointDebug::setViewPoint()
     // 更改Model对象的 头信息
 	model_general->setHeaderData(model_general->fieldIndex("name"), Qt::Horizontal, QStringLiteral("名称"));
 	model_general->setHeaderData(model_general->fieldIndex("description"),  Qt::Horizontal, QStringLiteral("描述"));
+	model_general->setHeaderData(model_general->fieldIndex("extra_offset_z"), Qt::Horizontal, QStringLiteral("额外偏移Z"));
 	model_general->setHeaderData(model_general->fieldIndex("open"), Qt::Horizontal, QStringLiteral("是否开胶"));
 	model_general->setHeaderData(model_general->fieldIndex("openAdvance"), Qt::Horizontal, QStringLiteral("提前开胶"));
 	model_general->setHeaderData(model_general->fieldIndex("openDelay"), Qt::Horizontal, QStringLiteral("延迟开胶"));
@@ -553,6 +592,7 @@ void PointDebug::setViewPoint()
 	// 更改Model对象的 头信息
 	model_glue1->setHeaderData(model_glue1->fieldIndex("name"), Qt::Horizontal, QStringLiteral("名称"));
 	model_glue1->setHeaderData(model_glue1->fieldIndex("description"), Qt::Horizontal, QStringLiteral("描述"));
+	model_glue1->setHeaderData(model_glue1->fieldIndex("extra_offset_z"), Qt::Horizontal, QStringLiteral("额外偏移Z"));
 	model_glue1->setHeaderData(model_glue1->fieldIndex("open"), Qt::Horizontal, QStringLiteral("是否开胶"));
 	model_glue1->setHeaderData(model_glue1->fieldIndex("openAdvance"), Qt::Horizontal, QStringLiteral("提前开胶"));
 	model_glue1->setHeaderData(model_glue1->fieldIndex("openDelay"), Qt::Horizontal, QStringLiteral("延迟开胶"));
@@ -571,6 +611,7 @@ void PointDebug::setViewPoint()
 	// 更改Model对象的 头信息
 	model_glue2->setHeaderData(model_glue2->fieldIndex("name"), Qt::Horizontal, QStringLiteral("名称"));
 	model_glue2->setHeaderData(model_glue2->fieldIndex("description"), Qt::Horizontal, QStringLiteral("描述"));
+	model_glue2->setHeaderData(model_glue2->fieldIndex("extra_offset_z"), Qt::Horizontal, QStringLiteral("额外偏移Z"));
 	model_glue2->setHeaderData(model_glue2->fieldIndex("open"), Qt::Horizontal, QStringLiteral("是否开胶"));
 	model_glue2->setHeaderData(model_glue2->fieldIndex("openAdvance"), Qt::Horizontal, QStringLiteral("提前开胶"));
 	model_glue2->setHeaderData(model_glue2->fieldIndex("openDelay"), Qt::Horizontal, QStringLiteral("延迟开胶"));
@@ -589,6 +630,7 @@ void PointDebug::setViewPoint()
 	// 更改Model对象的 头信息
 	model_glue3->setHeaderData(model_glue3->fieldIndex("name"), Qt::Horizontal, QStringLiteral("名称"));
 	model_glue3->setHeaderData(model_glue3->fieldIndex("description"), Qt::Horizontal, QStringLiteral("描述"));
+	model_glue3->setHeaderData(model_glue3->fieldIndex("extra_offset_z"), Qt::Horizontal, QStringLiteral("额外偏移Z"));
 	model_glue3->setHeaderData(model_glue3->fieldIndex("open"), Qt::Horizontal, QStringLiteral("是否开胶"));
 	model_glue3->setHeaderData(model_glue3->fieldIndex("openAdvance"), Qt::Horizontal, QStringLiteral("提前开胶"));
 	model_glue3->setHeaderData(model_glue3->fieldIndex("openDelay"), Qt::Horizontal, QStringLiteral("延迟开胶"));
@@ -621,17 +663,18 @@ void PointDebug::setViewPoint()
 	pointview->setColumnWidth(5, 60);
 	pointview->setColumnWidth(6, 60);
 	pointview->setColumnWidth(7, 60);
-	pointview->setColumnWidth(8, 60);
+	pointview->setColumnWidth(8, 70);
 	pointview->setColumnWidth(9, 60);
 	pointview->setColumnWidth(10, 60);
 	pointview->setColumnWidth(11, 60);
 	pointview->setColumnWidth(12, 60);
 	pointview->setColumnWidth(13, 60);
 	pointview->setColumnWidth(14, 60);
-	pointview->setColumnHidden(10, true);
+	pointview->setColumnWidth(15, 60);
 	pointview->setColumnHidden(11, true);
-	pointview->setColumnHidden(13, true);
+	pointview->setColumnHidden(12, true);
 	pointview->setColumnHidden(14, true);
+	pointview->setColumnHidden(15, true);
     // 可弹出右键菜单
     pointview->setContextMenuPolicy(Qt::CustomContextMenu);
 	// 隐藏表头
@@ -640,10 +683,12 @@ void PointDebug::setViewPoint()
 
 void PointDebug::setActions()
 {
-	action_go     = new QAction(QStringLiteral("Go"), this);
-	action_teach  = new QAction(QStringLiteral("示教"), this);
+	action_go = new QAction(QStringLiteral("Go"), this);
+	action_go_location = new QAction(QStringLiteral("Go 定位世界坐标位置"), this);
+	action_go_laser = new QAction(QStringLiteral("Go 定位Laser位置"), this);
+	action_teach = new QAction(QStringLiteral("示教"), this);
 	
-	action_sepa   = new QAction();
+	action_sepa = new QAction();
 	action_sepa->setSeparator(true);
 
 	action_add    = new QAction(QStringLiteral("添加"), this);
@@ -651,19 +696,20 @@ void PointDebug::setActions()
 	action_del    = new QAction(QStringLiteral("删除"), this);
 	action_save   = new QAction(QStringLiteral("保存"), this);
 
-	list_action  << action_go << action_teach << action_sepa
-		         << action_add << action_insert << action_del << action_save;
+	list_action << action_go << action_go_location << action_go_laser << action_teach 
+				<< action_sepa
+		        << action_add << action_insert << action_del << action_save;
 }
 
 
-// 槽 TableView
+// 槽 点位
 void PointDebug::setCurrentModel(int index)
 {
 	index_model = index;
-	if (0 == index_model)	pointview->setModel(model_general);
-	else if (1 == index_model) pointview->setModel(model_glue1);
-	else if (2 == index_model) pointview->setModel(model_glue2);
-	else if (3 == index_model) pointview->setModel(model_glue3);
+	if (0 == index)	pointview->setModel(model_general);
+	else if (1 == index) pointview->setModel(model_glue1);
+	else if (2 == index) pointview->setModel(model_glue2);
+	else if (3 == index) pointview->setModel(model_glue3);
 	else return;
 }
 
@@ -689,6 +735,8 @@ void PointDebug::on_pointview_rightClicked(const QPoint &)
 		menu_tableView->addActions(list_action);
 
 		action_go->setEnabled(false);
+		action_go_location->setEnabled(false);
+		action_go_laser->setEnabled(false);
 		action_teach->setEnabled(false);
 		action_del->setEnabled(false);
 		action_insert->setEnabled(false);
@@ -701,6 +749,8 @@ void PointDebug::on_pointview_rightClicked(const QPoint &)
 		menu_tableView->addActions(list_action);
 
 		action_go->setEnabled(true);
+		action_go_location->setEnabled(true);
+		action_go_laser->setEnabled(true);
 		action_teach->setEnabled(true);
 		action_del->setEnabled(true);
 		action_insert->setEnabled(true);
@@ -712,17 +762,14 @@ void PointDebug::on_pointview_rightClicked(const QPoint &)
 void PointDebug::on_action_go()
 {
 	QSqlTableModel *pointmodel = getCurrentModel();
-
 	int row = pointview->currentIndex().row();
 	
 	float fx = pointmodel->record(row).value("X").toString().toFloat();
 	float fy = pointmodel->record(row).value("Y").toString().toFloat();
 	float fz = pointmodel->record(row).value("Z").toString().toFloat();
-	// qDebug() << fx << fy << fz;
 
 	QtConcurrent::run( [fx, fy, fz] () {
 		// qDebug() << "thread" << fx << fy << fz;
-
 		move_axis_abs(AXISNUM::X, fx);
 		move_axis_abs(AXISNUM::Y, fy);
 		move_axis_abs(AXISNUM::Z, fz);
@@ -730,6 +777,83 @@ void PointDebug::on_action_go()
 		wait_axis_stop(AXISNUM::Y);
 		wait_axis_stop(AXISNUM::Z);
 	});
+}
+
+void PointDebug::on_action_go_location()
+{
+	QSqlTableModel *pointmodel = getCurrentModel();
+	int row = pointview->currentIndex().row();
+	QString type = pointmodel->record(row).value("type").toString();
+
+	if (!(type == "line" || type == "circle"))
+	{
+		QMessageBox::about(NULL, "Warning", QStringLiteral("该点位无法定位世界坐标"));
+		return;
+	}
+	else
+	{
+		// 获取 fx, fy, fz
+		float fx = pointmodel->record(row).value("X").toString().toFloat();
+		float fy = pointmodel->record(row).value("Y").toString().toFloat();
+		float fz = pointmodel->record(row).value("Z").toString().toFloat();
+
+		// 获取 distance_ccd_needle_x, distance_ccd_neddle_y
+		QSettings setting("../config/workflow_glue.ini", QSettings::IniFormat);
+		distance_ccd_needle_x = setting.value("ccd_needle_diatance/offset_x").toInt() / 1000.0;
+		distance_ccd_neddle_y = setting.value("ccd_needle_diatance/offset_y").toInt() / 1000.0;
+
+		// 计算世界坐标
+		fx = fx + distance_ccd_needle_x;
+		fy = fy + distance_ccd_neddle_y;
+
+		QtConcurrent::run([fx, fy, fz]() {
+			// qDebug() << "thread" << fx << fy << fz;
+			move_axis_abs(AXISNUM::X, fx);
+			move_axis_abs(AXISNUM::Y, fy);
+			move_axis_abs(AXISNUM::Z, fz);
+			wait_axis_stop(AXISNUM::X);
+			wait_axis_stop(AXISNUM::Y);
+			wait_axis_stop(AXISNUM::Z);
+		});
+	}	
+}
+
+void PointDebug::on_action_go_laser()
+{
+	QSqlTableModel *pointmodel = getCurrentModel();
+	int row = pointview->currentIndex().row();
+
+	if (pointmodel->record(row).value("type").toString() != "laser")
+	{
+		QMessageBox::about(NULL, "Warning", QStringLiteral("该点位无法定位Laser位置"));
+		return;
+	}
+	else
+	{
+		// 获取 fx, fy, fz
+		float fx = pointmodel->record(row).value("X").toString().toFloat();
+		float fy = pointmodel->record(row).value("Y").toString().toFloat();
+		float fz = pointmodel->record(row).value("Z").toString().toFloat();
+
+		// 获取 distance_ccd_laser_x, diatance_ccd_laser_y
+		QSettings setting("../config/workflow_glue.ini", QSettings::IniFormat);
+		distance_ccd_laser_x = setting.value("ccd_laser_diatance/offset_x").toInt() / 1000.0;
+		diatance_ccd_laser_y = setting.value("ccd_laser_diatance/offset_x").toInt() / 1000.0;
+
+		// 计算 Laser 位置
+		fx = fx + distance_ccd_laser_x;
+		fy = fy + diatance_ccd_laser_y;
+
+		QtConcurrent::run([fx, fy, fz]() {
+			// qDebug() << "thread" << fx << fy << fz;
+			move_axis_abs(AXISNUM::X, fx);
+			move_axis_abs(AXISNUM::Y, fy);
+			move_axis_abs(AXISNUM::Z, fz);
+			wait_axis_stop(AXISNUM::X);
+			wait_axis_stop(AXISNUM::Y);
+			wait_axis_stop(AXISNUM::Z);
+		});
+	}
 }
 
 void PointDebug::on_action_teach()
@@ -765,8 +889,9 @@ void PointDebug::on_action_add()
 	record_point.setValue("X", "0.000");
 	record_point.setValue("Y", "0.000");
 	record_point.setValue("Z", "0.000");
-	record_point.setValue("center_X", "0.000");
-	record_point.setValue("center_Y", "0.000");
+	record_point.setValue("center_X", "null");
+	record_point.setValue("center_Y", "null");
+	record_point.setValue("extra_offset_z", "null");
 	record_point.setValue("laser", false);
 	record_point.setValue("open", false);
 	record_point.setValue("openAdvance", 0);
@@ -836,8 +961,9 @@ void PointDebug::on_action_insert()
 	record_point.setValue("X", "0.000");
 	record_point.setValue("Y", "0.000");
 	record_point.setValue("Z", "0.000");
-	record_point.setValue("center_X", "0.000");
-	record_point.setValue("center_Y", "0.000");
+	record_point.setValue("center_X", "null");
+	record_point.setValue("center_Y", "null");
+	record_point.setValue("extra_offset_z", "null");
 	record_point.setValue("laser", false);
 	record_point.setValue("open", false);
 	record_point.setValue("openAdvance", 0);
@@ -848,7 +974,6 @@ void PointDebug::on_action_insert()
 	record_point.setValue("type", "line");
 
 	pointmodel->insertRecord(row, record_point);
-	// pointmodel->submitAll();
 	on_action_save();
 }
 
@@ -858,15 +983,10 @@ void PointDebug::on_action_save()
 	pointmodel->submitAll();
 
 	emit changedSqlModel(index_model);
-
-	runPoint = getRunPointInfo();
-	//allPoint.clear();
-	//allPoint = getPointInfo();
 }
 
 
-
-// 槽 Step
+// 槽 BTN 移动距离
 void PointDebug::on_radio_continue()
 {
 	setMoveType(EMOVE_CP);
@@ -913,26 +1033,32 @@ void PointDebug::setMoveType(int moveType)
 	edit_X_step->setEnabled(bEnable);
 	edit_Y_step->setEnabled(bEnable);
 	edit_Z_step->setEnabled(bEnable);
+	edit_A_step->setEnabled(bEnable);
 
 	edit_X_step->setText(str);
 	edit_Y_step->setText(str);
 	edit_Z_step->setText(str);
-
+	edit_A_step->setText(str);
 }
 
-// 槽 Move
+
+// 槽 Slider Speed
 void PointDebug::on_slider_speed_Changed(int pos)
 {
-	speed = pos / float(100.0);
-	acc = pos / float(100.0);
-	dec = pos / float(100.0);
+	debug_speed = pos / float(100.0);
+	debug_acc = pos / float(100.0);
 
-	set_speed_mode(start_v, speed, acc, ADMODE::T);
+	set_speed_mode(debug_startv, debug_speed, debug_acc, debug_admode);
 
-	qDebug() << QStringLiteral("当前速度:") << speed << acc << dec;
+	qDebug() << QStringLiteral("当前速度与模式:") << endl
+		     << "startv: " << debug_startv << endl
+			 << "speed: " << debug_speed << endl
+			 << "acc: " << debug_acc << endl
+		     << "admode: " << debug_admode;
 }
 
 
+// 槽 BTN 上下左右移动
 void PointDebug::on_X_positive_clicked()
 {
 	if (!(init_card() == 1)) return;
@@ -941,26 +1067,21 @@ void PointDebug::on_X_positive_clicked()
 
 	float fx = edit_X_step->text().toFloat();
 	move_axis_offset(AXISNUM::X, fx);
-	
+	// wait_axis_stop(AXISNUM::X);
 }
 
 void PointDebug::on_X_positive_pressed()
 {
 	if (!(init_card() == 1)) return;
 
-	if (!radio_continue->isChecked())
-	{
-		return;
-	}
+	if (!radio_continue->isChecked()) return;
 	else
 	{
-		if (axis_isMoving(1))
-		{
-			return;
-		}	
+		if (axis_isMoving(AXISNUM::X)) return;
 		else
 		{
 			move_axis_continue(AXISNUM::X, 0);
+
 		}
 	}
 }
@@ -969,16 +1090,10 @@ void PointDebug::on_X_positive_released()
 {
 	if (!(init_card() == 1)) return;
 	
-	if (!radio_continue->isChecked())
-	{
-		return;
-	}
+	if (!radio_continue->isChecked()) return;
 	else
 	{
-		if (!axis_isMoving(1))
-		{
-			return;
-		}
+		if (!axis_isMoving(AXISNUM::X)) return;
 		else
 		{
 			stop_axis(AXISNUM::X);
@@ -1001,16 +1116,10 @@ void PointDebug::on_X_negative_pressed()
 {
 	if (!(init_card() == 1)) return;
 
-	if (!radio_continue->isChecked())
-	{
-		return;
-	}
+	if (!radio_continue->isChecked()) return;
 	else
 	{
-		if (axis_isMoving(1))
-		{
-			return;
-		}
+		if (axis_isMoving(AXISNUM::X)) return;
 		else
 		{
 			move_axis_continue(AXISNUM::X, 1);
@@ -1022,16 +1131,10 @@ void PointDebug::on_X_negative_released()
 {
 	if (!(init_card() == 1)) return;
 
-	if (!radio_continue->isChecked())
-	{
-		return;
-	}
+	if (!radio_continue->isChecked()) return;
 	else
 	{
-		if (!axis_isMoving(1))
-		{
-			return;
-		}
+		if (!axis_isMoving(AXISNUM::X)) return;
 		else
 		{
 			stop_axis(AXISNUM::X);
@@ -1055,16 +1158,10 @@ void PointDebug::on_Y_positive_pressed()
 {
 	if (!(init_card() == 1)) return;
 
-	if (!radio_continue->isChecked())
-	{
-		return;
-	}
+	if (!radio_continue->isChecked()) return;
 	else
 	{
-		if (axis_isMoving(AXISNUM::Y))
-		{
-			return;
-		}
+		if (axis_isMoving(AXISNUM::Y)) return;
 		else
 		{
 			move_axis_continue(AXISNUM::Y, 0);
@@ -1076,16 +1173,10 @@ void PointDebug::on_Y_positive_released()
 {
 	if (!(init_card() == 1)) return;
 
-	if (!radio_continue->isChecked())
-	{
-		return;
-	}
+	if (!radio_continue->isChecked()) return;
 	else
 	{
-		if (!axis_isMoving(AXISNUM::Y))
-		{
-			return;
-		}
+		if (!axis_isMoving(AXISNUM::Y)) return;
 		else
 		{
 			stop_axis(AXISNUM::Y);
@@ -1108,16 +1199,10 @@ void PointDebug::on_Y_negative_pressed()
 {
 	if (!(init_card() == 1)) return;
 
-	if (!radio_continue->isChecked())
-	{
-		return;
-	}
+	if (!radio_continue->isChecked()) return;
 	else
 	{
-		if (axis_isMoving(AXISNUM::Y))
-		{
-			return;
-		}
+		if (axis_isMoving(AXISNUM::Y)) return;
 		else
 		{
 			move_axis_continue(AXISNUM::Y, 1);
@@ -1129,16 +1214,10 @@ void PointDebug::on_Y_negative_released()
 {
 	if (!(init_card() == 1)) return;
 
-	if (!radio_continue->isChecked())
-	{
-		return;
-	}
+	if (!radio_continue->isChecked()) return;
 	else
 	{
-		if (!axis_isMoving(AXISNUM::Y))
-		{
-			return;
-		}
+		if (!axis_isMoving(AXISNUM::Y)) return;
 		else
 		{
 			stop_axis(AXISNUM::Y);
@@ -1162,16 +1241,10 @@ void PointDebug::on_Z_positive_pressed()
 {
 	if (!(init_card() == 1)) return;
 
-	if (!radio_continue->isChecked())
-	{
-		return;
-	}
+	if (!radio_continue->isChecked()) return;
 	else
 	{
-		if (axis_isMoving(AXISNUM::Z))
-		{
-			return;
-		}
+		if (axis_isMoving(AXISNUM::Z)) return;
 		else
 		{
 			move_axis_continue(AXISNUM::Z, 0);
@@ -1183,16 +1256,10 @@ void PointDebug::on_Z_positive_released()
 {
 	if (!(init_card() == 1)) return;
 
-	if (!radio_continue->isChecked())
-	{
-		return;
-	}
+	if (!radio_continue->isChecked()) return;
 	else
 	{
-		if (!axis_isMoving(AXISNUM::Z))
-		{
-			return;
-		}
+		if (!axis_isMoving(AXISNUM::Z)) return;
 		else
 		{
 			stop_axis(AXISNUM::Z);
@@ -1215,17 +1282,10 @@ void PointDebug::on_Z_negative_pressed()
 {
 	if (!(init_card() == 1)) return;
 
-	if (!radio_continue->isChecked())
-	{
-		return;
-	}
+	if (!radio_continue->isChecked()) return;	
 	else
 	{
-		if (axis_isMoving(AXISNUM::Z))
-		{
-			Sleep(1);
-			return;
-		}
+		if (axis_isMoving(AXISNUM::Z)) return;
 		else
 		{
 			move_axis_continue(AXISNUM::Z, 1);
@@ -1243,11 +1303,7 @@ void PointDebug::on_Z_negative_released()
 	}
 	else
 	{
-		if (!axis_isMoving(AXISNUM::Z))
-		{
-			Sleep(1);
-			return;
-		}
+		if (!axis_isMoving(AXISNUM::Z)) return;
 		else
 		{
 			stop_axis(AXISNUM::Z);
@@ -1256,7 +1312,91 @@ void PointDebug::on_Z_negative_released()
 }
 
 
-// 回原
+void PointDebug::on_A_positive_clicked()
+{
+	if (!(init_card() == 1)) return;
+
+	if (radio_continue->isChecked()) return;
+
+	float fa = edit_A_step->text().toFloat();
+	move_axis_offset(AXISNUM::A, fa);
+	// wait_axis_stop(AXISNUM::X);
+}
+
+void PointDebug::on_A_positive_pressed()
+{
+	if (!(init_card() == 1)) return;
+
+	if (!radio_continue->isChecked()) return;
+	else
+	{
+		if (axis_isMoving(AXISNUM::A)) return;
+		else
+		{
+			move_axis_continue(AXISNUM::A, 0);
+
+		}
+	}
+}
+
+void PointDebug::on_A_positive_released()
+{
+	if (!(init_card() == 1)) return;
+
+	if (!radio_continue->isChecked()) return;
+	else
+	{
+		if (!axis_isMoving(AXISNUM::A)) return;
+		else
+		{
+			stop_axis(AXISNUM::A);
+		}
+	}
+}
+
+void PointDebug::on_A_negative_clicked()
+{
+	if (!(init_card() == 1)) return;
+
+	if (radio_continue->isChecked()) return;
+
+	float fa = edit_A_step->text().toFloat();
+	move_axis_offset(AXISNUM::A, -fa);
+	// wait_axis_stop(AXISNUM::X);
+}
+
+void PointDebug::on_A_negative_pressed()
+{
+	if (!(init_card() == 1)) return;
+
+	if (!radio_continue->isChecked()) return;
+	else
+	{
+		if (axis_isMoving(AXISNUM::A)) return;
+		else
+		{
+			move_axis_continue(AXISNUM::A, 1);
+		}
+	}
+}
+
+void PointDebug::on_A_negative_released()
+{
+	if (!(init_card() == 1)) return;
+
+	if (!radio_continue->isChecked()) return;
+	else
+	{
+		if (!axis_isMoving(AXISNUM::A)) return;
+		else
+		{
+			stop_axis(AXISNUM::A);
+		}
+	}
+}
+
+
+// 槽 BTN 回原
 void PointDebug::on_btn_stop()
 {
 	if (!(init_card() == 1)) return;
@@ -1273,22 +1413,23 @@ void PointDebug::on_btn_station_home()
 	if (!(init_card() == 1)) return;
 
 	QtConcurrent::run([&]() {
+		home_axis(AXISNUM::Z);
+		wait_axis_homeOk(AXISNUM::Z);
+
 		home_axis(AXISNUM::X);
 		wait_axis_homeOk(AXISNUM::X);
-	});
 
-	QtConcurrent::run([&]() {
 		home_axis(AXISNUM::Y);
 		wait_axis_homeOk(AXISNUM::Y);
 	});
-
 }
 
 void PointDebug::on_btn_x_home()
 {
+	if (!(init_card() == 1)) return;
+
 	// set_home_mode();
 	// set_home_speed();
-	if (!(init_card() == 1)) return;
 
 	// adt8949_SetHomeMode_Ex(0, 1, 3, 0, 1, -1, 15, 20, 0);
 	// adt8949_SetHomeSpeed_Ex(0, 1, 5, 20, 5, 20, 0.5);
@@ -1320,140 +1461,7 @@ void PointDebug::on_btn_z_home()
 }
 
 
-// 更新当前位置
-void PointDebug::thread_updateCurrentPos()
-{
-    // if (!(init_card() == 1)) return;
-
-	int step_pos = 0;
-
-	while (close_thread_updateCurrentPos == false)
-	{
-		switch (step_pos)
-		{
-		case 0:		// 等待触发
-		{
-			if (start_thread_updateCurrentPos == false)
-			{
-				Sleep(1);
-				step_pos = 0;
-			}
-			else
-			{
-				step_pos = 10;
-			}
-		}
-		break;
-
-		case 10:	// 刷新Input
-		{
-			float fx_axis = get_current_pos_axis(AXISNUM::X);
-			float fy_axis = get_current_pos_axis(AXISNUM::Y);
-			float fz_axis = get_current_pos_axis(AXISNUM::Z);
-
-			QString sx_axis = QString::number(fx_axis, 'f', 3);
-			QString sy_axis = QString::number(fy_axis, 'f', 3);
-			QString sz_axis = QString::number(fz_axis, 'f', 3);
-
-			label_X_currentpos->setText(sx_axis);
-			label_Y_currentpos->setText(sy_axis);
-			label_Z_currentpos->setText(sz_axis);
-
-			Sleep(5);
-			step_pos = 10;
-		}
-		break;
-
-		case 7777:	// 退出流程
-		{
-			start_thread_updateCurrentPos = false;
-			step_pos = 0;
-		}
-		break;
-
-		case 9999:	// 退出线程
-		{
-			// 安全退出该线程
-			close_thread_updateCurrentPos = true;
-		}
-		break;
-
-		default:
-			break;
-		}
-	}
-
-}
-
-// 更新IO信息
-void PointDebug::thread_updateInputStatus()
-{
-	// if (!(init_card() == 1)) return;
-
-	int step_input = 0;
-
-	while (close_thread_updateInputStatus == false)
-	{
-		switch (step_input)
-		{
-		case 0:		// 等待触发
-		{
-			if (start_thread_updateInputStatus == false)
-			{
-				Sleep(2);
-				step_input = 0;
-			}
-			else
-			{
-				step_input = 10;
-			}
-		}
-		break;
-
-		case 10:	// 刷新Input
-		{
-			INPUT_X[0]->setStatus(!read_in_bit(4));
-			INPUT_X[1]->setStatus(!read_in_bit(12));
-			INPUT_X[2]->setStatus(!read_in_bit(5));
-			INPUT_X[3]->setStatus(!read_in_bit(0));
-
-			INPUT_Y[0]->setStatus(!read_in_bit(6));
-			INPUT_Y[1]->setStatus(!read_in_bit(13));
-			INPUT_Y[2]->setStatus(!read_in_bit(7));
-			INPUT_Y[3]->setStatus(!read_in_bit(1));
-
-			INPUT_Z[0]->setStatus(!read_in_bit(8));
-			INPUT_Z[1]->setStatus(!read_in_bit(14));
-			INPUT_Z[2]->setStatus(!read_in_bit(9));
-			INPUT_Z[3]->setStatus(!read_in_bit(2));
-
-			Sleep(10);
-
-			step_input = 0;
-		}
-		break;
-
-		case 8888:	// 退出流程
-		{
-			start_thread_updateInputStatus = false;
-			step_input = 0;
-		}
-		break;
-
-		case 9999:	// 退出线程
-		{
-			// 安全退出该线程
-			close_thread_updateInputStatus = true;
-		}
-		break;
-
-		default:
-			break;
-		}
-	}
-
-}
-
+// 计时器 更新 当前位置
 void PointDebug::timer_updateCurrentPos()
 {
 	float fx_axis = get_current_pos_axis(AXISNUM::X);
@@ -1469,6 +1477,7 @@ void PointDebug::timer_updateCurrentPos()
 	if ((label_Z_currentpos->text() != sz_axis)) label_Z_currentpos->setText(sz_axis);
 }
 
+// 计时器 更新 INPUT 状态
 void PointDebug::timer_updateInputStatus()
 {
 	if (INPUT_X[0]->getStatus() != read_in_bit(4))  INPUT_X[0]->setStatus(read_in_bit(4));
@@ -1485,147 +1494,4 @@ void PointDebug::timer_updateInputStatus()
 	if (INPUT_Z[1]->getStatus() != !read_in_bit(14)) INPUT_Z[1]->setStatus(!read_in_bit(14));
 	if (INPUT_Z[2]->getStatus() != read_in_bit(9))  INPUT_Z[2]->setStatus(read_in_bit(9));
 	if (INPUT_Z[3]->getStatus() != !read_in_bit(2))  INPUT_Z[3]->setStatus(!read_in_bit(2));
-}
-
-
-// 获取当前选中的Model的数据
-QMap<QString, PointRun> PointDebug::getCurrentModelPointInfo()
-{
-	QSqlTableModel *pointmodel = getCurrentModel();
-
-	QMap<QString, PointRun> _allPoint;
-	int index = 0;
-	for (index; index < pointmodel->rowCount(); index++)
-	{
-		QString name = pointmodel->record(index).value("name").toString();
-		QString description = pointmodel->record(index).value("description").toString();
-		float X = pointmodel->record(index).value("X").toString().toFloat();
-		float Y = pointmodel->record(index).value("Y").toString().toFloat();
-		float Z = pointmodel->record(index).value("Z").toString().toFloat();
-
-		PointRun point; // = { name, description, X, Y, Z, open, openAdvance, openDelay, close, closeAdvance, closeDelay, type };
-		point.name = name;
-		point.description = description;
-		point.X = X;
-		point.Y = Y;
-		point.Z = Z;
-		_allPoint.insert(name, point);
-	}
-	return _allPoint;
-}
-
-PointRun PointDebug::get_point_name(QString name)
-{
-	QMap<QString, PointRun>::iterator Point_it;
-	Point_it = currentModelPoint.find(name);
-	PointRun point = Point_it.value();
-	return point;
-}
-
-PointRun PointDebug::get_point_index(int index)
-{
-	QSqlTableModel *pointmodel = getCurrentModel();
-
-	QAbstractItemModel *abstractmodel = pointview->model();
-	pointmodel->setParent(abstractmodel);
-
-	QString name = pointmodel->record(index).value("name").toString();
-
-	QMap<QString, PointRun>::iterator Point_it;
-	Point_it = currentModelPoint.find(name);
-	PointRun point = Point_it.value();
-	return point;
-}
-
-
-// 获取所有的 RunPoint
-QMap<QString, PointRun> PointDebug::getRunPointInfo()
-{
-	QMap<QString, PointRun> _allPoint;
-
-	for (int index = 0; index < model_general->rowCount(); index++)
-	{
-		QString name = model_general->record(index).value("name").toString();
-		QString description = model_general->record(index).value("description").toString();
-		float X = model_general->record(index).value("X").toString().toFloat();
-		float Y = model_general->record(index).value("Y").toString().toFloat();
-		float Z = model_general->record(index).value("Z").toString().toFloat();
-
-		PointRun point;
-		point.name = name;
-		point.description = description;
-		point.X = X;
-		point.Y = Y;
-		point.Z = Z;
-		_allPoint.insert(name, point);
-	}
-
-	for (int index = 0; index < model_glue1->rowCount(); index++)
-	{
-		QString name = model_glue1->record(index).value("name").toString();
-		QString description = model_glue1->record(index).value("description").toString();
-		float X = model_glue1->record(index).value("X").toString().toFloat();
-		float Y = model_glue1->record(index).value("Y").toString().toFloat();
-		float Z = model_glue1->record(index).value("Z").toString().toFloat();
-
-		PointRun point;
-		point.name = name;
-		point.description = description;
-		point.X = X;
-		point.Y = Y;
-		point.Z = Z;
-
-		_allPoint.insert(name, point);
-	}
-
-	for (int index = 0; index < model_glue2->rowCount(); index++)
-	{
-		QString name = model_glue2->record(index).value("name").toString();
-		QString description = model_glue2->record(index).value("description").toString();
-		float X = model_glue2->record(index).value("X").toString().toFloat();
-		float Y = model_glue2->record(index).value("Y").toString().toFloat();
-		float Z = model_glue2->record(index).value("Z").toString().toFloat();
-
-		PointRun point;
-		point.name = name;
-		point.description = description;
-		point.X = X;
-		point.Y = Y;
-		point.Z = Z;
-
-		_allPoint.insert(name, point);
-	}
-
-	for (int index = 0; index < model_glue3->rowCount(); index++)
-	{
-		QString name = model_glue3->record(index).value("name").toString();
-		QString description = model_glue3->record(index).value("description").toString();
-		float X = model_glue3->record(index).value("X").toString().toFloat();
-		float Y = model_glue3->record(index).value("Y").toString().toFloat();
-		float Z = model_glue3->record(index).value("Z").toString().toFloat();
-
-		PointRun point;
-		point.name = name;
-		point.description = description;
-		point.X = X;
-		point.Y = Y;
-		point.Z = Z;
-
-		_allPoint.insert(name, point);
-	}
-
-	return _allPoint;
-}
-
-
-int PointDebug::move_thread_xyz(float x_pos, float y_pos, float z_pos)
-{
-	move_axis_abs(AXISNUM::X, x_pos);
-	move_axis_abs(AXISNUM::Y, y_pos);
-	move_axis_abs(AXISNUM::Z, z_pos);
-	wait_axis_stop(AXISNUM::X);
-	wait_axis_stop(AXISNUM::Y);
-	wait_axis_stop(AXISNUM::Z);
-
-	return 0;
 }

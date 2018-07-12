@@ -1,0 +1,29 @@
+2018-07-10 09:12:33   Thread_watch_reset 复位开始
+2018-07-10 09:12:47   Thread_watch_reset 复位流程正常结束
+2018-07-10 09:46:33   Thread_watch_reset 复位开始
+2018-07-10 09:46:46   Thread_watch_reset 复位流程正常结束
+2018-07-10 11:37:19   Thread_watch_reset 复位开始
+2018-07-10 11:37:33   Thread_watch_reset 复位流程正常结束
+2018-07-10 11:37:36   Thread_watch_start 点胶流程开始
+2018-07-10 11:39:01   Thread_glue_teda_test 点胶泰达测试流程正常结束, 等待下次触发流程
+2018-07-10 11:39:10   Thread_watch_start 所有流程正常结束
+2018-07-10 13:03:09   Thread_watch_estop 急停流程正常结束, 线程将关闭. 请松开急停, 重新启动软件
+2018-07-10 13:03:10   Thread_watch_reset 复位开始
+2018-07-10 13:03:47   Thread_watch_clearNeedle 控制卡正在运行, 无法执行擦胶
+2018-07-10 14:01:02   Thread_watch_reset 复位开始
+2018-07-10 14:01:16   Thread_watch_reset 复位流程正常结束
+2018-07-10 14:01:22   Thread_watch_start 点胶流程开始
+2018-07-10 14:02:47   Thread_glue_teda_test 点胶泰达测试流程正常结束, 等待下次触发流程
+2018-07-10 14:02:56   Thread_watch_start 所有流程正常结束
+2018-07-10 14:21:33   Thread_watch_reset 复位开始
+2018-07-10 14:21:46   Thread_watch_reset 复位流程正常结束
+2018-07-10 14:21:55   Thread_watch_start 点胶流程开始
+2018-07-10 14:23:19   Thread_glue_teda_test 点胶泰达测试流程正常结束, 等待下次触发流程
+2018-07-10 14:23:28   Thread_watch_start 所有流程正常结束
+2018-07-10 14:29:30   Thread_watch_start 点胶流程开始
+2018-07-10 14:30:54   Thread_glue_teda_test 点胶泰达测试流程正常结束, 等待下次触发流程
+2018-07-10 14:31:03   Thread_watch_start 所有流程正常结束
+2018-07-10 14:37:04   Thread_watch_start 点胶流程开始
+2018-07-10 14:37:36   Thread_glue_teda_test 点胶泰达测试流程正常结束, 等待下次触发流程
+2018-07-10 14:37:36   Thread_watch_start 所有流程正常结束
+2018-07-10 14:37:36   Thread_watch_estop 急停流程正常结束, 线程将关闭. 请松开急停, 重新启动软件

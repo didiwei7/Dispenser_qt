@@ -3,7 +3,7 @@
 // 初始化控制卡 第一次调用才初始化, 第二次调用时返回第一次初始化的结果
 int index = 1;
 int ret = 0;
-int init_card()
+int  init_card()
 {
 	if (index == 1)
 	{
@@ -38,10 +38,9 @@ int init_card()
 	}
 }
 
-
 void load_card()
 {
-	// 【0】
+	// 【0】 控制卡复位
 	adt8949_reset_card(0);
 
 	// 【1】 设置急停模式
@@ -58,11 +57,14 @@ void load_card()
 	adt8949_set_gear(0, 3, 1000);
 	adt8949_set_gear(0, 4, 3200);
 
-	// 【3】 设置回原模式, 速度
+	// 【3】 设置步进轴速度
+	set_stepAxis_speed(5);
+
+	// 【4】 设置回原模式, 速度
 	set_home_mode();
 	set_home_speed();
 
-	// 【4】 设置限位锁模式
+	// 【5】 设置限位锁模式
 	// adt8949_set_limit_lock(0, 0);
 }
 
@@ -90,7 +92,7 @@ void stop_allaxis()
 // 急停
 void estop()
 {
-	adt8949_close_card();
+	// adt8949_close_card();
 }
 
 
@@ -501,8 +503,16 @@ void wait_inp_finish()
 	}
 }
 
+// 设置步进轴速度
+void set_stepAxis_speed(float speed)
+{
+	// adt8949_set_admode(0, AXISNUM::A, ADMODE::T);
+	adt8949_set_startv(0, AXISNUM::A, speed);
+	adt8949_set_speed(0, AXISNUM::A, speed);
+}
+
 // 等待步进轴停止
-void wait_stepmotor_stop()
+void wait_stepAxis_stop()
 {
 	int state = 0;
 	while (true)

@@ -1,0 +1,140 @@
+2018-07-06 17:17:35   Thread_watch_reset 清胶流程正常结束
+2018-07-06 17:17:38   Thread_watch_reset 清胶流程正常结束
+2018-07-06 17:17:40   Thread_watch_reset 清胶流程正常结束
+2018-07-06 17:17:43   Thread_watch_reset 清胶流程正常结束
+2018-07-06 17:17:45   Thread_watch_reset 清胶流程正常结束
+2018-07-06 17:28:43   Thread_watch_clearNeedle 未复位, 无法执行擦胶
+2018-07-06 17:28:44   Thread_watch_reset 清胶流程正常结束
+2018-07-06 17:28:45   Thread_watch_clearNeedle 未复位, 无法执行擦胶
+2018-07-06 17:28:47   Thread_watch_reset 清胶流程正常结束
+2018-07-06 17:28:48   Thread_watch_clearNeedle 未复位, 无法执行擦胶
+2018-07-06 17:28:49   Thread_watch_reset 清胶流程正常结束
+2018-07-06 17:28:50   Thread_watch_clearNeedle 未复位, 无法执行擦胶
+2018-07-06 17:28:52   Thread_watch_reset 清胶流程正常结束
+2018-07-06 17:28:53   Thread_watch_clearNeedle 未复位, 无法执行擦胶
+2018-07-06 17:28:55   Thread_watch_reset 清胶流程正常结束
+2018-07-06 17:28:56   Thread_watch_clearNeedle 未复位, 无法执行擦胶
+2018-07-06 17:28:57   Thread_watch_reset 清胶流程正常结束
+2018-07-06 17:28:58   Thread_watch_clearNeedle 未复位, 无法执行擦胶
+2018-07-06 17:29:00   Thread_watch_reset 清胶流程正常结束
+2018-07-06 17:29:01   Thread_watch_clearNeedle 未复位, 无法执行擦胶
+2018-07-06 17:29:02   Thread_watch_reset 清胶流程正常结束
+2018-07-06 17:29:03   Thread_watch_clearNeedle 未复位, 无法执行擦胶
+2018-07-06 17:29:05   Thread_watch_reset 清胶流程正常结束
+2018-07-06 17:29:06   Thread_watch_clearNeedle 未复位, 无法执行擦胶
+2018-07-06 17:29:07   Thread_watch_reset 清胶流程正常结束
+2018-07-06 17:29:08   Thread_watch_clearNeedle 未复位, 无法执行擦胶
+2018-07-06 17:29:10   Thread_watch_reset 清胶流程正常结束
+2018-07-06 17:29:11   Thread_watch_clearNeedle 未复位, 无法执行擦胶
+2018-07-06 17:29:12   Thread_watch_reset 清胶流程正常结束
+2018-07-06 17:29:13   Thread_watch_clearNeedle 未复位, 无法执行擦胶
+2018-07-06 17:29:15   Thread_watch_reset 清胶流程正常结束
+2018-07-06 17:29:16   Thread_watch_clearNeedle 未复位, 无法执行擦胶
+2018-07-06 17:29:17   Thread_watch_reset 清胶流程正常结束
+2018-07-06 17:29:18   Thread_watch_clearNeedle 未复位, 无法执行擦胶
+2018-07-06 17:29:20   Thread_watch_reset 清胶流程正常结束
+2018-07-06 17:29:21   Thread_watch_clearNeedle 未复位, 无法执行擦胶
+2018-07-06 17:29:22   Thread_watch_reset 清胶流程正常结束
+2018-07-06 17:29:23   Thread_watch_clearNeedle 未复位, 无法执行擦胶
+2018-07-06 17:29:25   Thread_watch_reset 清胶流程正常结束
+2018-07-06 17:29:26   Thread_watch_clearNeedle 未复位, 无法执行擦胶
+2018-07-06 17:29:28   Thread_watch_reset 清胶流程正常结束
+2018-07-06 17:29:29   Thread_watch_clearNeedle 未复位, 无法执行擦胶
+2018-07-06 17:29:30   Thread_watch_reset 清胶流程正常结束
+2018-07-06 17:29:31   Thread_watch_clearNeedle 未复位, 无法执行擦胶
+2018-07-06 17:29:33   Thread_watch_reset 清胶流程正常结束
+2018-07-06 17:29:34   Thread_watch_clearNeedle 未复位, 无法执行擦胶
+2018-07-06 17:29:35   Thread_watch_reset 清胶流程正常结束
+2018-07-06 17:29:36   Thread_watch_clearNeedle 未复位, 无法执行擦胶
+2018-07-06 17:29:38   Thread_watch_reset 清胶流程正常结束
+2018-07-06 17:29:39   Thread_watch_clearNeedle 未复位, 无法执行擦胶
+2018-07-06 17:29:40   Thread_watch_reset 清胶流程正常结束
+2018-07-06 17:29:41   Thread_watch_clearNeedle 未复位, 无法执行擦胶
+2018-07-06 17:29:43   Thread_watch_reset 清胶流程正常结束
+2018-07-06 17:29:44   Thread_watch_clearNeedle 未复位, 无法执行擦胶
+2018-07-06 17:29:45   Thread_watch_reset 清胶流程正常结束
+2018-07-06 17:29:46   Thread_watch_clearNeedle 未复位, 无法执行擦胶
+2018-07-06 17:29:48   Thread_watch_reset 清胶流程正常结束
+2018-07-06 17:29:54   Thread_watch_clearNeedle 未复位, 无法执行擦胶
+2018-07-06 17:29:55   Thread_watch_reset 清胶流程正常结束
+2018-07-06 17:29:56   Thread_watch_clearNeedle 未复位, 无法执行擦胶
+2018-07-06 17:29:58   Thread_watch_reset 清胶流程正常结束
+2018-07-06 17:29:59   Thread_watch_clearNeedle 未复位, 无法执行擦胶
+2018-07-06 17:30:00   Thread_watch_reset 清胶流程正常结束
+2018-07-06 17:30:01   Thread_watch_clearNeedle 未复位, 无法执行擦胶
+2018-07-06 17:30:03   Thread_watch_reset 清胶流程正常结束
+2018-07-06 17:30:04   Thread_watch_clearNeedle 未复位, 无法执行擦胶
+2018-07-06 17:30:05   Thread_watch_reset 清胶流程正常结束
+2018-07-06 17:30:06   Thread_watch_clearNeedle 未复位, 无法执行擦胶
+2018-07-06 17:30:08   Thread_watch_reset 清胶流程正常结束
+2018-07-06 17:30:09   Thread_watch_clearNeedle 未复位, 无法执行擦胶
+2018-07-06 17:30:10   Thread_watch_reset 清胶流程正常结束
+2018-07-06 17:30:12   Thread_watch_clearNeedle 未复位, 无法执行擦胶
+2018-07-06 17:30:13   Thread_watch_reset 清胶流程正常结束
+2018-07-06 17:30:14   Thread_watch_clearNeedle 未复位, 无法执行擦胶
+2018-07-06 17:30:16   Thread_watch_reset 清胶流程正常结束
+2018-07-06 17:30:17   Thread_watch_clearNeedle 未复位, 无法执行擦胶
+2018-07-06 17:30:18   Thread_watch_reset 清胶流程正常结束
+2018-07-06 17:30:19   Thread_watch_clearNeedle 未复位, 无法执行擦胶
+2018-07-06 17:30:21   Thread_watch_reset 清胶流程正常结束
+2018-07-06 17:30:22   Thread_watch_clearNeedle 未复位, 无法执行擦胶
+2018-07-06 17:30:23   Thread_watch_reset 清胶流程正常结束
+2018-07-06 17:30:24   Thread_watch_clearNeedle 未复位, 无法执行擦胶
+2018-07-06 17:30:26   Thread_watch_reset 清胶流程正常结束
+2018-07-06 17:30:27   Thread_watch_clearNeedle 未复位, 无法执行擦胶
+2018-07-06 17:30:28   Thread_watch_reset 清胶流程正常结束
+2018-07-06 17:30:29   Thread_watch_clearNeedle 未复位, 无法执行擦胶
+2018-07-06 17:30:31   Thread_watch_reset 清胶流程正常结束
+2018-07-06 17:30:32   Thread_watch_clearNeedle 未复位, 无法执行擦胶
+2018-07-06 17:30:33   Thread_watch_reset 清胶流程正常结束
+2018-07-06 17:30:34   Thread_watch_clearNeedle 未复位, 无法执行擦胶
+2018-07-06 17:30:36   Thread_watch_reset 清胶流程正常结束
+2018-07-06 17:30:37   Thread_watch_clearNeedle 未复位, 无法执行擦胶
+2018-07-06 17:30:38   Thread_watch_reset 清胶流程正常结束
+2018-07-06 17:30:39   Thread_watch_clearNeedle 未复位, 无法执行擦胶
+2018-07-06 17:30:41   Thread_watch_reset 清胶流程正常结束
+2018-07-06 17:30:42   Thread_watch_clearNeedle 未复位, 无法执行擦胶
+2018-07-06 17:30:43   Thread_watch_reset 清胶流程正常结束
+2018-07-06 17:30:44   Thread_watch_clearNeedle 未复位, 无法执行擦胶
+2018-07-06 17:30:46   Thread_watch_reset 清胶流程正常结束
+2018-07-06 17:30:52   Thread_watch_clearNeedle 未复位, 无法执行擦胶
+2018-07-06 17:30:54   Thread_watch_reset 清胶流程正常结束
+2018-07-06 17:30:55   Thread_watch_clearNeedle 未复位, 无法执行擦胶
+2018-07-06 17:30:56   Thread_watch_reset 清胶流程正常结束
+2018-07-06 17:30:57   Thread_watch_clearNeedle 未复位, 无法执行擦胶
+2018-07-06 17:30:59   Thread_watch_reset 清胶流程正常结束
+2018-07-06 17:31:00   Thread_watch_clearNeedle 未复位, 无法执行擦胶
+2018-07-06 17:31:01   Thread_watch_reset 清胶流程正常结束
+2018-07-06 17:31:02   Thread_watch_clearNeedle 未复位, 无法执行擦胶
+2018-07-06 17:31:04   Thread_watch_reset 清胶流程正常结束
+2018-07-06 17:31:05   Thread_watch_clearNeedle 未复位, 无法执行擦胶
+2018-07-06 17:31:06   Thread_watch_reset 清胶流程正常结束
+2018-07-06 17:31:07   Thread_watch_clearNeedle 未复位, 无法执行擦胶
+2018-07-06 17:31:09   Thread_watch_reset 清胶流程正常结束
+2018-07-06 17:31:10   Thread_watch_clearNeedle 未复位, 无法执行擦胶
+2018-07-06 17:31:12   Thread_watch_reset 清胶流程正常结束
+2018-07-06 17:31:13   Thread_watch_clearNeedle 未复位, 无法执行擦胶
+2018-07-06 17:31:14   Thread_watch_reset 清胶流程正常结束
+2018-07-06 17:31:15   Thread_watch_clearNeedle 未复位, 无法执行擦胶
+2018-07-06 17:31:17   Thread_watch_reset 清胶流程正常结束
+2018-07-06 17:31:18   Thread_watch_clearNeedle 未复位, 无法执行擦胶
+2018-07-06 17:31:19   Thread_watch_reset 清胶流程正常结束
+2018-07-06 17:31:20   Thread_watch_clearNeedle 未复位, 无法执行擦胶
+2018-07-06 17:31:22   Thread_watch_reset 清胶流程正常结束
+2018-07-06 17:31:23   Thread_watch_clearNeedle 未复位, 无法执行擦胶
+2018-07-06 17:31:24   Thread_watch_reset 清胶流程正常结束
+2018-07-06 17:31:25   Thread_watch_clearNeedle 未复位, 无法执行擦胶
+2018-07-06 17:31:27   Thread_watch_reset 清胶流程正常结束
+2018-07-06 17:31:28   Thread_watch_clearNeedle 未复位, 无法执行擦胶
+2018-07-06 17:31:29   Thread_watch_reset 清胶流程正常结束
+2018-07-06 17:31:30   Thread_watch_clearNeedle 未复位, 无法执行擦胶
+2018-07-06 17:31:32   Thread_watch_reset 清胶流程正常结束
+2018-07-06 17:31:33   Thread_watch_clearNeedle 未复位, 无法执行擦胶
+2018-07-06 17:31:34   Thread_watch_reset 清胶流程正常结束
+2018-07-06 17:31:35   Thread_watch_clearNeedle 未复位, 无法执行擦胶
+2018-07-06 17:31:37   Thread_watch_reset 清胶流程正常结束
+2018-07-06 17:31:38   Thread_watch_clearNeedle 未复位, 无法执行擦胶
+2018-07-06 17:31:39   Thread_watch_reset 清胶流程正常结束
+2018-07-06 17:31:40   Thread_watch_clearNeedle 未复位, 无法执行擦胶
+2018-07-06 17:31:42   Thread_watch_reset 清胶流程正常结束
+2018-07-06 17:31:43   Thread_watch_clearNeedle 未复位, 无法执行擦胶

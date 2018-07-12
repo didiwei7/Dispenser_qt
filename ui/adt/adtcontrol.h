@@ -22,6 +22,7 @@ typedef struct _CCDGlue
 	float            Z;                       // Z
 	float            center_X;				  // 圆心X
 	float            center_Y;				  // 圆心Y
+	float            extra_offset_z;	      // 额外偏移Z
 	bool			 laser;					  // 是否开启镭射
 	bool             open;					  // 是否开胶
 	int              openAdvance;			  // 提前开胶时间
@@ -40,6 +41,7 @@ typedef struct _CCDGlue
 		Z = 0.000;                    // Z
 		center_X = 0.000;			  // 圆心X
 		center_Y = 0.000;			  // 圆心Y
+		extra_offset_z = 0.000;		  // 额外偏移Z
 		laser = false;				  // 是否开启镭射
 		open = false;				  // 是否开胶
 		openAdvance = 0;			  // 提前开胶时间
@@ -63,6 +65,7 @@ typedef struct _CCDGlue
 		Z = other.Z;
 		center_X = other.center_X;
 		center_Y = other.center_Y;
+		extra_offset_z = other.extra_offset_z;
 		laser = other.laser;
 		open = other.open;
 		openAdvance = other.openAdvance;
@@ -74,93 +77,6 @@ typedef struct _CCDGlue
 		return *this;
 	}
 }CCDGlue;
-
-// 实际点胶点
-typedef struct _PointGlue
-{
-	QString          name;                    // 点位名字
-	QString          description;             // 点位描述
-	float            X;					      // X
-	float            Y;						  // Y
-	float            Z;                       // Z
-	bool             open;					  // 是否开胶
-	int              openAdvance;			  // 提前开胶时间
-	int              openDelay;               // 延迟开胶时间
-	bool             close;                   // 是否关胶
-	int              closeAdvance;            // 提前关胶时间
-	int              closeDelay;              // 延后关胶时间
-	int			     type;					  // 类型
-
-	_PointGlue()
-	{
-		name = "";                    // 点位名字
-		description = "";             // 点位描述
-		X = 0.000;					  // X
-		Y = 0.000;					  // Y
-		Z = 0.000;                    // Z
-		open = false;				  // 是否开胶
-		openAdvance = 0;			  // 提前开胶时间
-		openDelay = 0;                 // 延迟开胶时间
-		close = false;                // 是否关胶
-		closeAdvance = 0;             // 提前关胶时间
-		closeDelay = 0;                // 延后关胶时
-		type = 0;					  // 类型
-	}
-
-	_PointGlue & operator = (const _PointGlue &other)
-	{
-		if (this == &other)
-		{
-			return *this;
-		}
-		name = other.name;
-		description = other.description;
-		X = other.X;
-		Y = other.Y;
-		Z = other.Z;
-		open = other.open;
-		openAdvance = other.openAdvance;
-		openDelay = other.openDelay;
-		close = other.close;
-		closeAdvance = other.closeAdvance;
-		closeDelay = other.closeDelay;
-		type = other.type;
-		return *this;
-	}
-}PointGlue;
-
-// 普通点位
-typedef struct _PointGeneral
-{
-	QString          name;                    // 点位名字
-	QString          description;             // 点位描述
-	float            X;					      // X
-	float            Y;						  // Y
-	float            Z;                       // Z
-
-	_PointGeneral()
-	{
-		name = "";                    // 点位名字
-		description = "";             // 点位描述
-		X = 0.000;					  // X
-		Y = 0.000;					  // Y
-		Z = 0.000;                    // Z
-	}
-
-	_PointGeneral & operator = (const _PointGeneral &other)
-	{
-		if (this == &other)
-		{
-			return *this;
-		}
-		name = other.name;
-		description = other.description;
-		X = other.X;
-		Y = other.Y;
-		Z = other.Z;
-		return *this;
-	}
-}PointGeneral;
 
 // 所有点位 包含 name desc x y z
 typedef struct _PointRun
@@ -325,8 +241,11 @@ void wait_allaxis_stop();
 // 等待插补完成
 void wait_inp_finish();
 
+// 设置步进轴速度
+void set_stepAxis_speed(float speed);
+
 // 等待步进轴停止
-void wait_stepmotor_stop();
+void wait_stepAxis_stop();
 
 
 #endif // ADTCONTROL_H

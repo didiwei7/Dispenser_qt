@@ -7,9 +7,11 @@ CONFIG   += ordered
 SUBDIRS  += \
 #            control \
 #            control_lu \
-#            T01_LEADSHINE
+#            T01_LEADSHINE \
+#            QMyMsgBoxThread \
             QFlex          \
             QNavigationBar \
             QMySlider      \
             QCommunication \
             QIO
+

@@ -38,7 +38,7 @@ private:
 	void setConnect();
 	void setThread();
 
-public:
+private:
 	void setGroupLogo();
 	void setGroupWarn();
 	void setGroupGlue();
@@ -56,9 +56,9 @@ public:
 	QGroupBox *group_distance_offset;
 
 
-public:
+private:
     void setChart_offset();
-	int index_offset;
+	int  index_offset;
 	QChartView  *chartView_offset;
 	QChart		*chart_offset;
 	QLineSeries *lseries_offset_x;
@@ -88,38 +88,38 @@ public:
     QChart *chart_3;
     QChart *chart_4;
 
-public:
+private:
 	QLabel       *label_rundata;
 	QTextBrowser *text_rundata;
 
-public:
-	void on_btn_ccd_calibration();
+private:
+	void on_btn_station_home();
+	void on_btn_ccd_calib();
 	void on_btn_ccd_runEmpty();
-	void on_btn_ccd_laser();
-	void on_btn_pin_calibration();
 	void on_btn_runEmpty();
 
-	void on_btn_glueAxisHome();
-	void on_btn_glueClear();
-	void on_btn_glueAutoClear();
+	void on_btn_clearGlue();
+	void on_btn_dischargeGlue();
+	void on_btn_needleCalib_1();
+	void on_btn_needleCalib_2();
 
-	QPushButton *btn_ccd_calibration;
-	QPushButton *btn_ccd_laser;
+	QPushButton *btn_station_home;
+	QPushButton *btn_ccd_calib;
 	QPushButton *btn_ccd_runEmpty;
-	QPushButton *btn_pin_calibration;
-	
-	QPushButton *btn_glueAxisHome;
-	QPushButton *btn_glueClear;
-	QPushButton *btn_glueAutoClear;
 	QPushButton *btn_runEmpty;
+	
+	QPushButton *btn_clearGlue;
+	QPushButton *btn_dischargeGlue;
+	QPushButton *btn_needleCalib_1;
+	QPushButton *btn_needleCalib_2;
 
-public:
-	void       on_check_glue();
+private:
+	void       on_check_flowConfig();
 	QCheckBox *check_glue1;
 	QCheckBox *check_glue2;
 	QCheckBox *check_glue3;
 
-public:
+private:
 	void on_btn_saveDistanceOffset();
 
 	QLineEdit *edit_distance_ccd_needle_x;
@@ -139,16 +139,24 @@ public:
 	QPushButton *btn_saveDistanceOffset;
 
 signals:
-	void changedConfigGlue(bool glue1, bool glue2, bool glue3);
-	void changedConfigGlueOffset(float offset_x, float offset_y, float offset_z);
+	void clicked_check_flowConfig();
+	void clicked_btn_saveDistanceOffset();
+
+	void clicked_btn_ccd_calib();
+	void clicked_btn_ccd_runEmpty();
+	void clicked_btn_runEmpty();
+	void clicked_btn_clearGlue();
+	void clicked_btn_dischargeGlue();
+	void clicked_btn_needleCalib_1();
+	void clicked_btn_needleCalib_2();
 
 public slots:
 	void on_changedRundataLabel(QString str);
 	void on_changedRundataText(QString str);
+	void on_changedDistanceOffset();
 	void on_changedOffsetChart(float x, float y, float A);
-	void on_changedOffset(float offset_x, float offset_y, float offset_z);
-
-public:
+	
+private:
 	// 获取当前时间
 	QString getCurrentTime();
 };

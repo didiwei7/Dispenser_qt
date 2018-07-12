@@ -1,0 +1,5 @@
+2018-07-07 16:59:19   Thread_watch_clearNeedle 清胶流程正常结束, 等待下次开始
+2018-07-07 16:59:24   Thread_watch_clearNeedle 清胶流程正常结束, 等待下次开始
+2018-07-07 16:59:30   Thread_watch_clearNeedle 清胶流程正常结束, 等待下次开始
+2018-07-07 16:59:34   Thread_watch_clearNeedle 清胶流程正常结束, 等待下次开始
+2018-07-07 16:59:38   Thread_watch_clearNeedle 清胶流程正常结束, 等待下次开始

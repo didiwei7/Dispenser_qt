@@ -8,8 +8,6 @@ TEMPLATE  = lib
 DESTDIR   = ../../bin
 
 DEFINES  += QIO_LIBRARY
-
-
 DEFINES  += QT_DEPRECATED_WARNINGS
 
 

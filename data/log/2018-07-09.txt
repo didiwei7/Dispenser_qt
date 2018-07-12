@@ -1,0 +1,50 @@
+2018-07-09 10:44:16   Thread_watch_reset 复位开始
+常结束, 线程将关闭. 请松开急停, 重新启动软件
+2018-07-09 10:44:40   Thread_watch_clearNeedle 未复位, 无法执行擦胶
+2018-07-09 13:51:42   Thread_watch_reset 复位开始
+2018-07-09 13:52:22   Thread_watch_reset 复位流程正常结束
+2018-07-09 14:33:16   Thread_nineCalib 点标定开始
+2018-07-09 14:36:18   Thread_nineCalib 点标定开始
+2018-07-09 14:36:18   Thread_nineCalib 9点标定异常结束
+2018-07-09 14:37:54   Thread_nineCalib 点标定开始
+2018-07-09 14:37:54   Thread_nineCalib 9点标定异常结束
+2018-07-09 14:37:57   Thread_nineCalib 点标定开始
+2018-07-09 14:37:57   Thread_nineCalib 9点标定异常结束
+2018-07-09 14:41:00   Thread_nineCalib 未复位, 无法进行九点标定
+2018-07-09 14:41:12   Thread_watch_reset 复位开始
+2018-07-09 14:41:49   Thread_watch_reset 复位流程正常结束
+2018-07-09 15:02:28   Thread_watch_reset 复位开始
+2018-07-09 15:02:42   Thread_watch_reset 复位流程正常结束
+2018-07-09 15:42:34   Thread_watch_reset 复位开始
+2018-07-09 15:43:13   Thread_watch_reset 复位流程正常结束
+2018-07-09 15:50:37   Thread_watch_reset 复位开始
+2018-07-09 15:51:10   Thread_watch_reset 复位流程正常结束
+2018-07-09 15:51:20   Thread_watch_reset 复位开始
+2018-07-09 15:51:34   Thread_watch_reset 复位流程正常结束
+2018-07-09 15:51:37   Thread_watch_start 点胶流程开始
+2018-07-09 15:52:02   Thread_glue_teda_test 点胶泰达测试流程正常结束, 等待下次触发流程
+2018-07-09 15:52:12   Thread_watch_start 所有流程正常结束
+2018-07-09 15:55:57   Thread_watch_reset 复位开始
+2018-07-09 15:56:11   Thread_watch_reset 复位流程正常结束
+2018-07-09 17:02:14   Thread_watch_reset 复位开始
+2018-07-09 17:02:50   Thread_watch_reset 复位流程正常结束
+2018-07-09 17:02:55   Thread_watch_start 点胶流程开始
+2018-07-09 17:03:47   Thread_glue_teda_test 点胶泰达测试流程正常结束, 等待下次触发流程
+2018-07-09 17:03:55   Thread_watch_start 所有流程正常结束
+2018-07-09 17:08:14   Thread_watch_start 点胶流程开始
+2018-07-09 17:09:03   Thread_glue_teda_test 点胶泰达测试流程正常结束, 等待下次触发流程
+2018-07-09 17:09:10   Thread_watch_start 所有流程正常结束
+2018-07-09 17:14:30   Thread_watch_estop 急停流程正常结束, 线程将关闭. 请松开急停, 重新启动软件
+2018-07-09 17:15:11   Thread_watch_start 点胶流程开始
+2018-07-09 17:15:11   Thread_glue_teda_test 点胶泰达测试流程正常结束, 等待下次触发流程
+2018-07-09 17:15:12   Thread_watch_start 所有流程正常结束
+2018-07-09 17:15:13   Thread_watch_start 点胶流程开始
+2018-07-09 17:15:13   Thread_glue_teda_test 点胶泰达测试流程正常结束, 等待下次触发流程
+2018-07-09 17:15:14   Thread_watch_start 所有流程正常结束
+2018-07-09 17:24:49   Thread_watch_reset 复位开始
+2018-07-09 17:25:02   Thread_watch_reset 复位流程正常结束
+2018-07-09 18:53:37   Thread_watch_reset 复位开始
+2018-07-09 18:54:08   Thread_watch_reset 复位流程正常结束
+2018-07-09 19:19:17   Thread_watch_start 点胶流程开始
+2018-07-09 19:20:48   Thread_glue_teda_test 点胶泰达测试流程正常结束, 等待下次触发流程
+2018-07-09 19:20:56   Thread_watch_start 所有流程正常结束
