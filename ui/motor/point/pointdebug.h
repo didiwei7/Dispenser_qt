@@ -12,9 +12,7 @@
 #include "../../adt/adtcontrol.h"
 
 // 载入动态库
-#include "../../../sdk/QIO/qio.h"
-#include "../../../sdk/QNavigationBar/qnavigationbar.h"
-#include "../../../sdk/QMySlider/qmyslider.h"
+#include "../../../sdk/QMyPlugin/qmyplugin.h"
 class QMySlider;
 class QInput;
 class QHNavigationBar;

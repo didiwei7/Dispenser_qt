@@ -77,7 +77,7 @@ void PointDebug::setConnect()
     connect(radio_short,    &QRadioButton::clicked, this, &PointDebug::on_radio_short);
 
 	// 【3】 Move Slider
-	connect(slider_speed,   &QMySlider::sliderValueChanged, this, &PointDebug::on_slider_speed_Changed);
+	connect(slider_speed,   &QMySlider::qvalueChanged, this, &PointDebug::on_slider_speed_Changed);
 
 	// 【4】 Move BTN
     connect(X_positive, &QPushButton::clicked, this, &PointDebug::on_X_positive_clicked);
@@ -140,7 +140,7 @@ void PointDebug::setGroupMove()
 	group_move->setFont(font);
 
     slider_speed = new QMySlider();
-	slider_speed->setText(QStringLiteral("当前速度"));
+	slider_speed->setName(QStringLiteral("当前速度"));
 	slider_speed->setRange(0, 10000);
 	slider_speed->setValue(500);
 	slider_speed->setFixedWidth(320);
@@ -1331,11 +1331,7 @@ void PointDebug::on_A_positive_pressed()
 	else
 	{
 		if (axis_isMoving(AXISNUM::A)) return;
-		else
-		{
-			move_axis_continue(AXISNUM::A, 0);
-
-		}
+		else move_axis_continue(AXISNUM::A, 0);
 	}
 }
 
@@ -1347,10 +1343,7 @@ void PointDebug::on_A_positive_released()
 	else
 	{
 		if (!axis_isMoving(AXISNUM::A)) return;
-		else
-		{
-			stop_axis(AXISNUM::A);
-		}
+		else stop_axis(AXISNUM::A);
 	}
 }
 
@@ -1362,7 +1355,6 @@ void PointDebug::on_A_negative_clicked()
 
 	float fa = edit_A_step->text().toFloat();
 	move_axis_offset(AXISNUM::A, -fa);
-	// wait_axis_stop(AXISNUM::X);
 }
 
 void PointDebug::on_A_negative_pressed()
@@ -1373,10 +1365,7 @@ void PointDebug::on_A_negative_pressed()
 	else
 	{
 		if (axis_isMoving(AXISNUM::A)) return;
-		else
-		{
-			move_axis_continue(AXISNUM::A, 1);
-		}
+		else move_axis_continue(AXISNUM::A, 1);
 	}
 }
 
@@ -1480,18 +1469,18 @@ void PointDebug::timer_updateCurrentPos()
 // 计时器 更新 INPUT 状态
 void PointDebug::timer_updateInputStatus()
 {
-	if (INPUT_X[0]->getStatus() != read_in_bit(4))  INPUT_X[0]->setStatus(read_in_bit(4));
-	if (INPUT_X[1]->getStatus() != !read_in_bit(12)) INPUT_X[1]->setStatus(!read_in_bit(12));
-	if (INPUT_X[2]->getStatus() != read_in_bit(5))  INPUT_X[2]->setStatus(read_in_bit(5));
-	if (INPUT_X[3]->getStatus() != !read_in_bit(0))  INPUT_X[3]->setStatus(!read_in_bit(0));
+	INPUT_X[0]->setStatus(read_in_bit(4));
+	INPUT_X[1]->setStatus(!read_in_bit(12));
+	INPUT_X[2]->setStatus(read_in_bit(5));
+	INPUT_X[3]->setStatus(!read_in_bit(0));
 
-	if (INPUT_Y[0]->getStatus() != read_in_bit(6))  INPUT_Y[0]->setStatus(read_in_bit(6));
-	if (INPUT_Y[1]->getStatus() != !read_in_bit(13)) INPUT_Y[1]->setStatus(!read_in_bit(13));
-	if (INPUT_Y[2]->getStatus() != read_in_bit(7))  INPUT_Y[2]->setStatus(read_in_bit(7));
-	if (INPUT_Y[3]->getStatus() != !read_in_bit(1))  INPUT_Y[3]->setStatus(!read_in_bit(1));
+	INPUT_Y[0]->setStatus(read_in_bit(6));
+	INPUT_Y[1]->setStatus(!read_in_bit(13));
+	INPUT_Y[2]->setStatus(read_in_bit(7));
+	INPUT_Y[3]->setStatus(!read_in_bit(1));
 
-	if (INPUT_Z[0]->getStatus() != read_in_bit(8))  INPUT_Z[0]->setStatus(read_in_bit(8));
-	if (INPUT_Z[1]->getStatus() != !read_in_bit(14)) INPUT_Z[1]->setStatus(!read_in_bit(14));
-	if (INPUT_Z[2]->getStatus() != read_in_bit(9))  INPUT_Z[2]->setStatus(read_in_bit(9));
-	if (INPUT_Z[3]->getStatus() != !read_in_bit(2))  INPUT_Z[3]->setStatus(!read_in_bit(2));
+	INPUT_Z[0]->setStatus(read_in_bit(8));
+	INPUT_Z[1]->setStatus(!read_in_bit(14));
+	INPUT_Z[2]->setStatus(read_in_bit(9));
+	INPUT_Z[3]->setStatus(!read_in_bit(2));
 }

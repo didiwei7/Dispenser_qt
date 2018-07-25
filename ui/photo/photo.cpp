@@ -50,10 +50,10 @@ void Photo::setConnect()
 
     // 【2】 边缘检测
     connect(btn_openfile, &QPushButton::clicked, this, &Photo::on_openFile);
-    connect(slider_burl, &QMySlider::sliderValueChanged, this, &Photo::updateEdgeDetection);
-    connect(slider_canny_threshold1, &QMySlider::sliderValueChanged,
+    connect(slider_burl, &QMySlider::qvalueChanged, this, &Photo::updateEdgeDetection);
+    connect(slider_canny_threshold1, &QMySlider::qvalueChanged,
             this, &Photo::updateEdgeDetection);
-    connect(slider_canny_threshold2, &QMySlider::sliderValueChanged,
+    connect(slider_canny_threshold2, &QMySlider::qvalueChanged,
             this, &Photo::updateEdgeDetection);
 }
 
@@ -62,14 +62,14 @@ void Photo::setEdgeDetection()
 {
     // 滤波
     slider_burl = new QMySlider();
-    slider_burl->setText(QStringLiteral("均值滤波Burl"));
+    slider_burl->setName(QStringLiteral("均值滤波Burl"));
     slider_burl->setRange(1,100);
 
     // 检测
     slider_canny_threshold1 = new QMySlider();
     slider_canny_threshold2 = new QMySlider();
-    slider_canny_threshold1->setText(QStringLiteral("Canny threshold1"));
-    slider_canny_threshold2->setText(QStringLiteral("Canny threshold2"));
+    slider_canny_threshold1->setName(QStringLiteral("Canny threshold1"));
+    slider_canny_threshold2->setName(QStringLiteral("Canny threshold2"));
     slider_canny_threshold1->setRange(1, 200);
     slider_canny_threshold2->setRange(1, 200);
 
@@ -99,15 +99,15 @@ void Photo::updateEdgeDetection()
 
     if(!btn_canny->isChecked())
     {
-        int value_burl  = slider_burl ->currentValue();
+        int value_burl  = slider_burl ->getValue();
         blur(img_copy, img_copy, Size(value_burl, value_burl));
         show_cvImg_to_label(img_copy);
     }
     else
     {
-        int value_burl  = slider_burl ->currentValue();
-        int value_threshold1 = slider_canny_threshold1->currentValue();
-        int value_threshold2 = slider_canny_threshold2->currentValue();
+        int value_burl  = slider_burl ->getValue();
+        int value_threshold1 = slider_canny_threshold1->getValue();
+        int value_threshold2 = slider_canny_threshold2->getValue();
 
         // 【1】 转换为灰度
         cvtColor(img_copy, img_copy, COLOR_BGR2GRAY);

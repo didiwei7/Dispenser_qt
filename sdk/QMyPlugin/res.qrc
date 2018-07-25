@@ -1,0 +1,5 @@
+<RCC>
+    <qresource prefix="/">
+        <file>qmyslider/qmyslider.qss</file>
+    </qresource>
+</RCC>

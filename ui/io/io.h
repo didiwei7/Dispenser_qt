@@ -8,7 +8,7 @@
 // 控制卡
 #include "../adt/adtcontrol.h"
 
-#include "../../sdk/QIO/qio.h"
+#include "../../sdk/QMyPlugin/qmyplugin.h"
 class QInputLabel;
 class QOutputButton;
 
@@ -27,7 +27,6 @@ public:
 private:
 	void setupUi();
 	void setConnect();
-	void setThread();
 	void setTimer();
 
 private:
@@ -36,18 +35,8 @@ private:
 	void setIOConnect();
 
 private:
-	QThreadPool thread_pool;
-
-	bool is_updateInputStatus_ok;
-	bool start_thread_updateInputStatus;
-	bool close_thread_updateInputStatus;
-	QFuture<void> future_thread_updateInputStatus;
-	void thread_updateInputStatus();
-
 	void timer_updateInputStatus();
 	void timer_updateOutputStatus();
-	
-	void updateOutputStatus();
 	
 private:
 	void  on_btn_output();
@@ -60,22 +49,6 @@ private:
 
     QInputLabel   *INPUT[IN_COUNT];
 	QOutputButton *OUTPUT[OUT_COUNT];
-	// 为防止以后会连接不同的槽函数, 暂时分开写
-	//QOutputButton *OUT0;
-	//QOutputButton *OUT1;
-	//QOutputButton *OUT2;
-	//QOutputButton *OUT3;
-	//QOutputButton *OUT4;
-	//QOutputButton *OUT5;
-	//QOutputButton *OUT6;
-	//QOutputButton *OUT7;
-	//QOutputButton *OUT8;
-	//QOutputButton *OUT9;
-	//QOutputButton *OUT10;
-	//QOutputButton *OUT11;
-	//QOutputButton *OUT12;
-	//QOutputButton *OUT13;
-	//QOutputButton *OUT14;
 };
 
 #endif // IO_H

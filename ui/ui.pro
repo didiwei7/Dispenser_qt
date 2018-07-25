@@ -58,32 +58,11 @@ RC_FILE  += myico.rc
 # SDK
 win32:CONFIG(debug, debug|release):{
     LIBS += ../bin/QFlexd.lib
-    LIBS += ../bin/QNavigationBard.lib
-    LIBS += ../bin/QMySliderd.lib
-    LIBS += ../bin/QCommunicationd.lib
-    LIBS += ../bin/QIOd.lib
+    LIBS += ../bin/QMyPlugind.lib
 }else:win32:CONFIG(release, debug|release):{
     LIBS += ../bin/QFlex.lib
-    LIBS += ../bin/QNavigationBar.lib
-    LIBS += ../bin/QMySlider.lib
-    LIBS += ../bin/QCommunication.lib
-    LIBS += ../bin/QIO.lib
+    LIBS += ../bin/QMyPlugin.lib
 }
-
-# QFlex
-#INCLUDEPATH += C:/Qt/QtMyCtrls/include
-#win32:CONFIG(debug, debug|release): LIBS += C:/Qt/QtMyCtrls/lib/QFlexd.lib
-#else:win32:CONFIG(release, debug|release): LIBS += C:/Qt/QtMyCtrls/lib/QFlex.lib
-
-# QNavigationBar
-#INCLUDEPATH += C:/Qt/QtMyCtrls/include/QNavigationBar
-#win32:CONFIG(debug, debug|release): LIBS += C:/Qt/QtMyCtrls/lib/QNavigationBard.lib
-#else:win32:CONFIG(release, debug|release): LIBS += C:/Qt/QtMyCtrls/lib/QNavigationBar.lib
-
-# QMySlider
-#INCLUDEPATH += C:/Qt/QtMyCtrls/include/QMySlider
-#win32:CONFIG(debug, debug|release): LIBS += C:/Qt/QtMyCtrls/lib/QMySliderd.lib
-#else:win32:CONFIG(release, debug|release): LIBS += C:/Qt/QtMyCtrls/lib/QMySlider.lib
 
 # OpenCV
 INCLUDEPATH += C:/opencv/opencv300/include

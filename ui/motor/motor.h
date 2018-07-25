@@ -5,7 +5,7 @@
 #include <QtWidgets>
 
 // 载入动态库
-#include "../../sdk/QNavigationBar/qnavigationbar.h"
+#include "../../sdk/QMyPlugin/qmyplugin.h"
 class QVNavigationBar;
 
 #include "point/pointdebug.h"

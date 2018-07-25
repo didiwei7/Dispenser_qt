@@ -4,8 +4,7 @@
 #include <QWidget>
 #include <QtWidgets>
 
-#include "../../sdk/QNavigationBar/qnavigationbar.h"
-#include "../../sdk/QCommunication/qcommunication.h"
+#include "../../sdk/QMyPlugin/qmyplugin.h"
 class QVNavigationBar;
 class QMySocket;
 class QMySerial;

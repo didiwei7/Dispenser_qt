@@ -135,26 +135,41 @@ private:	// 空跑点胶轨迹
 	QFuture<void> future_ccd_glue_1;
 	void thread_ccd_glue_1();
 
-private:	// 校针
-	bool is_calibNeedle_ing;
-	bool start_thread_calibNeedle;
-	bool close_thread_calibNeedle;
-	QFuture<void> future_thread_calibNeedle;
-	void thread_calibNeedle();
+private:	// BTN CCD标定
+	bool is_thread_btn_ccd_calib_ing;
+	bool close_thread_btn_ccd_calib;
+	QFuture<void> future_thread_btn_ccd_calib;
+	void thread_btn_ccd_calib();
 
-private:	// 九点标定
-	bool is_ccd_calib_ing;
-	bool start_thread_ccd_calib;
-	bool close_thread_ccd_calib;
-	QFuture<void> future_thread_ccd_calib;
-	void thread_ccd_calib();
+private:	// BTN CCD空跑
+	bool is_thread_btn_ccd_runEmpty_ing;
+	bool close_thread_btn_ccd_runEmpty;
+	QFuture<void> future_thread_btn_ccd_runEmpty;
+	void thread_btn_ccd_runEmpty();
 
-private:	// 清胶
-	bool start_thread_clearNeedle;
-	bool close_thread_clearNeedle;
-	QFuture<void> future_thread_clearNeedle;
-	void thread_clearNeedle();
+private:	// BTN 空跑不点胶
+	bool is_thread_btn_runEmpty_ing;
+	bool close_thread_btn_runEmpty;
+	QFuture<void> future_thread_btn_runEmpty;
+	void thread_btn_runEmpty();
 
+private:	// BTN 针头清理
+	bool is_thread_btn_clearNeedle_ing;
+	bool close_thread_btn_clearNeedle;
+	QFuture<void> future_thread_btn_clearNeedle;
+	void thread_btn_clearNeedle();
+
+private:	// BTN 针头校准1
+	bool is_btn_needleCalib1_ing;
+	bool close_thread_needleCalib1;
+	QFuture<void> future_thread_needleCalib_1;
+	void thread_needleCalib_1();
+
+private:	// BTN 针头校准2
+	bool is_btn_needleCalib2_ing;
+	bool close_thread_needleCalib2;
+	QFuture<void> future_thread_needleCalib_2;
+	void thread_needleCalib_2();
 
 private:	// 通讯
 	QTcpSocket  *socket_ccd;
@@ -190,18 +205,6 @@ private:	// 点位
 	// 计算平移旋转点位
 	void CalCCDGlueCenterPoint(float center_pos[2], const float center_x, const float center_y, const float offset_x, const float offset_y, const float offset_angle, const float org_x, const float org_y);
 
-
-private:
-	// 可通过信号槽来刷新中心点, 但不要在运行中设置
-	float org_ccdglue_x[3];
-	float org_ccdglue_y[3];
-
-	// 可通过信号槽来刷新偏移量, 但不要在运行中设置
-	float calib_offset_x;
-	float calib_offset_y;
-	float calib_offset_z;
-
-
 private:	// 偏移
 	float distance_ccd_needle_x;
 	float distance_ccd_neddle_y;
@@ -212,6 +215,17 @@ private:	// 偏移
 	float distance_laser_needle_x;
 	float distance_laser_needle_y;
 	float distance_laser_needle_z;
+
+	float distance_needle_z;
+
+	// 可通过信号槽来刷新偏移量, 但不要在运行中设置
+	float calib_offset_x;
+	float calib_offset_y;
+	float calib_offset_z;
+
+	// 可通过信号槽来刷新中心点, 但不要在运行中设置
+	float org_ccdglue_x[3];
+	float org_ccdglue_y[3];
 
 
 private:
@@ -233,7 +247,7 @@ public slots:	// 自定义槽 来自 Operation
 	void on_clicked_btn_ccd_calib();
 	void on_clicked_btn_ccd_runEmpty();
 	void on_clicked_btn_runEmpty();
-	void on_clicked_btn_clearGlue();
+	void on_clicked_btn_clearNeedle();
 	void on_clicked_btn_dischargeGlue();
 	void on_clicked_btn_needleCalib_1();
 	void on_clicked_btn_needleCalib_2();

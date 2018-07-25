@@ -60,7 +60,7 @@ void MainWidget::setConnect()
 	connect(w_operation, &Operation::clicked_btn_ccd_calib,          w_workflow, &Workflow::on_clicked_btn_ccd_calib);
 	connect(w_operation, &Operation::clicked_btn_ccd_runEmpty,       w_workflow, &Workflow::on_clicked_btn_ccd_runEmpty);
 	connect(w_operation, &Operation::clicked_btn_runEmpty,		     w_workflow, &Workflow::on_clicked_btn_runEmpty);
-	connect(w_operation, &Operation::clicked_btn_clearGlue,			 w_workflow, &Workflow::on_clicked_btn_clearGlue);
+	connect(w_operation, &Operation::clicked_btn_clearNeedle,		 w_workflow, &Workflow::on_clicked_btn_clearNeedle);
 	connect(w_operation, &Operation::clicked_btn_dischargeGlue,		 w_workflow, &Workflow::on_clicked_btn_dischargeGlue);
 	connect(w_operation, &Operation::clicked_btn_needleCalib_1,		 w_workflow, &Workflow::on_clicked_btn_needleCalib_1);
 	connect(w_operation, &Operation::clicked_btn_needleCalib_2,		 w_workflow, &Workflow::on_clicked_btn_needleCalib_2);

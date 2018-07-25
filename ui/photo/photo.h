@@ -10,8 +10,7 @@
 #include <QDebug>
 
 // 载入动态库
-#include "../../sdk/QNavigationBar/qnavigationbar.h"
-#include "../../sdk/QMySlider/qmyslider.h"
+#include "../../sdk/QMyPlugin/qmyplugin.h"
 class QVNavigationBar;
 class QMySlider;
 

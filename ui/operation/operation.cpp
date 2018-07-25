@@ -53,7 +53,7 @@ void Operation::setConnect()
 	connect(btn_ccd_calib,     &QPushButton::clicked, this, &Operation::on_btn_ccd_calib);
 	connect(btn_ccd_runEmpty,  &QPushButton::clicked, this, &Operation::on_btn_ccd_runEmpty);
 	connect(btn_runEmpty,      &QPushButton::clicked, this, &Operation::on_btn_runEmpty);
-	connect(btn_clearGlue,     &QPushButton::clicked, this, &Operation::on_btn_clearGlue);
+	connect(btn_clearNeedle,     &QPushButton::clicked, this, &Operation::on_btn_clearNeedle);
 	connect(btn_dischargeGlue, &QPushButton::clicked, this, &Operation::on_btn_dischargeGlue);
 	connect(btn_needleCalib_1, &QPushButton::clicked, this, &Operation::on_btn_needleCalib_1);
 	connect(btn_needleCalib_2, &QPushButton::clicked, this, &Operation::on_btn_needleCalib_2);
@@ -122,7 +122,7 @@ void Operation::setGroupGlue()
 	btn_ccd_runEmpty = new QPushButton(QStringLiteral("CCD_空跑"));
 	btn_runEmpty     = new QPushButton(QStringLiteral("空跑不点胶"));
 
-	btn_clearGlue     = new QPushButton(QStringLiteral("清胶"));
+	btn_clearNeedle     = new QPushButton(QStringLiteral("清胶"));
 	btn_dischargeGlue = new QPushButton(QStringLiteral("自动排胶"));
 	btn_needleCalib_1 = new QPushButton(QStringLiteral("校针-首次校准"));
 	btn_needleCalib_2 = new QPushButton(QStringLiteral("校针-自动保存"));
@@ -132,7 +132,7 @@ void Operation::setGroupGlue()
 	layout_2_1->addWidget(btn_ccd_runEmpty);
 	layout_2_1->addWidget(btn_runEmpty);
 
-	layout_2_2->addWidget(btn_clearGlue);
+	layout_2_2->addWidget(btn_clearNeedle);
 	layout_2_2->addWidget(btn_dischargeGlue);
 	layout_2_2->addWidget(btn_needleCalib_1);
 	layout_2_2->addWidget(btn_needleCalib_2);
@@ -189,8 +189,9 @@ void Operation::setGroupDebug()
 
 	group_debug->setLayout(layout_1);
 
-	on_changedRundataText(QStringLiteral("您还没有登陆,暂时无法为您提供操作权限哦"));
-	on_changedRundataText(QStringLiteral("请点击上方目录栏的登陆选项, 或者使用快捷键 Ctrl + L, 进行登陆"));
+	QString s_currentTime = getCurrentTime();
+	text_rundata->append(s_currentTime + ":  " + QStringLiteral("您还没有登陆,暂时无法为您提供操作权限哦"));
+	text_rundata->append(s_currentTime + ":  " + QStringLiteral("请点击上方目录栏的登陆选项, 或者使用快捷键 Ctrl + L, 进行登陆"));
 }
 
 void Operation::setGroupConfig()
@@ -253,6 +254,8 @@ void Operation::setGroupDistanceOffset()
 	QLabel *label_offset_ccd_needle_y = new QLabel(QStringLiteral("CCD与针头偏移 Y:"));
 	QLabel *label_offset_laser_needle_z = new QLabel(QStringLiteral("Laser与针头偏移 Z:"));
 
+	QLabel *label_needle_z = new QLabel(QStringLiteral("针头点胶高度 Z:"));
+	
 	edit_distance_ccd_needle_x = new QLineEdit();
 	edit_distance_ccd_needle_y = new QLineEdit();
 
@@ -266,6 +269,8 @@ void Operation::setGroupDistanceOffset()
 	edit_offset_ccd_needle_x = new QLineEdit();
 	edit_offset_ccd_needle_y = new QLineEdit();
 	edit_offset_laser_needle_z = new QLineEdit();
+
+	edit_distance_needle_z = new QLineEdit();
 
 	btn_saveDistanceOffset = new QPushButton(QStringLiteral("保存"));
 
@@ -286,20 +291,26 @@ void Operation::setGroupDistanceOffset()
 	layout_2_1->addWidget(edit_distance_laser_needle_z, 6, 1, Qt::AlignLeft);
 
 	QGridLayout *layout_2_2 = new QGridLayout();
-	layout_2_2->addWidget(label_offset_ccd_needle_x, 0, 0, Qt::AlignRight);
-	layout_2_2->addWidget(label_offset_ccd_needle_y, 1, 0, Qt::AlignRight);
+	layout_2_2->addWidget(label_offset_ccd_needle_x,   0, 0, Qt::AlignRight);
+	layout_2_2->addWidget(label_offset_ccd_needle_y,   1, 0, Qt::AlignRight);
 	layout_2_2->addWidget(label_offset_laser_needle_z, 2, 0, Qt::AlignRight);
-	layout_2_2->addWidget(edit_offset_ccd_needle_x, 0, 1, Qt::AlignLeft);
-	layout_2_2->addWidget(edit_offset_ccd_needle_y, 1, 1, Qt::AlignLeft);
+	layout_2_2->addWidget(edit_offset_ccd_needle_x,   0, 1, Qt::AlignLeft);
+	layout_2_2->addWidget(edit_offset_ccd_needle_y,   1, 1, Qt::AlignLeft);
 	layout_2_2->addWidget(edit_offset_laser_needle_z, 2, 1, Qt::AlignLeft);
 
+	QGridLayout *layout_2_3 = new QGridLayout();
+	layout_2_3->addWidget(label_needle_z, 0, 0, Qt::AlignRight);
+	layout_2_3->addWidget(edit_distance_needle_z, 0, 1, Qt::AlignLeft);
+
 	QVBoxLayout *layout_1 = new QVBoxLayout();
+	layout_1->setMargin(3);
 	layout_1->addLayout(layout_2_1);
 	layout_1->addSpacing(5);
 	layout_1->addLayout(layout_2_2);
+	layout_1->addSpacing(5);
+	layout_1->addLayout(layout_2_3);
 	layout_1->addWidget(btn_saveDistanceOffset);
-	layout_1->setMargin(3);
-
+	
 	group_distance_offset->setLayout(layout_1);
 
 	QFile file("../config/workflow_glue.ini");
@@ -307,19 +318,21 @@ void Operation::setGroupDistanceOffset()
 	else
 	{
 		QSettings setting("../config/workflow_glue.ini", QSettings::IniFormat);
-		edit_distance_ccd_needle_x->setText(setting.value("ccd_needle_diatance/offset_x").toString());
-		edit_distance_ccd_needle_y->setText(setting.value("ccd_needle_diatance/offset_y").toString());
+		edit_distance_ccd_needle_x->setText(setting.value("ccd_needle_distance/offset_x").toString());
+		edit_distance_ccd_needle_y->setText(setting.value("ccd_needle_distance/offset_y").toString());
 
-		edit_distance_ccd_laser_x->setText(setting.value("ccd_laser_diatance/offset_x").toString());
-		edit_distance_ccd_laser_y->setText(setting.value("ccd_laser_diatance/offset_y").toString());
+		edit_distance_ccd_laser_x->setText(setting.value("ccd_laser_distance/offset_x").toString());
+		edit_distance_ccd_laser_y->setText(setting.value("ccd_laser_distance/offset_y").toString());
 
-		edit_distance_laser_needle_x->setText(setting.value("laser_needle_diatance/offset_x").toString());
-		edit_distance_laser_needle_y->setText(setting.value("laser_needle_diatance/offset_y").toString());
-		edit_distance_laser_needle_z->setText(setting.value("laser_needle_diatance/offset_z").toString());
+		edit_distance_laser_needle_x->setText(setting.value("laser_needle_distance/offset_x").toString());
+		edit_distance_laser_needle_y->setText(setting.value("laser_needle_distance/offset_y").toString());
+		edit_distance_laser_needle_z->setText(setting.value("laser_needle_distance/offset_z").toString());
 
 		edit_offset_ccd_needle_x->setText(setting.value("calib_needle_optical/calib_offset_x").toString());
 		edit_offset_ccd_needle_y->setText(setting.value("calib_needle_optical/calib_offset_y").toString());
 		edit_offset_laser_needle_z->setText(setting.value("calib_needle_attach/calib_offset_z").toString());
+
+		edit_distance_needle_z->setText(setting.value("needle_distance/offset_z").toString());
 	}
 	file.close();
 }
@@ -487,17 +500,17 @@ void Operation::on_btn_saveDistanceOffset()
 {
 	QSettings setting("../config/workflow_glue.ini", QSettings::IniFormat);
 
-	setting.beginGroup("ccd_needle_diatance");
+	setting.beginGroup("ccd_needle_distance");
 	setting.setValue("offset_x", edit_distance_ccd_needle_x->text().toInt());
 	setting.setValue("offset_y", edit_distance_ccd_needle_y->text().toInt());
 	setting.endGroup();
 
-	setting.beginGroup("ccd_laser_diatance");
+	setting.beginGroup("ccd_laser_distance");
 	setting.setValue("offset_x", edit_distance_ccd_laser_x->text().toInt());
 	setting.setValue("offset_y", edit_distance_ccd_laser_y->text().toInt());
 	setting.endGroup();
 
-	setting.beginGroup("laser_needle_diatance");
+	setting.beginGroup("laser_needle_distance");
 	setting.setValue("offset_x", edit_distance_laser_needle_x->text().toInt());
 	setting.setValue("offset_y", edit_distance_laser_needle_y->text().toInt());
 	setting.setValue("offset_z", edit_distance_laser_needle_z->text().toInt());
@@ -512,9 +525,9 @@ void Operation::on_btn_saveDistanceOffset()
 	setting.setValue("calib_offset_z", edit_offset_laser_needle_z->text().toInt());
 	setting.endGroup();
 
-	float offset_x = edit_offset_ccd_needle_x->text().toInt() / 1000.0;
-	float offset_y = edit_offset_ccd_needle_y->text().toInt() / 1000.0;
-	float offset_z = edit_offset_laser_needle_z->text().toInt() / 1000.0;
+	setting.beginGroup("needle_distance");
+	setting.setValue("offset_z", edit_distance_needle_z->text().toInt());
+	setting.endGroup();
 
 	emit clicked_btn_saveDistanceOffset();
 }
@@ -555,9 +568,9 @@ void Operation::on_btn_runEmpty()
 }
 
 // BTN 清胶
-void Operation::on_btn_clearGlue()
+void Operation::on_btn_clearNeedle()
 {
-	emit clicked_btn_clearGlue();
+	emit clicked_btn_clearNeedle();
 }
 
 // BTN 自动排胶
@@ -600,11 +613,11 @@ void Operation::on_changedDistanceOffset()
 	else
 	{
 		QSettings setting("../config/workflow_glue.ini", QSettings::IniFormat);
-		edit_distance_ccd_needle_x->setText(setting.value("ccd_needle_diatance/offset_x").toString());
-		edit_distance_ccd_needle_y->setText(setting.value("ccd_needle_diatance/offset_y").toString());
+		edit_distance_ccd_needle_x->setText(setting.value("ccd_needle_distance/offset_x").toString());
+		edit_distance_ccd_needle_y->setText(setting.value("ccd_needle_distance/offset_y").toString());
 
-		edit_distance_ccd_laser_x->setText(setting.value("ccd_laser_diatance/offset_x").toString());
-		edit_distance_ccd_laser_y->setText(setting.value("ccd_laser_diatance/offset_y").toString());
+		edit_distance_ccd_laser_x->setText(setting.value("ccd_laser_distance/offset_x").toString());
+		edit_distance_ccd_laser_y->setText(setting.value("ccd_laser_distance/offset_y").toString());
 
 		edit_distance_laser_needle_x->setText(setting.value("laser_needle_diatance/offset_x").toString());
 		edit_distance_laser_needle_y->setText(setting.value("laser_needle_diatance/offset_y").toString());
@@ -613,6 +626,8 @@ void Operation::on_changedDistanceOffset()
 		edit_offset_ccd_needle_x->setText(setting.value("calib_needle_optical/calib_offset_x").toString());
 		edit_offset_ccd_needle_y->setText(setting.value("calib_needle_optical/calib_offset_y").toString());
 		edit_offset_laser_needle_z->setText(setting.value("calib_needle_attach/calib_offset_z").toString());
+	
+		edit_distance_needle_z->setText(setting.value("needle_distance/offset_z").toString());
 	}
 	file.close();
 }

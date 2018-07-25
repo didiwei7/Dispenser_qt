@@ -98,7 +98,7 @@ private:
 	void on_btn_ccd_runEmpty();
 	void on_btn_runEmpty();
 
-	void on_btn_clearGlue();
+	void on_btn_clearNeedle();
 	void on_btn_dischargeGlue();
 	void on_btn_needleCalib_1();
 	void on_btn_needleCalib_2();
@@ -108,7 +108,7 @@ private:
 	QPushButton *btn_ccd_runEmpty;
 	QPushButton *btn_runEmpty;
 	
-	QPushButton *btn_clearGlue;
+	QPushButton *btn_clearNeedle;
 	QPushButton *btn_dischargeGlue;
 	QPushButton *btn_needleCalib_1;
 	QPushButton *btn_needleCalib_2;
@@ -121,6 +121,8 @@ private:
 
 private:
 	void on_btn_saveDistanceOffset();
+
+	
 
 	QLineEdit *edit_distance_ccd_needle_x;
 	QLineEdit *edit_distance_ccd_needle_y;
@@ -135,6 +137,8 @@ private:
 	QLineEdit *edit_offset_ccd_needle_x;
 	QLineEdit *edit_offset_ccd_needle_y;
 	QLineEdit *edit_offset_laser_needle_z;
+
+	QLineEdit *edit_distance_needle_z;
 	
 	QPushButton *btn_saveDistanceOffset;
 
@@ -145,7 +149,7 @@ signals:
 	void clicked_btn_ccd_calib();
 	void clicked_btn_ccd_runEmpty();
 	void clicked_btn_runEmpty();
-	void clicked_btn_clearGlue();
+	void clicked_btn_clearNeedle();
 	void clicked_btn_dischargeGlue();
 	void clicked_btn_needleCalib_1();
 	void clicked_btn_needleCalib_2();

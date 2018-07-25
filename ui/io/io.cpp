@@ -5,26 +5,15 @@ IO::IO(QWidget *parent) : QWidget(parent)
 	// 【1】 初始化Ui
 	setupUi();
 
-	// 【2】 更新输出状态
-	// updateOutputStatus();
-
-	// 【3】 设置线程
-	// setThread();
-
-	// 【4】 连接信号槽
+	// 【2】 连接信号槽
 	setConnect();
 
-	// 【5】 设置计时器
+	// 【3】 设置计时器
 	setTimer();
 }
 
 IO::~IO()
 {
-	//close_thread_updateInputStatus = true;
-
-	//thread_pool.waitForDone();
-	//thread_pool.clear();
-	//thread_pool.destroyed();
 }
 
 void IO::setupUi()
@@ -52,20 +41,8 @@ void IO::setConnect()
 {
 	for (int i = OUT_VISIBLE_BEGIN; i < OUT_COUNT; i++)
 	{
-        connect(OUTPUT[i], &QOutputButton::wclicked, this, &IO::on_btn_output);
+        connect(OUTPUT[i], &QOutputButton::qclicked, this, &IO::on_btn_output);
 	}
-}
-
-void IO::setThread()
-{
-	is_updateInputStatus_ok = false;
-	start_thread_updateInputStatus = true;
-	close_thread_updateInputStatus = false;
-
-	thread_pool.setMaxThreadCount(1);
-
-	future_thread_updateInputStatus = QtConcurrent::run(&thread_pool, [&]() { thread_updateInputStatus(); });
-	// qDebug() << thread_updateOutputStatus.isRunning();
 }
 
 void IO::setTimer()
@@ -94,25 +71,21 @@ void IO::setInput()
 
 	// 【2】 Input
 	QFile file("../config/io.json");
-	if (!file.exists())
-	{
-		return;
-	}
-
+	if (!file.exists()) return;
 	file.open((QIODevice::ReadOnly));
 	QByteArray date = file.readAll();
 	QJsonDocument doc = QJsonDocument::fromJson(date);
-	QJsonObject obj = doc.object();
+	QJsonObject obj = doc.object().value("Card0").toObject().value("Input").toObject();
 
-	QJsonObject outobj = obj.value("Card0").toObject().value("Input").toObject();
 	for ( int i = 0; i < IN_COUNT; i++)
 	{
 		QString str_i = QString::number(i, 10);
 		QString str_i_objname = "INPUT" + str_i;
-		// qDebug() << outobj.value(str_i).toObject().value("name").toString();
-        INPUT[i] = new QInputLabel(outobj.value(str_i).toObject().value("name").toString(), 0, this);
-		INPUT[i]->setVisible(outobj.value(str_i).toObject().value("visible").toBool());
+        INPUT[i] = new QInputLabel(this);
 		INPUT[i]->setObjectName(str_i_objname);
+		INPUT[i]->setVisible(obj.value(str_i).toObject().value("visible").toBool());
+		INPUT[i]->setName(obj.value(str_i).toObject().value("name").toString());
+		INPUT[i]->setStatus(obj.value(str_i).toObject().value("status").toInt());
 		layout_2_1->addWidget(INPUT[i]);
 	}
 	file.close();
@@ -135,31 +108,26 @@ void IO::setOutput()
 
 	// 【2】 Output
 	QFile file("../config/io.json");
-	if (!file.exists())
-	{
-		return;
-	}
-
+	if (!file.exists()) return;
 	file.open((QIODevice::ReadOnly));
 	QByteArray date = file.readAll();
 	QJsonDocument doc = QJsonDocument::fromJson(date);
-	QJsonObject obj = doc.object();
+	QJsonObject obj = doc.object().value("Card0").toObject().value("Output").toObject();
 
-	QJsonObject outobj = obj.value("Card0").toObject().value("Output").toObject();
 	for (int i = 0; i < OUT_COUNT; i++)
 	{
 		QString str_i = QString::number(i, 10);
 		QString str_i_objname = "OUTPUT" + str_i;
-		// qDebug() << outobj.value(str_i).toObject().value("name").toString();
-        OUTPUT[i] = new QOutputButton(outobj.value(str_i).toObject().value("name").toString());
-        OUTPUT[i]->setVisible(outobj.value(str_i).toObject().value("visible").toBool());
+		OUTPUT[i] = new QOutputButton(this);
 		OUTPUT[i]->setObjectName(str_i_objname);
-		// qDebug() << OUTPUT[i]->objectName();
+		OUTPUT[i]->setVisible(obj.value(str_i).toObject().value("visible").toBool());
+		OUTPUT[i]->setName(obj.value(str_i).toObject().value("name").toString());
+		OUTPUT[i]->setStatus(obj.value(str_i).toObject().value("status").toInt());
 		layout_2_2->addWidget(OUTPUT[i]);
 	}
 	file.close();
 
-    layout_2_2->addSpacerItem(new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding));
+	layout_2_2->addSpacerItem(new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding));
 }
 
 void IO::setIOConnect()
@@ -177,73 +145,18 @@ void IO::setIOConnect()
     layout_2_3->addSpacerItem(new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding));
 }
 
-void IO::thread_updateInputStatus()
-{
-	// if (!(init_card() == 1)) return;
-
-	int step_input = 0;
-
-	while (close_thread_updateInputStatus == false)
-	{
-		switch (step_input)
-		{
-		case 0:		// 等待触发
-		{
-			if (start_thread_updateInputStatus == false)
-			{
-				Sleep(2);
-				step_input = 0;
-			}
-			else
-			{
-				step_input = 10;
-			}
-		}
-		break;
-
-		case 10:	// 刷新Input
-		{
-			for (int i = IN_VISIBLE_BEGIN; i < IN_COUNT; i++)
-			{
-				INPUT[i]->setStatus(!read_in_bit(i));
-			}
-
-			step_input = 0;
-		}
-		break;
-
-		case 8888:	// 退出流程
-		{
-			start_thread_updateInputStatus = false;
-			step_input = 0;
-		}
-		break;
-
-		case 9999:	// 退出线程
-		{
-			// 安全退出该线程
-			close_thread_updateInputStatus = true;
-		}
-		break;
-
-		default:
-			break;
-		}	
-	}
-}
-
 void IO::timer_updateInputStatus()
 {
 	for (int i = IN_VISIBLE_BEGIN; i < IN_COUNT; i++)
 	{
-		// 不取反, 急停信号
+		// 不取反的输入: 急停, 
 		if (16 == i)
 		{
-			if (INPUT[i]->getStatus() != read_in_bit(i)) INPUT[i]->setStatus(read_in_bit(i));
+			INPUT[i]->setStatus(read_in_bit(i));	// 已在控件中处理, 改变时更新
 		}
 		else
 		{
-			if (INPUT[i]->getStatus() != !read_in_bit(i)) INPUT[i]->setStatus(!read_in_bit(i));
+			INPUT[i]->setStatus(!read_in_bit(i));
 		}
 	}
 }
@@ -252,18 +165,8 @@ void IO::timer_updateOutputStatus()
 {
 	for (int i = OUT_VISIBLE_BEGIN; i < OUT_COUNT; i++)
 	{
-		if (OUTPUT[i]->getStatus() != read_out_bit(i)) OUTPUT[i]->setStatus(read_out_bit(i));
-	}
-}
-
-void IO::updateOutputStatus() // 读取一次
-{
-	if (init_card() == 1)
-	{
-		for (int i = OUT_VISIBLE_BEGIN; i < OUT_COUNT; i++)
-		{
-			OUTPUT[i]->setStatus(read_out_bit(i));
-		}
+		// if (OUTPUT[i]->getStatus() != read_out_bit(i)) OUTPUT[i]->setStatus(read_out_bit(i));
+		OUTPUT[i]->setStatus(read_out_bit(i));		// 已在控件中处理, 改变时更新控件状态.
 	}
 }
 
@@ -311,32 +214,9 @@ void IO::changeOutputStatus(int bit)
 	if (adt8949_get_out(0, bit) == 1)
 	{
 		adt8949_write_bit(0, bit, 0);
-		//Sleep(5);
-		//if (adt8949_get_out(0, bit) == 0)
-		//{
-		//	OUTPUT[bit]->setStatus(0);
-		//}
-		//else
-		//{
-		//	qDebug() << QStringLiteral("IO: 输出信号有误, 请检查");
-		//}	
 	}
 	else
 	{
-		// 调试用
 		adt8949_write_bit(0, bit, 1);
-		// OUTPUT[bit]->setStatus(1);
-
-		// 正确的代码
-		//adt8949_write_bit(0, bit, 1);
-		//Sleep(5);
-		//if (adt8949_get_out(0, bit) == 1)
-		//{
-		//	OUTPUT[bit]->setStatus(1);
-		//}
-		//else
-		//{
-		//	qDebug() << QStringLiteral("IO: 输出信号有误, 请检查");
-		//}
 	}
 }
