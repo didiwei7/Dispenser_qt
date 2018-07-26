@@ -172,7 +172,7 @@
       <IncludePath>.\GeneratedFiles\$(ConfigurationName);.\GeneratedFiles;$(QTDIR)\mkspecs/$(Platform)-msvc;.;C:/opencv/opencv300/include;C:/opencv/opencv300/include/opencv;C:/opencv/opencv300/include/opencv2;C:/myPlugin/Eigen3;C:/Motion/ADT;$(QTDIR)\include;$(QTDIR)\include/QtMultimedia;$(QTDIR)\include/QtCharts;$(QTDIR)\include/QtWidgets;$(QTDIR)\include/QtWinExtras;$(QTDIR)\include/QtGui;$(QTDIR)\include/QtANGLE;$(QTDIR)\include/QtSql;$(QTDIR)\include/QtXml;$(QTDIR)\include/QtNetwork;$(QTDIR)\include/QtSerialPort;$(QTDIR)\include/QtConcurrent;$(QTDIR)\include/QtCore;C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\INCLUDE;C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\ATLMFC\INCLUDE;C:\Program Files (x86)\Windows Kits\10\include\10.0.16299.0\ucrt;C:\Program Files (x86)\Windows Kits\NETFXSDK\4.6.1\include\um;C:\Program Files (x86)\Windows Kits\10\include\10.0.16299.0\shared;C:\Program Files (x86)\Windows Kits\10\include\10.0.16299.0\um;C:\Program Files (x86)\Windows Kits\10\include\10.0.16299.0\winrt</IncludePath>
     </QtMoc>
     <PostBuildEvent>
-      <Command>editbin /SUBSYSTEM:CONSOLE $(OUTDIR)\$(TargetFileName)</Command>
+      <Command>editbin /SUBSYSTEM:CONSOLE $(OutDir)$(ProjectName).exe</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>

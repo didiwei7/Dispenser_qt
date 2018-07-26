@@ -53,7 +53,7 @@ void IO::setTimer()
 
 	QTimer *timer_output = new QTimer(this);
 	connect(timer_output, &QTimer::timeout, this, &IO::timer_updateOutputStatus);
-	timer_output->start(300);
+	timer_output->start(50);
 }
 
 void IO::setInput()
@@ -211,12 +211,12 @@ void IO::on_btn_output()
 
 void IO::changeOutputStatus(int bit)
 {
-	if (adt8949_get_out(0, bit) == 1)
+	if (read_out_bit(bit) == 1)
 	{
-		adt8949_write_bit(0, bit, 0);
+		write_out_bit(bit, 0);
 	}
 	else
 	{
-		adt8949_write_bit(0, bit, 1);
+		write_out_bit(bit, 1);
 	}
 }

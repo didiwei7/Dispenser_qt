@@ -55,7 +55,7 @@ void load_card()
 	adt8949_set_gear(0, 1, 1000);
 	adt8949_set_gear(0, 2, 1000);
 	adt8949_set_gear(0, 3, 1000);
-	adt8949_set_gear(0, 4, 3200);
+	adt8949_set_gear(0, 4, 4000);
 
 	// 【3】 设置步进轴速度
 	set_stepAxis_speed(5);
@@ -509,6 +509,7 @@ void set_stepAxis_speed(float speed)
 	// adt8949_set_admode(0, AXISNUM::A, ADMODE::T);
 	adt8949_set_startv(0, AXISNUM::A, speed);
 	adt8949_set_speed(0, AXISNUM::A, speed);
+	// adt8949_set_acc(0, AXISNUM::A, speed);
 }
 
 // 等待步进轴停止

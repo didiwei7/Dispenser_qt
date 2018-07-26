@@ -1377,10 +1377,7 @@ void PointDebug::on_A_negative_released()
 	else
 	{
 		if (!axis_isMoving(AXISNUM::A)) return;
-		else
-		{
-			stop_axis(AXISNUM::A);
-		}
+		else stop_axis(AXISNUM::A);
 	}
 }
 

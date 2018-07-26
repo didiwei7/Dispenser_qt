@@ -54,7 +54,8 @@ void MainWidget::setConnect()
 	connect(w_workflow, &Workflow::changedRundataText,    w_operation, &Operation::on_changedRundataText);
 	connect(w_workflow, &Workflow::changedDistanceOffset, w_operation, &Operation::on_changedDistanceOffset);
 	connect(w_workflow, &Workflow::changedOffsetChart,    w_operation, &Operation::on_changedOffsetChart);	
-	
+	connect(w_workflow, &Workflow::changedDischargeGlue,  w_operation, &Operation::on_changedDischargeGlue);
+
 	connect(w_operation, &Operation::clicked_check_flowConfig,       w_workflow, &Workflow::on_clicked_check_flowConfig);
 	connect(w_operation, &Operation::clicked_btn_saveDistanceOffset, w_workflow, &Workflow::on_clicked_btn_saveDistanceOffset);
 	connect(w_operation, &Operation::clicked_btn_ccd_calib,          w_workflow, &Workflow::on_clicked_btn_ccd_calib);

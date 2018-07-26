@@ -25,7 +25,7 @@
             "21": { "index": 21,  "name": "照明按钮",  "status": 0,  "visible": true},
             "22": { "index": 22,  "name": "擦胶-无尘布感应",    "status": 0,  "visible": true},
             "23": { "index": 23,  "name": "擦胶-A轴行程感应",   "status": 0,  "visible": true},
-            "24": { "index": 24,  "name": "擦胶-擦胶感应器",    "status": 0,  "visible": true},
+            "24": { "index": 24,  "name": "清胶",              "status": 0,  "visible": true},
             "25": { "index": 25,  "name": "擦胶-气缸推进感应",  "status": 0,  "visible": true},
             "26": { "index": 26,  "name": "擦胶-气缸后退感应",  "status": 0,  "visible": true},
             "27": { "index": 27,  "name": "校针-位移传感器",  "status": 0,  "visible": true},

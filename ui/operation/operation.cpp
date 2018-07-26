@@ -1,9 +1,20 @@
 ﻿#include "operation.h"
 
+void asyncSleep(unsigned int msec)
+{
+	QTime reachTime = QTime::currentTime().addMSecs(msec);
+
+	while (QTime::currentTime() < reachTime)
+	{
+		QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
+	}
+}
+
 Operation::Operation(QWidget *parent) : QWidget(parent)
 {
     setupUi();
 	setConnect();
+	setTimer();
 }
 
 void Operation::setupUi()
@@ -64,6 +75,13 @@ void Operation::setConnect()
 
 	connect(btn_saveDistanceOffset, &QPushButton::clicked, this, &Operation::on_btn_saveDistanceOffset);
 }
+
+void Operation::setTimer()
+{
+	timer_dischargeGlue = new QTimer(this);
+	is_dischargeGlue_ing = false;
+}
+	
 
 void Operation::setGroupLogo()
 {
@@ -480,7 +498,12 @@ QString Operation::getCurrentTime()
 	return s_currentTime;
 }
 
-
+void Operation::on_timer_dischargeGlue()
+{
+	write_out_bit(8, 1);
+	asyncSleep(3000);
+	write_out_bit(8, 0);
+}
 
 //	Check glue1, glue2, glue3
 void Operation::on_check_flowConfig()
@@ -567,7 +590,7 @@ void Operation::on_btn_runEmpty()
 	emit clicked_btn_runEmpty();
 }
 
-// BTN 清胶
+// BTN 擦胶
 void Operation::on_btn_clearNeedle()
 {
 	emit clicked_btn_clearNeedle();
@@ -576,7 +599,27 @@ void Operation::on_btn_clearNeedle()
 // BTN 自动排胶
 void Operation::on_btn_dischargeGlue()
 {
-	emit clicked_btn_dischargeGlue();
+	// emit clicked_btn_dischargeGlue();
+	if (is_dischargeGlue_ing == false)
+	{
+		is_dischargeGlue_ing = true;
+		btn_dischargeGlue->setText(QStringLiteral("自动排胶-运行中"));
+
+		write_out_bit(8, 1);
+		asyncSleep(3000);
+		write_out_bit(8, 0);
+
+		connect(timer_dischargeGlue, &QTimer::timeout, this, &Operation::on_timer_dischargeGlue);
+		timer_dischargeGlue->start(30000);
+	}
+	else
+	{
+		is_dischargeGlue_ing = false;
+		btn_dischargeGlue->setText(QStringLiteral("自动排胶-已结束"));
+
+		disconnect(timer_dischargeGlue, &QTimer::timeout, this, &Operation::on_timer_dischargeGlue);
+		timer_dischargeGlue->stop();
+	}
 }
 
 // BTN 校针1
@@ -649,4 +692,10 @@ void Operation::on_changedOffsetChart(float x, float y, float A)
 	chart_offset->addSeries(lseries_offset_y);
 	chart_offset->addSeries(lseries_offset_A);
 	chart_offset->createDefaultAxes();
+}
+
+// 连接Workflow
+void Operation::on_changedDischargeGlue()
+{
+	on_btn_dischargeGlue();
 }

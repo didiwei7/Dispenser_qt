@@ -36,7 +36,7 @@ public:
 private:
     void setupUi();
 	void setConnect();
-	void setThread();
+	void setTimer();
 
 private:
 	void setGroupLogo();
@@ -66,7 +66,7 @@ private:
 	QLineSeries *lseries_offset_A;
 
 	void setChart_pass();
-	int index_pass;
+	int  index_pass;
 	QChartView  *chartView_quality;
 	QChart		*chart_quality;
 	QPieSeries  *pseries_quality;
@@ -103,6 +103,11 @@ private:
 	void on_btn_needleCalib_1();
 	void on_btn_needleCalib_2();
 
+
+	void on_timer_dischargeGlue();
+	QTimer *timer_dischargeGlue;
+	bool   is_dischargeGlue_ing;
+
 	QPushButton *btn_station_home;
 	QPushButton *btn_ccd_calib;
 	QPushButton *btn_ccd_runEmpty;
@@ -121,8 +126,6 @@ private:
 
 private:
 	void on_btn_saveDistanceOffset();
-
-	
 
 	QLineEdit *edit_distance_ccd_needle_x;
 	QLineEdit *edit_distance_ccd_needle_y;
@@ -159,6 +162,7 @@ public slots:
 	void on_changedRundataText(QString str);
 	void on_changedDistanceOffset();
 	void on_changedOffsetChart(float x, float y, float A);
+	void on_changedDischargeGlue();
 	
 private:
 	// 获取当前时间

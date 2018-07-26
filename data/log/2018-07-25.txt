@@ -1,0 +1,64 @@
+2018-07-25 13:07:56   Thread_watch_estop 急停流程正常结束, 线程将关闭. 请松开急停, 重新启动软件
+2018-07-25 13:07:57   Thread_watch_reset 复位开始
+2018-07-25 13:16:53   Thread_watch_clearNeedle 未复位, 无法执行擦胶
+2018-07-25 13:17:37   Thread_watch_reset 复位开始
+2018-07-25 13:18:04   Thread_watch_reset 复位流程正常结束
+2018-07-25 13:40:26   Thread_watch_reset 复位开始
+2018-07-25 13:40:39   Thread_watch_reset 复位流程正常结束
+2018-07-25 13:42:49   Thread_watch_reset 复位开始
+2018-07-25 13:43:24   Thread_watch_reset 复位流程正常结束
+2018-07-25 13:43:59   Thread_watch_clearNeedle 擦胶开始
+2018-07-25 13:45:14   Thread_watch_clearNeedle 清胶流程正常结束, 等待下次开始
+2018-07-25 13:47:48   Thread_watch_reset 复位开始
+2018-07-25 13:48:19   Thread_watch_reset 复位流程正常结束
+2018-07-25 13:48:31   Thread_watch_clearNeedle 擦胶开始
+2018-07-25 13:49:04   Thread_watch_clearNeedle 清胶流程正常结束, 等待下次开始
+2018-07-25 13:49:32   Thread_watch_clearNeedle 擦胶开始
+2018-07-25 13:49:44   Thread_watch_clearNeedle 清胶流程正常结束, 等待下次开始
+2018-07-25 13:49:58   Thread_watch_clearNeedle 擦胶开始
+2018-07-25 13:50:14   Thread_watch_clearNeedle 清胶流程正常结束, 等待下次开始
+2018-07-25 14:00:02   Thread_watch_reset 复位开始
+2018-07-25 14:00:34   Thread_watch_reset 复位流程正常结束
+2018-07-25 14:36:15   Thread_watch_reset 复位开始
+2018-07-25 14:36:29   Thread_watch_reset 复位流程正常结束
+2018-07-25 14:36:33   Thread_watch_glue 点胶开始
+2018-07-25 14:37:38   Thread_glue_teda_test 点胶泰达测试流程正常结束, 等待下次触发流程
+2018-07-25 14:37:38   Thread_watch_glue 监视点胶流程正常结束, 等待下次开始
+2018-07-25 14:37:53   Thread_watch_estop 急停流程正常结束, 线程将关闭. 请松开急停, 重新启动软件
+2018-07-25 14:58:17   Thread_watch_reset 复位开始
+2018-07-25 14:58:55   Thread_watch_reset 复位流程正常结束
+2018-07-25 15:24:31   Thread_watch_reset 复位开始
+2018-07-25 15:24:59   Thread_watch_reset 复位流程正常结束
+2018-07-25 15:26:52   Thread_watch_clearNeedle 擦胶开始
+2018-07-25 15:27:08   Thread_watch_clearNeedle 清胶流程正常结束, 等待下次开始
+2018-07-25 15:28:14   Thread_watch_clearNeedle 擦胶开始
+2018-07-25 15:28:30   Thread_watch_clearNeedle 清胶流程正常结束, 等待下次开始
+2018-07-25 15:28:36   Thread_watch_clearNeedle 擦胶开始
+2018-07-25 15:28:52   Thread_watch_clearNeedle 清胶流程正常结束, 等待下次开始
+2018-07-25 15:32:17   Thread_watch_clearNeedle 未复位, 无法执行擦胶
+2018-07-25 15:32:24   Thread_watch_estop 急停流程正常结束, 线程将关闭. 请松开急停, 重新启动软件
+2018-07-25 15:32:25   Thread_watch_clearNeedle 清胶流程正常结束, 等待下次开始
+2018-07-25 15:33:37   Thread_watch_clearNeedle 未复位, 无法执行擦胶
+2018-07-25 15:33:38   Thread_watch_clearNeedle 清胶流程正常结束, 等待下次开始
+2018-07-25 15:33:54   Thread_watch_clearNeedle 未复位, 无法执行擦胶
+2018-07-25 15:34:33   Thread_watch_estop 急停流程正常结束, 线程将关闭. 请松开急停, 重新启动软件
+2018-07-25 15:34:59   Thread_watch_reset 复位开始
+2018-07-25 15:35:17   Thread_watch_clearNeedle 未复位, 无法执行擦胶
+2018-07-25 15:35:33   Thread_watch_reset 复位流程正常结束
+2018-07-25 15:35:34   Thread_watch_clearNeedle 未复位, 无法执行擦胶
+2018-07-25 15:35:36   Thread_watch_clearNeedle 擦胶开始
+2018-07-25 15:36:29   Thread_watch_clearNeedle 清胶流程正常结束, 等待下次开始
+2018-07-25 15:58:08   Thread_watch_reset 复位开始
+2018-07-25 15:58:39   Thread_watch_reset 复位流程正常结束
+2018-07-25 16:48:43   Thread_watch_reset 复位开始
+2018-07-25 16:49:07   Thread_watch_reset 复位流程正常结束
+2018-07-25 16:49:12   Thread_watch_clearNeedle 未复位, 无法执行擦胶
+2018-07-25 16:49:14   Thread_watch_clearNeedle 擦胶开始
+2018-07-25 16:50:05   Thread_watch_clearNeedle 清胶流程正常结束, 等待下次开始
+2018-07-25 16:50:25   Thread_watch_clearNeedle 擦胶开始
+2018-07-25 16:50:46   Thread_watch_clearNeedle 清胶流程正常结束, 等待下次开始
+2018-07-25 16:50:48   Thread_watch_glue 点胶开始
+2018-07-25 16:52:10   Thread_glue_teda_test 点胶泰达测试流程正常结束, 等待下次触发流程
+2018-07-25 16:52:10   Thread_watch_glue 监视点胶流程正常结束, 等待下次开始
+2018-07-25 16:52:13   Thread_watch_clearNeedle 擦胶开始
+2018-07-25 16:52:41   Thread_watch_clearNeedle 清胶流程正常结束, 等待下次开始

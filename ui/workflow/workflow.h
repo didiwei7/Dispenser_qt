@@ -74,47 +74,46 @@ private:
 	QMutex mutex_serial;
 	
 private:	// 急停
-	bool is_estop_ok;
-	bool start_thread_watch_estop;
+	bool is_estop;
 	bool close_thread_watch_estop;
 	QFuture<void> future_thread_watch_estop;
 	void thread_watch_estop();
 
 private:	// 复位
 	bool is_reset_ok;
-	bool start_thread_watch_reset;
 	bool close_thread_watch_reset;
 	QFuture<void> future_thread_watch_reset;
 	void thread_watch_reset();
 
+private:	// 监视点胶
+	bool is_glue_ing;
+	bool close_thread_watch_glue;
+	QFuture<void> future_thread_watch_glue;
+	void thread_watch_glue();
+
 private:	// 监视擦胶
-	bool is_clearNeedle_ok;
-	bool start_thread_watch_clearNeedle;
+	bool is_clearNeedle_ing;
 	bool close_thread_watch_clearNeedle;
 	QFuture<void> future_thread_watch_clearNeedle;
 	void thread_watch_clearNeedle();
+
+private:	// 监视排胶
+	bool is_dischargeGlue_ing;
+	bool close_thread_watch_dischargeGlue;
+	QFuture<void> future_thread_watch_dischargeGlue;
+	void thread_watch_dischargeGlue();
 	
 private:	// 开始
 	bool is_start_ok;
-	bool start_thread_watch_start;
 	bool close_thread_watch_start;
 	QFuture<void> future_thread_watch_start;	
 	void thread_watch_start();
 
 
-private:	// 点胶1
+private:	// 点胶1,2,3
 	bool is_config_gluel;		
-	bool is_gluel_ok;			
-	bool start_thread_glue_1;
-	bool close_thread_glue_1;
-	QFuture<void> future_thread_glue_1;
-	void thread_glue_1();
-
-public:		// 点胶2
 	bool is_config_glue2;
-
-public:		// 点胶3
-	bool is_config_glue3;	
+	bool is_config_glue3;
 
 private:	// 点胶泰达
 	bool is_config_glue_teda = true;
@@ -124,16 +123,9 @@ private:	// 点胶泰达
 	QFuture<void> future_thread_glue_teda;
 	void thread_glue_teda();
 
-private:	// 点胶泰达
+private:	// 点胶泰达测试
 	QFuture<void> future_thread_glue_teda_test;
 	void thread_glue_teda_test();
-
-private:	// 空跑点胶轨迹
-	bool is_ccdGlue3_ok;
-	bool start_thread_ccd_glue_1;
-	bool close_thread_ccd_glue_1;
-	QFuture<void> future_ccd_glue_1;
-	void thread_ccd_glue_1();
 
 private:	// BTN CCD标定
 	bool is_thread_btn_ccd_calib_ing;
@@ -158,6 +150,12 @@ private:	// BTN 针头清理
 	bool close_thread_btn_clearNeedle;
 	QFuture<void> future_thread_btn_clearNeedle;
 	void thread_btn_clearNeedle();
+
+private:	// BTN 自动排胶
+	bool is_thread_btn_dischargeGlue_ing;
+	bool close_thread_btn_dischargeGlue;
+	QFuture<void> future_thread_btn_dischargeGlue;
+	void thread_btn_dischargeGlue();
 
 private:	// BTN 针头校准1
 	bool is_btn_needleCalib1_ing;
@@ -260,6 +258,8 @@ signals:		// 自定义信号 连接 Operation
 	void changedRundataText(QString str);	
 	void changedDistanceOffset();
 	void changedOffsetChart(float x, float y, float A);	
+
+	void changedDischargeGlue();
 };
 
 #endif // WORKFLOW_H
