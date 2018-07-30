@@ -982,7 +982,8 @@ void PointDebug::on_action_save()
 	QSqlTableModel *pointmodel = getCurrentModel();
 	pointmodel->submitAll();
 
-	emit changedSqlModel(index_model);
+	// emit changedSqlModel(index_model);
+	emit changedSqlModel();
 }
 
 

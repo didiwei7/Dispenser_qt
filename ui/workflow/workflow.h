@@ -251,7 +251,7 @@ public slots:	// 自定义槽 来自 Operation
 	void on_clicked_btn_needleCalib_2();
 
 public slots:	// 自定义槽 来自 PointDebug
-	void on_changedSqlModel(int index);
+	void on_changedSqlModel();
 
 signals:		// 自定义信号 连接 Operation
 	void changedRundataLabel(QString str);	

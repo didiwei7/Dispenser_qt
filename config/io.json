@@ -56,8 +56,8 @@
             "13": { "index": 13,  "name": "照明",  "status": 0,  "visible": true},
             "14": { "index": 14,  "name": "红灯",  "status": 0,  "visible": true},
             "15": { "index": 15,  "name": "黄灯",  "status": 0,  "visible": true},
-            "16": { "index": 15,  "name": "绿灯",  "status": 0,  "visible": true},
-            "17": { "index": 15,  "name": "蜂鸣器",  "status": 0,  "visible": true}
+            "16": { "index": 16,  "name": "绿灯",  "status": 0,  "visible": true},
+            "17": { "index": 17,  "name": "蜂鸣器",  "status": 0,  "visible": true}
         }
     },
 

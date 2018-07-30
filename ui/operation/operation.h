@@ -167,6 +167,9 @@ public slots:
 private:
 	// 获取当前时间
 	QString getCurrentTime();
+
+	QMap<QString, PointRun> getAllRunPointInfo();
+	bool move_point_name(QString pointname);
 };
 
 #endif // OPERATION_H

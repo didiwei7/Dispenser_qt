@@ -194,7 +194,7 @@ private:	// 更新数据
 	QInput *INPUT_A[4];
 
 signals:	// 自定义信号槽
-	void changedSqlModel(int index);	// 连接 Workflow, 应用当前修改
+	void changedSqlModel();	// 连接 Workflow, 应用当前修改
 };
 
 #endif // POINTDEBUG_H

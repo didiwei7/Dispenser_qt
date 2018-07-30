@@ -51,15 +51,15 @@ void Workflow::setConfig()
 	is_config_glue3 = setting.value("workflow_glue/is_config_glue3").toBool();
 
 	// 【2】 距离偏移配置
-	distance_ccd_needle_x = setting.value("ccd_needle_diatance/offset_x").toInt() / 1000.0;
-	distance_ccd_neddle_y = setting.value("ccd_needle_diatance/offset_y").toInt() / 1000.0;
+	distance_ccd_needle_x = setting.value("ccd_needle_distance/offset_x").toInt() / 1000.0;
+	distance_ccd_neddle_y = setting.value("ccd_needle_distance/offset_y").toInt() / 1000.0;
 
-	distance_ccd_laser_x = setting.value("ccd_laser_diatance/offset_x").toInt() / 1000.0;
-	diatance_ccd_laser_y = setting.value("ccd_laser_diatance/offset_x").toInt() / 1000.0;
+	distance_ccd_laser_x = setting.value("ccd_laser_distance/offset_x").toInt() / 1000.0;
+	diatance_ccd_laser_y = setting.value("ccd_laser_distance/offset_x").toInt() / 1000.0;
 
-	distance_laser_needle_x = setting.value("laser_needle_diatance/offset_x").toInt() / 1000.0;
-	distance_laser_needle_y = setting.value("laser_needle_diatance/offset_y").toInt() / 1000.0;
-	distance_laser_needle_z = setting.value("laser_needle_diatance/offset_z").toInt() / 1000.0;
+	distance_laser_needle_x = setting.value("laser_needle_distance/offset_x").toInt() / 1000.0;
+	distance_laser_needle_y = setting.value("laser_needle_distance/offset_y").toInt() / 1000.0;
+	distance_laser_needle_z = setting.value("laser_needle_distance/offset_z").toInt() / 1000.0;
 
 	calib_offset_x = setting.value("calib_needle_optical/calib_offset_x").toInt() / 1000.0;
 	calib_offset_y = setting.value("calib_needle_optical/calib_offset_y").toInt() / 1000.0;
@@ -68,8 +68,10 @@ void Workflow::setConfig()
 	distance_needle_z = setting.value("needle_distance/offset_z").toInt() / 1000.0;
 
 	file.close();
+}
 
-
+void Workflow::setPoint()
+{
 	// 【2】 点位配置
 	model_general = new QSqlTableModel(this);
 	// 使用 submit 时,数据库才会更改,否则做出的更改存储在缓存中
@@ -96,10 +98,7 @@ void Workflow::setConfig()
 	model_glue3->setTable("point_glue3");
 	model_glue3->setSort(0, Qt::AscendingOrder);
 	model_glue3->select();
-}
 
-void Workflow::setPoint()
-{
 	allpoint_pointRun = getAllRunPointInfo();
 
 	vec_ccdGlue_1 = getCCDGluePoint2Vector(1);
@@ -192,11 +191,12 @@ void Workflow::setThread()
 	future_thread_watch_start = QtConcurrent::run(&thread_pool, [&]() { thread_watch_start(); });
 	future_thread_watch_glue = QtConcurrent::run(&thread_pool, [&]() { thread_watch_glue(); });
 	future_thread_watch_clearNeedle = QtConcurrent::run(&thread_pool, [&]() { thread_watch_clearNeedle(); });
-		
+	future_thread_watch_dischargeGlue = QtConcurrent::run(&thread_pool, [&]() { thread_watch_dischargeGlue(); });
+
 	future_thread_glue_teda_test = QtConcurrent::run(&thread_pool, [&]() { thread_glue_teda_test(); });
 }
 
-// Thread 急停
+// Thread 监视急停
 void Workflow::thread_watch_estop()
 {
 	if (!(init_card() == 1)) return;
@@ -248,7 +248,7 @@ void Workflow::thread_watch_estop()
 	}
 }
 
-// Thread 复位
+// Thread 监视复位
 void Workflow::thread_watch_reset()
 {
 	if (!(init_card() == 1)) return;
@@ -518,7 +518,7 @@ void Workflow::thread_watch_clearNeedle()
 			Sleep(500);
 
 			// 【4】 A轴移动
-			move_axis_offset(AXISNUM::A, -5);
+			move_axis_offset(AXISNUM::A, 2);
 			wait_axis_stop(AXISNUM::A);
 
 			// 【4】 到清胶点
@@ -619,6 +619,7 @@ void Workflow::thread_watch_dischargeGlue()
 				step_dischargeGlue = 20;
 			}
 		}
+		break;
 
 		case 20:	// 排胶
 		{
@@ -654,7 +655,7 @@ void Workflow::thread_watch_dischargeGlue()
 	}
 }
 
-// Thread 启动
+// Thread 监视启动
 void Workflow::thread_watch_start()
 {
 	if (!(init_card() == 1)) return;
@@ -1053,12 +1054,12 @@ void Workflow::thread_glue_teda()
 		{
 			if (current_cmd.open)
 			{
-				adt8949_set_fifo_io(0, 15, 1, -1);
+				adt8949_set_fifo_io(0, 8, 1, -1);
 			}
 			else
 			{
 
-				adt8949_set_fifo_io(0, 15, 0, -1);
+				adt8949_set_fifo_io(0, 8, 0, -1);
 			}
 
 			step_glue_teda = 230;
@@ -1111,11 +1112,11 @@ void Workflow::thread_glue_teda()
 		{
 			if (current_cmd.open)
 			{
-				adt8949_set_fifo_io(0, 15, 1, -1);
+				adt8949_set_fifo_io(0, 8, 1, -1);
 			}
 			else if (current_cmd.close)
 			{
-				adt8949_set_fifo_io(0, 15, 0, -1);
+				adt8949_set_fifo_io(0, 8, 0, -1);
 			}
 
 			step_glue_teda = 430;
@@ -1586,50 +1587,22 @@ void Workflow::thread_glue_teda_test()
 			{
 				current_cmd = vec_ccdGlue_1.at(index_current_cmd);
 
-				if (current_cmd.type == QString("finish"))
-				{
-					step_glue_teda = 6666;
-				}
-				else if (current_cmd.type == QString("line"))		// 直线插补
-				{
-					step_glue_teda = 200;
-				}
-				else if (current_cmd.type == QString("circle"))		// 圆弧插补
-				{
-					step_glue_teda = 300;
-				}
-				else if (current_cmd.type == QString("laser"))		// 镭射测量
-				{
-					step_glue_teda = 400;
-				}
-				else if (current_cmd.type == QString("up_abs"))		// Z轴定位运动
-				{
-					step_glue_teda = 500;
-				}
-				else if (current_cmd.type == QString("up_offset"))	// Z轴偏移运动
-				{
-					step_glue_teda = 600;
-				}
-				else if (current_cmd.type == QString("move_abs"))	// 轴定位指令
-				{
-					step_glue_teda = 700;
-				}
-				else if (current_cmd.type == QString("move_offset"))// 轴偏移指令
-				{
-					step_glue_teda = 800;
-				}
-				else if (current_cmd.type == QString("open_close"))
-				{
-					step_glue_teda = 900;
-				}
-				else if (current_cmd.type == QString("continue"))	// 继续指令
-				{
-					step_glue_teda = 1000;
-				}
-				else if (current_cmd.type == QString("clear_needle"))
-				{
-					step_glue_teda = 1100;
-				}
+				if (current_cmd.type == QString("finish"))		      step_glue_teda = 6666;  // 结束指令
+				else if (current_cmd.type == QString("line"))		  step_glue_teda = 1000;  // 直线插补
+				else if (current_cmd.type == QString("circle"))		  step_glue_teda = 1100;  // 圆弧插补
+				else if (current_cmd.type == QString("laser"))		  step_glue_teda = 2000;  // 镭射测量
+				else if (current_cmd.type == QString("move_abs_ccd")) step_glue_teda = 3000;  // XYZ 定位运动, 带补偿
+				else if (current_cmd.type == QString("xy_abs_ccd"))	  step_glue_teda = 3100;  // XY  定位运动, 带补偿
+				else if (current_cmd.type == QString("z_abs_ccd"))	  step_glue_teda = 3200;  // Z   定位运动, 带补偿
+				else if (current_cmd.type == QString("move_abs"))     step_glue_teda = 4000;  // XYZ 定位运动
+				else if (current_cmd.type == QString("xy_abs"))		  step_glue_teda = 4100;  // XY  定位运动
+				else if (current_cmd.type == QString("z_abs"))		  step_glue_teda = 4200;  // Z   定位运动
+				else if (current_cmd.type == QString("move_offset"))  step_glue_teda = 4300;  // XYZ 偏移运动
+				else if (current_cmd.type == QString("xy_offset"))	  step_glue_teda = 4400;  // XY  偏移运动
+				else if (current_cmd.type == QString("z_offset"))     step_glue_teda = 4500;  // Z   偏移运动
+				else if (current_cmd.type == QString("continue"))	  step_glue_teda = 5000;  // 继续指令
+				else if (current_cmd.type == QString("open_close"))   step_glue_teda = 5100;  // IO指令
+				else if (current_cmd.type == QString("clear_needle")) step_glue_teda = 5200;  // 擦胶指令
 				else
 				{
 					MessageBox(NULL, TEXT("点位解析错误"), TEXT("警告"), MB_OK);
@@ -1644,36 +1617,35 @@ void Workflow::thread_glue_teda_test()
 
 
 		/********************** 直线插补 **********************/
-		case 200:	// 开胶, 关胶
+		case 1000:	// 开胶, 关胶
 		{
 			if (current_cmd.open)
 			{
-				adt8949_set_fifo_io(0, 15, 1, -1);
+				adt8949_set_fifo_io(0, 8, 1, -1);
 			}
 			else
 			{
-				adt8949_set_fifo_io(0, 15, 0, -1);
+				adt8949_set_fifo_io(0, 8, 0, -1);
 			}
 
-			step_glue_teda = 210;
+			step_glue_teda = 1010;
 		}
 		break;
 
-		case 210:	// 直线插补
+		case 1010:	// 直线插补
 		{
 			float move_pos[3];
 			move_pos[0] = work_matrix(index_current_cmd, 0) + distance_ccd_needle_x + calib_offset_x;
 			move_pos[1] = work_matrix(index_current_cmd, 1) + distance_ccd_neddle_y + calib_offset_y;
-			move_pos[2] = work_matrix(index_current_cmd, 2) + distance_ccd_needle_x + calib_offset_z; 
-
-																									// 直线插补
+			move_pos[2] = work_matrix(index_current_cmd, 2) + distance_needle_z + calib_offset_z;
+																						
 			move_inp_abs_line3(move_pos[0], move_pos[1], move_pos[2]);
 
-			step_glue_teda = 220;
+			step_glue_teda = 1020;
 		}
 		break;
 
-		case 220:	// 置标志位, 跳回
+		case 1020:	// 置标志位, 跳回
 		{
 			iter_cmd++;
 			index_current_cmd++;
@@ -1684,21 +1656,21 @@ void Workflow::thread_glue_teda_test()
 
 
 		/********************** 圆弧插补 **********************/
-		case 300:	// 开胶, 关胶
+		case 1100:	// 开胶, 关胶
 		{
 			if (current_cmd.open)
 			{
-				adt8949_set_fifo_io(0, 15, 1, -1);
+				adt8949_set_fifo_io(0, 8, 1, -1);
 			}
 			else if (current_cmd.close)
 			{
-				adt8949_set_fifo_io(0, 15, 0, -1);
+				adt8949_set_fifo_io(0, 8, 0, -1);
 			}
-			step_glue_teda = 310;
+			step_glue_teda = 1110;
 		}
 		break;
 
-		case 310:	// 圆弧插补
+		case 1110:	// 圆弧插补
 		{
 			float move_pos[3];
 			move_pos[0] = work_matrix(index_current_cmd, 0) + distance_ccd_needle_x + calib_offset_x;
@@ -1709,11 +1681,11 @@ void Workflow::thread_glue_teda_test()
 
 			move_inp_abs_arc2(move_pos[0], move_pos[1], center_pos[0], center_pos[1]);
 
-			step_glue_teda = 320;
+			step_glue_teda = 1120;
 		}
 		break;
 
-		case 320:	// 置标志位, 跳回
+		case 1120:	// 置标志位, 跳回
 		{
 			iter_cmd++;
 			index_current_cmd++;
@@ -1725,26 +1697,26 @@ void Workflow::thread_glue_teda_test()
 
 
 		/********************** 镭射测量 **********************/
-		case 400:	// 等待插补结束
+		case 2000:	// 等待插补结束
 		{
 			wait_inp_finish();
-			step_glue_teda = 410;
+			step_glue_teda = 2010;
 		}
 		break;
 
-		case 410:	// 
+		case 2010:	// 
 		{
-			step_glue_teda = 420;
+			step_glue_teda = 2020;
 		}
 		break;
 
-		case 420:	// 
+		case 2020:	// 
 		{
-			step_glue_teda = 430;
+			step_glue_teda = 2030;
 		}
 		break;
 
-		case 430:	// 置标志位跳回
+		case 2030:	// 置标志位跳回
 		{
 			iter_cmd++;
 			index_current_cmd++;
@@ -1754,123 +1726,35 @@ void Workflow::thread_glue_teda_test()
 		break;
 
 
-		/********************** Z轴定位运动 **********************/
-		case 500:	// 等待插补结束
+		/********************** XYZ 定位运动, 带补偿 **********************/
+		case 3000: // 等待插补结束
 		{
 			wait_inp_finish();
-			step_glue_teda = 510;
+			step_glue_teda = 3010;
 		}
 		break;
 
-		case 510:	// 开胶, 关胶
+		case 3010:	// 开胶, 关胶
 		{
 			if (current_cmd.open)
 			{
-				write_out_bit(15, 1);
+				write_out_bit(8, 1);
 			}
 			else if (current_cmd.close)
 			{
-				write_out_bit(15, 0);
+				write_out_bit(8, 0);
 			}
 
-			step_glue_teda = 520;
+			step_glue_teda = 3020;
 		}
 		break;
 
-		case 520:	// Z轴定位运动
-		{
-			float move_pos_z = current_cmd.Z;
-
-			move_axis_abs(AXISNUM::Z, move_pos_z);
-			wait_axis_stop(AXISNUM::Z);
-
-			step_glue_teda = 530;
-		}
-		break;
-
-		case 530:	// 置标志位跳回
-		{
-			iter_cmd++;
-			index_current_cmd++;
-
-			step_glue_teda = 110;
-		}
-		break;
-
-
-		/********************** Z轴偏移指令 **********************/
-		case 600:	// 等待插补结束
-		{
-			wait_inp_finish();
-			step_glue_teda = 610;
-		}
-		break;
-
-		case 610:	// 开胶, 关胶
-		{
-			if (current_cmd.open)
-			{
-				write_out_bit(15, 1);
-			}
-			else if (current_cmd.close)
-			{
-				write_out_bit(15, 0);
-			}
-
-			step_glue_teda = 620;
-		}
-		break;
-
-		case 620:	// Z轴偏移运动
-		{
-			float move_pos_z = current_cmd.Z;
-
-			move_axis_offset(AXISNUM::Z, move_pos_z);
-			wait_axis_stop(AXISNUM::Z);
-
-			step_glue_teda = 630;
-		}
-		break;
-
-		case 630:	// 置标志位跳回
-		{
-			iter_cmd++;
-			index_current_cmd++;
-
-			step_glue_teda = 110;
-		}
-		break;
-
-
-		/********************** 轴定位指令 **********************/
-		case 700:	// 等待插补结束
-		{
-			wait_inp_finish();
-			step_glue_teda = 710;
-		}
-		break;
-
-		case 710:	// 开胶, 关胶
-		{
-			if (current_cmd.open)
-			{
-				write_out_bit(15, 1);
-			}
-			else if (current_cmd.close)
-			{
-				write_out_bit(15, 0);
-			}
-
-			step_glue_teda = 720;
-		}
-		break;
-
-		case 720:	// 轴绝对运动
+		case 3020:	//  XYZ 定位运动, 带补偿
 		{
 			float move_pos[3];
-			move_pos[0] = current_cmd.X;
-			move_pos[1] = current_cmd.Y;
-			move_pos[2] = current_cmd.Z;
+			move_pos[0] = work_matrix(index_current_cmd, 0) + distance_ccd_needle_x + calib_offset_x;
+			move_pos[1] = work_matrix(index_current_cmd, 1) + distance_ccd_neddle_y + calib_offset_y;;
+			move_pos[2] = work_matrix(index_current_cmd, 2) + distance_needle_z + calib_offset_z;
 
 			move_axis_abs(AXISNUM::X, move_pos[0]);
 			move_axis_abs(AXISNUM::Y, move_pos[1]);
@@ -1880,11 +1764,11 @@ void Workflow::thread_glue_teda_test()
 			wait_axis_stop(AXISNUM::Y);
 			wait_axis_stop(AXISNUM::Z);
 
-			step_glue_teda = 730;
+			step_glue_teda = 3030;
 		}
 		break;
 
-		case 730:	// 置标志位跳回
+		case 3030:	// 置标志位跳回
 		{
 			iter_cmd++;
 			index_current_cmd++;
@@ -1895,30 +1779,277 @@ void Workflow::thread_glue_teda_test()
 
 
 
-		/********************** 轴偏移指令 **********************/
-		case 800:	// 等待插补结束
+		/********************** XY 定位运动, 带补偿 **********************/
+		case 3100: // 等待插补结束
 		{
 			wait_inp_finish();
-			step_glue_teda = 810;
+			step_glue_teda = 3110;
 		}
 		break;
 
-		case 810:	// 开胶, 关胶
+		case 3110:	// 开胶, 关胶
 		{
 			if (current_cmd.open)
 			{
-				write_out_bit(15, 1);
+				write_out_bit(8, 1);
 			}
 			else if (current_cmd.close)
 			{
-				write_out_bit(15, 0);
+				write_out_bit(8, 0);
 			}
 
-			step_glue_teda = 820;
+			step_glue_teda = 3120;
 		}
 		break;
 
-		case 820:	// 轴偏移运动
+		case 3120:	//  XY  定位运动, 带补偿
+		{
+			float move_pos[3];
+			move_pos[0] = work_matrix(index_current_cmd, 0) + distance_ccd_needle_x + calib_offset_x;
+			move_pos[1] = work_matrix(index_current_cmd, 1) + distance_ccd_neddle_y + calib_offset_y;;
+			move_pos[2] = work_matrix(index_current_cmd, 2) + distance_needle_z + calib_offset_z;
+
+			move_axis_abs(AXISNUM::X, move_pos[0]);
+			move_axis_abs(AXISNUM::Y, move_pos[1]);
+
+			wait_axis_stop(AXISNUM::X);
+			wait_axis_stop(AXISNUM::Y);
+
+			step_glue_teda = 3130;
+		}
+		break;
+
+		case 3130:	// 置标志位跳回
+		{
+			iter_cmd++;
+			index_current_cmd++;
+
+			step_glue_teda = 110;
+		}
+		break;
+
+
+
+		/********************** Z 定位运动, 带补偿 **********************/
+		case 3200: // 等待插补结束
+		{
+			wait_inp_finish();
+			step_glue_teda = 3210;
+		}
+		break;
+
+		case 3210:	// 开胶, 关胶
+		{
+			if (current_cmd.open)
+			{
+				write_out_bit(8, 1);
+			}
+			else if (current_cmd.close)
+			{
+				write_out_bit(8, 0);
+			}
+
+			step_glue_teda = 3220;
+		}
+		break;
+
+		case 3220:	//  Z 定位运动, 带补偿
+		{
+			float move_pos[3];
+			move_pos[0] = work_matrix(index_current_cmd, 0) + distance_ccd_needle_x + calib_offset_x;
+			move_pos[1] = work_matrix(index_current_cmd, 1) + distance_ccd_neddle_y + calib_offset_y;;
+			move_pos[2] = work_matrix(index_current_cmd, 2) + distance_needle_z + calib_offset_z;
+
+			move_axis_abs(AXISNUM::Z, move_pos[2]);
+			wait_axis_stop(AXISNUM::Z);
+
+			step_glue_teda = 3230;
+		}
+		break;
+
+		case 3230:	// 置标志位跳回
+		{
+			iter_cmd++;
+			index_current_cmd++;
+
+			step_glue_teda = 110;
+		}
+		break;
+
+		
+		/********************** XYZ 定位运动 **********************/
+		case 4000: // 等待插补结束
+		{
+			wait_inp_finish();
+			step_glue_teda = 4010;
+		}
+		break;
+
+		case 4010:	// 开胶, 关胶
+		{
+			if (current_cmd.open)
+			{
+				write_out_bit(8, 1);
+			}
+			else if (current_cmd.close)
+			{
+				write_out_bit(8, 0);
+			}
+
+			step_glue_teda = 4020;
+		}
+		break;
+
+		case 4020:	// XYZ 定位运动
+		{
+			float move_pos[3];
+			move_pos[0] = work_matrix(index_current_cmd, 0); // + distance_ccd_needle_x + calib_offset_x;
+			move_pos[1] = work_matrix(index_current_cmd, 1); // + distance_ccd_neddle_y + calib_offset_y;;
+			move_pos[2] = work_matrix(index_current_cmd, 2); // + distance_needle_z + calib_offset_z;
+
+			move_axis_abs(AXISNUM::X, move_pos[0]);
+			move_axis_abs(AXISNUM::Y, move_pos[1]);
+			move_axis_abs(AXISNUM::Z, move_pos[2]);
+
+			wait_axis_stop(AXISNUM::X);
+			wait_axis_stop(AXISNUM::Y);
+			wait_axis_stop(AXISNUM::Z);
+
+			step_glue_teda = 4030;
+		}
+		break;
+
+		case 4030:	// 置标志位跳回
+		{
+			iter_cmd++;
+			index_current_cmd++;
+
+			step_glue_teda = 110;
+		}
+		break;
+		
+
+		/********************** XY 定位运动 **********************/
+		case 4100: // 等待插补结束
+		{
+			wait_inp_finish();
+			step_glue_teda = 4110;
+		}
+		break;
+
+		case 4110:	// 开胶, 关胶
+		{
+			if (current_cmd.open)
+			{
+				write_out_bit(8, 1);
+			}
+			else if (current_cmd.close)
+			{
+				write_out_bit(8, 0);
+			}
+
+			step_glue_teda = 4120;
+		}
+		break;
+
+		case 4120:	// XY 定位运动
+		{
+			float move_pos[3];
+			move_pos[0] = work_matrix(index_current_cmd, 0); // + distance_ccd_needle_x + calib_offset_x;
+			move_pos[1] = work_matrix(index_current_cmd, 1); // + distance_ccd_neddle_y + calib_offset_y;;
+			move_pos[2] = work_matrix(index_current_cmd, 2); // + distance_needle_z + calib_offset_z;
+
+			move_axis_abs(AXISNUM::X, move_pos[0]);
+			move_axis_abs(AXISNUM::Y, move_pos[1]);
+
+			wait_axis_stop(AXISNUM::X);
+			wait_axis_stop(AXISNUM::Y);
+
+			step_glue_teda = 4130;
+		}
+		break;
+
+		case 4130:	// 置标志位跳回
+		{
+			iter_cmd++;
+			index_current_cmd++;
+
+			step_glue_teda = 110;
+		}
+		break;
+
+		/********************** Z 定位运动 **********************/
+		case 4200: // 等待插补结束
+		{
+			wait_inp_finish();
+			step_glue_teda = 4210;
+		}
+		break;
+
+		case 4210:	// 开胶, 关胶
+		{
+			if (current_cmd.open)
+			{
+				write_out_bit(8, 1);
+			}
+			else if (current_cmd.close)
+			{
+				write_out_bit(8, 0);
+			}
+
+			step_glue_teda = 4220;
+		}
+		break;
+
+		case 4220:	// XY 定位运动
+		{
+			float move_pos[3];
+			move_pos[0] = work_matrix(index_current_cmd, 0); // + distance_ccd_needle_x + calib_offset_x;
+			move_pos[1] = work_matrix(index_current_cmd, 1); // + distance_ccd_neddle_y + calib_offset_y;;
+			move_pos[2] = work_matrix(index_current_cmd, 2); // + distance_needle_z + calib_offset_z;
+
+
+			move_axis_abs(AXISNUM::Z, move_pos[2]);
+			wait_axis_stop(AXISNUM::Z);
+
+			step_glue_teda = 4230;
+		}
+		break;
+
+		case 4230:	// 置标志位跳回
+		{
+			iter_cmd++;
+			index_current_cmd++;
+
+			step_glue_teda = 110;
+		}
+		break;
+
+
+		/********************** XYZ 偏移运动 **********************/
+		case 4300:	// 等待插补结束
+		{
+			wait_inp_finish();
+			step_glue_teda = 4310;
+		}
+		break;
+
+		case 4310:	// 开胶, 关胶
+		{
+			if (current_cmd.open)
+			{
+				write_out_bit(8, 1);
+			}
+			else if (current_cmd.close)
+			{
+				write_out_bit(8, 0);
+			}
+
+			step_glue_teda = 4320;
+		}
+		break;
+
+		case 4320:	// 轴偏移运动
 		{
 			float move_pos[3];
 			move_pos[0] = current_cmd.X;
@@ -1933,11 +2064,11 @@ void Workflow::thread_glue_teda_test()
 			wait_axis_stop(AXISNUM::Y);
 			wait_axis_stop(AXISNUM::Z);
 
-			step_glue_teda = 830;
+			step_glue_teda = 4330;
 		}
 		break;
 
-		case 830:	// 置标志位跳回
+		case 4330:	// 置标志位跳回
 		{
 			iter_cmd++;
 			index_current_cmd++;
@@ -1947,31 +2078,48 @@ void Workflow::thread_glue_teda_test()
 		break;
 
 
-
-		/********************** 开胶/关胶 **********************/	
-		case 900:	// 等待插补结束
+		/********************** XY 轴偏移运动 **********************/
+		case 4400:	// 等待插补结束
 		{
 			wait_inp_finish();
-			step_glue_teda = 910;
+			step_glue_teda = 4410;
 		}
 		break;
 
-		case 910:	// 开胶, 关胶
+		case 4410:	// 开胶, 关胶
 		{
 			if (current_cmd.open)
 			{
-				write_out_bit(15, 1);
+				write_out_bit(8, 1);
 			}
 			else if (current_cmd.close)
 			{
-				write_out_bit(15, 0);
+				write_out_bit(8, 0);
 			}
 
-			step_glue_teda = 920;
+			step_glue_teda = 4420;
 		}
 		break;
 
-		case 920:	// 置标志位跳回
+		case 4420:	// XY 轴偏移运动
+		{
+			float move_pos[3];
+			move_pos[0] = current_cmd.X;
+			move_pos[1] = current_cmd.Y;
+			move_pos[2] = current_cmd.Z;
+
+			move_axis_offset(AXISNUM::X, move_pos[0]);
+			move_axis_offset(AXISNUM::Y, move_pos[1]);
+
+			wait_axis_stop(AXISNUM::X);
+			wait_axis_stop(AXISNUM::Y);
+
+
+			step_glue_teda = 4430;
+		}
+		break;
+
+		case 4430:	// 置标志位跳回
 		{
 			iter_cmd++;
 			index_current_cmd++;
@@ -1980,17 +2128,64 @@ void Workflow::thread_glue_teda_test()
 		}
 		break;
 
+
+
+		/********************** Z 轴偏移运动 **********************/
+		case 4500:	// 等待插补结束
+		{
+			wait_inp_finish();
+			step_glue_teda = 4510;
+		}
+		break;
+
+		case 4510:	// 开胶, 关胶
+		{
+			if (current_cmd.open)
+			{
+				write_out_bit(8, 1);
+			}
+			else if (current_cmd.close)
+			{
+				write_out_bit(8, 0);
+			}
+
+			step_glue_teda = 4520;
+		}
+		break;
+
+		case 4520:	// 轴偏移运动
+		{
+			float move_pos[3];
+			move_pos[0] = current_cmd.X;
+			move_pos[1] = current_cmd.Y;
+			move_pos[2] = current_cmd.Z;
+
+			move_axis_offset(AXISNUM::Z, move_pos[2]);
+			wait_axis_stop(AXISNUM::Z);
+
+			step_glue_teda = 4530;
+		}
+		break;
+
+		case 4530:	// 置标志位跳回
+		{
+			iter_cmd++;
+			index_current_cmd++;
+
+			step_glue_teda = 110;
+		}
+		break;
 
 
 		/********************** 继续指令 **********************/
-		case 1000:	// 等待插补结束
+		case 5000:	// 等待插补结束
 		{
 			wait_inp_finish();
-			step_glue_teda = 1010;
+			step_glue_teda = 5010;
 		}
 		break;
 
-		case 1010:	// 置标志位跳回
+		case 5010:	// 置标志位跳回
 		{
 			iter_cmd++;
 			index_current_cmd++;
@@ -2000,15 +2195,48 @@ void Workflow::thread_glue_teda_test()
 		break;
 
 
-		/********************** 清胶指令 **********************/
-		case 1100:	// 等待插补结束
+		/********************** 开胶/关胶 **********************/	
+		case 5100:	// 等待插补结束
 		{
 			wait_inp_finish();
-			step_glue_teda = 1110;
+			step_glue_teda = 5110;
 		}
 		break;
 
-		case 1110:	// 清胶
+		case 5110:	// 开胶, 关胶
+		{
+			if (current_cmd.open)
+			{
+				write_out_bit(8, 1);
+			}
+			else if (current_cmd.close)
+			{
+				write_out_bit(8, 0);
+			}
+
+			step_glue_teda = 5120;
+		}
+		break;
+
+		case 5120:	// 置标志位跳回
+		{
+			iter_cmd++;
+			index_current_cmd++;
+
+			step_glue_teda = 110;
+		}
+		break;
+
+
+		/********************** 擦胶指令 **********************/
+		case 5200:	// 等待插补结束
+		{
+			wait_inp_finish();
+			step_glue_teda = 5210;
+		}
+		break;
+
+		case 5210:	// 擦胶
 		{
 			// 【1】 Z轴到安全点
 			move_axis_abs(AXISNUM::Z, 0);
@@ -2019,42 +2247,34 @@ void Workflow::thread_glue_teda_test()
 			wait_allaxis_stop();
 
 			// 【3】 清胶气缸松开
+			write_out_bit(12, 0);
+			Sleep(500);
 
+			// 【4】 A轴移动
+			move_axis_offset(AXISNUM::A, 2);
+			wait_axis_stop(AXISNUM::A);
 
-			// 【4】 判断清胶气缸是否松开
-			if (true)
-			{
-				step_glue_teda = 1120;
-			}
-			else
-			{
-				QMessageBox::about(NULL, "Warning", QStringLiteral("擦胶气缸松开失败"));
-				step_glue_teda = 9999;
-			}
-		}
-		break;
-
-		case 1120:	
-		{
-			// 【5】 到清胶点
+			// 【4】 到清胶点
 			move_point_name("clear_glue");
 			wait_allaxis_stop();
+			Sleep(200);
 
 			// 【6】 清胶气缸夹紧
+			write_out_bit(12, 1);
+			Sleep(500);
 
-			
 			// 【7】 Z轴到安全点
 			move_axis_abs(AXISNUM::Z, 0);
 			wait_axis_stop(AXISNUM::Z);
 
 			// 【8】 清胶气缸松开
+			write_out_bit(12, 0);
 
-
-			step_glue_teda = 1130;
+			step_glue_teda = 5220;
 		}
 		break;
 
-		case 1130:	// 置标志位跳回
+		case 5220:	// 置标志位跳回
 		{
 			iter_cmd++;
 			index_current_cmd++;
@@ -2064,38 +2284,7 @@ void Workflow::thread_glue_teda_test()
 		break;
 
 
-		/********************** 拍照指令 **********************/
-		case 1200:	// 等待插补结束
-		{
-			wait_inp_finish();
-			step_glue_teda = 1210;
-		}
-		break;
-
-		case 1210:	// 拍照
-		{
-			step_glue_teda = 1220;
-		}
-		break;
-
-		case 1220:
-		{
-			step_glue_teda = 1230;
-		}
-		break;
-
-		case 1230:	// 置标志位跳回
-		{
-			iter_cmd++;
-			index_current_cmd++;
-
-			step_glue_teda = 110;
-		}
-		break;
-
-
-
-
+		
 		case 6666:	// 流程正常结束, 跳回0, 等待下次触发流程
 		{
 			// 【1】 等待插补结束
@@ -2428,11 +2617,11 @@ void Workflow::thread_btn_ccd_runEmpty()
 		{
 			if (current_cmd.open)
 			{
-				adt8949_set_fifo_io(0, 15, 1, -1);
+				adt8949_set_fifo_io(0, 8, 1, -1);
 			}
 			else
 			{
-				adt8949_set_fifo_io(0, 15, 0, -1);
+				adt8949_set_fifo_io(0, 8, 0, -1);
 			}
 
 			step_glue_teda = 210;
@@ -2468,11 +2657,11 @@ void Workflow::thread_btn_ccd_runEmpty()
 		{
 			if (current_cmd.open)
 			{
-				adt8949_set_fifo_io(0, 15, 1, -1);
+				adt8949_set_fifo_io(0, 8, 1, -1);
 			}
 			else if (current_cmd.close)
 			{
-				adt8949_set_fifo_io(0, 15, 0, -1);
+				adt8949_set_fifo_io(0, 8, 0, -1);
 			}
 			step_glue_teda = 310;
 		}
@@ -3088,11 +3277,11 @@ void Workflow::thread_btn_runEmpty()
 		{
 			if (current_cmd.open)
 			{
-				adt8949_set_fifo_io(0, 15, 1, -1);
+				adt8949_set_fifo_io(0, 8, 1, -1);
 			}
 			else
 			{
-				adt8949_set_fifo_io(0, 15, 0, -1);
+				adt8949_set_fifo_io(0, 8, 0, -1);
 			}
 
 			step_glue_teda = 210;
@@ -3128,11 +3317,11 @@ void Workflow::thread_btn_runEmpty()
 		{
 			if (current_cmd.open)
 			{
-				adt8949_set_fifo_io(0, 15, 1, -1);
+				adt8949_set_fifo_io(0, 8, 1, -1);
 			}
 			else if (current_cmd.close)
 			{
-				adt8949_set_fifo_io(0, 15, 0, -1);
+				adt8949_set_fifo_io(0, 8, 0, -1);
 			}
 			step_glue_teda = 310;
 		}
@@ -4263,7 +4452,7 @@ void Workflow::thread_needleCalib_2()
 	}
 }
 
-// 通讯 Laser 串口
+// Thread 串口 接收Laser消息
 void Workflow::thread_serialLaserReceive()
 {
 	while (close_thread_serialLaserReceive == false)
@@ -4280,7 +4469,7 @@ void Workflow::thread_serialLaserReceive()
 	}
 }
 
-// 通讯 CCD socket
+// Socket 接收CCD消息
 void Workflow::socket_ccd_receive()
 {
 	QByteArray readData = socket_ccd->read(128);
@@ -4913,30 +5102,19 @@ void Workflow::on_clicked_btn_needleCalib_2()
 }
 
 // 连接 PointDebug 点位数据修改
-void Workflow::on_changedSqlModel(int index)
+void Workflow::on_changedSqlModel()
 {
-	allpoint_pointRun = getAllRunPointInfo();
+	model_general->select();
+	model_glue1->select();
+	model_glue2->select();
+	model_glue3->select();
 
-	if (0 == index)
-	{
-		model_general->select();
-	}
-	else if (1 == index)
-	{
-		model_glue1->select();
-		vec_ccdGlue_1 = getCCDGluePoint2Vector(1);	// 点胶流程点位信息, 用于自动解析指令
-	}
-	else if (2 == index)
-	{
-		model_glue2->select();
-		vec_ccdGlue_2 = getCCDGluePoint2Vector(2);
-	}
-	else if (3 == index)
-	{
-		model_glue3->select();
-		vec_ccdGlue_3 = getCCDGluePoint2Vector(3);
-	}
-	else return;
+	// 点胶流程点位信息, 用于自动解析指令
+	vec_ccdGlue_1 = getCCDGluePoint2Vector(1);	
+	vec_ccdGlue_2 = getCCDGluePoint2Vector(2);
+	vec_ccdGlue_3 = getCCDGluePoint2Vector(3);
+
+	allpoint_pointRun = getAllRunPointInfo();
 }
 
 // 连接 Operation 流程配置修改
@@ -4971,15 +5149,15 @@ void Workflow::on_clicked_btn_saveDistanceOffset()
 	}
 	QSettings setting("../config/workflow_glue.ini", QSettings::IniFormat);
 
-	distance_ccd_needle_x = setting.value("ccd_needle_diatance/offset_x").toInt() / 1000.0;
-	distance_ccd_neddle_y = setting.value("ccd_needle_diatance/offset_y").toInt() / 1000.0;
+	distance_ccd_needle_x = setting.value("ccd_needle_distance/offset_x").toInt() / 1000.0;
+	distance_ccd_neddle_y = setting.value("ccd_needle_distance/offset_y").toInt() / 1000.0;
 
-	distance_ccd_laser_x = setting.value("ccd_laser_diatance/offset_x").toInt() / 1000.0;
-	diatance_ccd_laser_y = setting.value("ccd_laser_diatance/offset_x").toInt() / 1000.0;
+	distance_ccd_laser_x = setting.value("ccd_laser_distance/offset_x").toInt() / 1000.0;
+	diatance_ccd_laser_y = setting.value("ccd_laser_distance/offset_x").toInt() / 1000.0;
 
-	distance_laser_needle_x = setting.value("laser_needle_diatance/offset_x").toInt() / 1000.0;
-	distance_laser_needle_y = setting.value("laser_needle_diatance/offset_y").toInt() / 1000.0;
-	distance_laser_needle_z = setting.value("laser_needle_diatance/offset_z").toInt() / 1000.0;
+	distance_laser_needle_x = setting.value("laser_needle_distance/offset_x").toInt() / 1000.0;
+	distance_laser_needle_y = setting.value("laser_needle_distance/offset_y").toInt() / 1000.0;
+	distance_laser_needle_z = setting.value("laser_needle_distance/offset_z").toInt() / 1000.0;
 
 	calib_offset_x = setting.value("calib_needle_optical/calib_offset_x").toInt() / 1000.0;
 	calib_offset_y = setting.value("calib_needle_optical/calib_offset_y").toInt() / 1000.0;

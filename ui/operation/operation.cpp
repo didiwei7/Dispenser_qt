@@ -490,13 +490,7 @@ QChart *Operation::setChart_4()
     return chart_4;
 }
 
-// 获取当前时间
-QString Operation::getCurrentTime()
-{
-	QDateTime currentTime = QDateTime::currentDateTime();
-	QString s_currentTime = currentTime.toString(QStringLiteral("yyyy-MM-dd hh:mm:ss"));
-	return s_currentTime;
-}
+
 
 void Operation::on_timer_dischargeGlue()
 {
@@ -698,4 +692,145 @@ void Operation::on_changedOffsetChart(float x, float y, float A)
 void Operation::on_changedDischargeGlue()
 {
 	on_btn_dischargeGlue();
+}
+
+
+// 获取当前时间
+QString Operation::getCurrentTime()
+{
+	QDateTime currentTime = QDateTime::currentDateTime();
+	QString s_currentTime = currentTime.toString(QStringLiteral("yyyy-MM-dd hh:mm:ss"));
+	return s_currentTime;
+}
+
+// 获取所有点位
+QMap<QString, PointRun> Operation::getAllRunPointInfo()
+{
+	// 【2】 点位配置
+	QSqlTableModel *model_general = new QSqlTableModel();
+	// 使用 submit 时,数据库才会更改,否则做出的更改存储在缓存中
+	model_general->setEditStrategy(QSqlTableModel::OnManualSubmit);
+	model_general->setTable("point_main");
+	// 设置按第0列升序排列
+	model_general->setSort(0, Qt::AscendingOrder);
+	model_general->select();
+
+	QSqlTableModel *model_glue1 = new QSqlTableModel();
+	model_glue1->setEditStrategy(QSqlTableModel::OnManualSubmit);
+	model_glue1->setTable("point_glue1");
+	model_glue1->setSort(0, Qt::AscendingOrder);
+	model_glue1->select();
+
+	QSqlTableModel *model_glue2 = new QSqlTableModel();
+	model_glue2->setEditStrategy(QSqlTableModel::OnManualSubmit);
+	model_glue2->setTable("point_glue2");
+	model_glue2->setSort(0, Qt::AscendingOrder);
+	model_glue2->select();
+
+	QSqlTableModel *model_glue3 = new QSqlTableModel();
+	model_glue3->setEditStrategy(QSqlTableModel::OnManualSubmit);
+	model_glue3->setTable("point_glue3");
+	model_glue3->setSort(0, Qt::AscendingOrder);
+	model_glue3->select();
+
+	QMap<QString, PointRun> _allPoint;
+
+	for (int index = 0; index < model_general->rowCount(); index++)
+	{
+		QString name = model_general->record(index).value("name").toString();
+		QString description = model_general->record(index).value("description").toString();
+		float X = model_general->record(index).value("X").toString().toFloat();
+		float Y = model_general->record(index).value("Y").toString().toFloat();
+		float Z = model_general->record(index).value("Z").toString().toFloat();
+
+		PointRun point;
+		point.name = name;
+		point.description = description;
+		point.X = X;
+		point.Y = Y;
+		point.Z = Z;
+		_allPoint.insert(name, point);
+	}
+
+	for (int index = 0; index < model_glue1->rowCount(); index++)
+	{
+		QString name = model_glue1->record(index).value("name").toString();
+		QString description = model_glue1->record(index).value("description").toString();
+		float X = model_glue1->record(index).value("X").toString().toFloat();
+		float Y = model_glue1->record(index).value("Y").toString().toFloat();
+		float Z = model_glue1->record(index).value("Z").toString().toFloat();
+
+		PointRun point;
+		point.name = name;
+		point.description = description;
+		point.X = X;
+		point.Y = Y;
+		point.Z = Z;
+
+		_allPoint.insert(name, point);
+	}
+
+	for (int index = 0; index < model_glue2->rowCount(); index++)
+	{
+		QString name = model_glue2->record(index).value("name").toString();
+		QString description = model_glue2->record(index).value("description").toString();
+		float X = model_glue2->record(index).value("X").toString().toFloat();
+		float Y = model_glue2->record(index).value("Y").toString().toFloat();
+		float Z = model_glue2->record(index).value("Z").toString().toFloat();
+
+		PointRun point;
+		point.name = name;
+		point.description = description;
+		point.X = X;
+		point.Y = Y;
+		point.Z = Z;
+
+		_allPoint.insert(name, point);
+	}
+
+	for (int index = 0; index < model_glue3->rowCount(); index++)
+	{
+		QString name = model_glue3->record(index).value("name").toString();
+		QString description = model_glue3->record(index).value("description").toString();
+		float X = model_glue3->record(index).value("X").toString().toFloat();
+		float Y = model_glue3->record(index).value("Y").toString().toFloat();
+		float Z = model_glue3->record(index).value("Z").toString().toFloat();
+
+		PointRun point;
+		point.name = name;
+		point.description = description;
+		point.X = X;
+		point.Y = Y;
+		point.Z = Z;
+
+		_allPoint.insert(name, point);
+	}
+
+	return _allPoint;
+}
+
+// 移动到点, 没有速度要求, 暂时先这么写
+bool Operation::move_point_name(QString pointname)
+{
+	QMap<QString, PointRun> allpoint_pointRun = getAllRunPointInfo();
+
+	if (!allpoint_pointRun.contains(pointname))
+	{
+		QMessageBox::warning(NULL, QStringLiteral("警告"), QStringLiteral("找不到点: %1 数据").arg(pointname));
+		return false;
+	}
+	else
+	{
+		PointRun point = allpoint_pointRun[pointname];
+
+		move_axis_abs(AXISNUM::X, point.X);
+		move_axis_abs(AXISNUM::Y, point.Y);
+		move_axis_abs(AXISNUM::Z, point.Z);
+
+		wait_axis_stop(AXISNUM::X);
+		wait_axis_stop(AXISNUM::Y);
+		wait_axis_stop(AXISNUM::Z);
+	}
+
+	return true;
 }

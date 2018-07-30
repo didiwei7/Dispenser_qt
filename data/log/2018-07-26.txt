@@ -1,0 +1,112 @@
+2018-07-26 09:49:49   Thread_watch_dischargeGlue 排胶流程正常结束
+2018-07-26 09:51:12   Thread_watch_reset 复位开始
+2018-07-26 09:51:43   Thread_watch_reset 复位流程正常结束
+2018-07-26 09:51:44   Thread_watch_reset 复位开始
+2018-07-26 09:51:57   Thread_watch_reset 复位流程正常结束
+2018-07-26 09:51:58   Thread_watch_reset 复位开始
+2018-07-26 09:52:12   Thread_watch_reset 复位流程正常结束
+2018-07-26 09:52:12   Thread_watch_reset 复位开始
+2018-07-26 09:52:59   Thread_watch_reset 复位开始
+2018-07-26 09:53:13   Thread_watch_reset 复位流程正常结束
+2018-07-26 09:53:13   Thread_watch_reset 复位开始
+2018-07-26 09:53:27   Thread_watch_reset 复位流程正常结束
+2018-07-26 09:53:27   Thread_watch_reset 复位开始
+2018-07-26 09:53:41   Thread_watch_reset 复位流程正常结束
+2018-07-26 09:53:41   Thread_watch_reset 复位开始
+2018-07-26 09:53:54   Thread_watch_start 点胶流程开始
+2018-07-26 09:53:54   Thread_watch_reset 复位流程正常结束
+2018-07-26 09:53:55   Thread_watch_reset 复位开始
+2018-07-26 09:54:24   Thread_watch_reset 复位开始
+2018-07-26 09:54:41   Thread_watch_estop 急停线程正常结束, 线程将关闭. 请松开急停, 重新启动软件
+2018-07-26 09:54:42   Thread_watch_start 未复位, 无法启动
+2018-07-26 09:55:03   Thread_watch_start 急停被按下, 无法启动
+2018-07-26 10:01:09   Thread_watch_reset 复位开始
+2018-07-26 10:01:19   Thread_watch_estop 急停线程正常结束, 线程将关闭. 请松开急停, 重新启动软件
+2018-07-26 10:16:12   Thread_watch_estop 急停线程正常结束, 线程将关闭. 请松开急停, 重新启动软件
+2018-07-26 10:16:34   Thread_watch_reset 复位开始
+2018-07-26 10:17:00   Thread_watch_reset 复位流程正常结束
+2018-07-26 10:17:08   Thread_watch_clearNeedle 擦胶开始
+2018-07-26 10:17:52   Thread_watch_clearNeedle 清胶流程正常结束
+2018-07-26 10:20:28   Thread_watch_reset 复位开始
+2018-07-26 10:20:59   Thread_watch_reset 复位流程正常结束
+2018-07-26 10:21:18   Thread_watch_clearNeedle 擦胶开始
+2018-07-26 10:22:05   Thread_watch_clearNeedle 清胶流程正常结束
+2018-07-26 10:22:12   Thread_watch_clearNeedle 擦胶开始
+2018-07-26 10:22:28   Thread_watch_clearNeedle 清胶流程正常结束
+2018-07-26 10:27:01   Thread_watch_clearNeedle 擦胶开始
+2018-07-26 10:27:17   Thread_watch_clearNeedle 清胶流程正常结束
+2018-07-26 10:27:22   Thread_watch_clearNeedle 擦胶开始
+2018-07-26 10:27:38   Thread_watch_clearNeedle 清胶流程正常结束
+2018-07-26 10:29:54   Thread_watch_estop 急停线程正常结束, 线程将关闭. 请松开急停, 重新启动软件
+2018-07-26 10:52:36   Thread_watch_reset 复位开始
+2018-07-26 10:53:07   Thread_watch_reset 复位流程正常结束
+2018-07-26 10:53:12   Thread_watch_dischargeGlue 排胶流程启动
+2018-07-26 10:53:12   Thread_watch_dischargeGlue 排胶流程正常结束
+2018-07-26 10:53:56   Thread_watch_dischargeGlue 排胶流程启动
+2018-07-26 10:53:56   Thread_watch_dischargeGlue 排胶流程正常结束
+2018-07-26 10:59:20   Thread_watch_reset 复位开始
+2018-07-26 10:59:58   Thread_watch_reset 复位流程正常结束
+2018-07-26 11:00:01   Thread_watch_glue 点胶开始
+2018-07-26 11:01:07   Thread_glue_teda_test 点胶泰达测试流程正常结束, 等待下次触发流程
+2018-07-26 11:01:07   Thread_watch_glue 监视点胶流程正常结束, 等待下次开始
+2018-07-26 11:03:47   Thread_watch_reset 复位开始
+2018-07-26 11:04:25   Thread_watch_reset 复位流程正常结束
+2018-07-26 11:04:34   Thread_watch_start 点胶流程开始
+2018-07-26 11:05:27   Thread_glue_teda_test 点胶泰达测试流程正常结束, 等待下次触发流程
+2018-07-26 11:05:27   Thread_watch_start 所有流程正常结束
+2018-07-26 11:05:28   Thread_watch_estop 急停线程正常结束, 线程将关闭. 请松开急停, 重新启动软件
+2018-07-26 11:14:10   Thread_watch_estop 急停线程正常结束, 线程将关闭. 请松开急停, 重新启动软件
+2018-07-26 11:15:28   Thread_watch_reset 复位开始
+2018-07-26 11:16:05   Thread_watch_reset 复位流程正常结束
+2018-07-26 11:16:08   Thread_watch_start 点胶流程开始
+2018-07-26 11:17:21   Thread_glue_teda_test 点胶泰达测试流程正常结束, 等待下次触发流程
+2018-07-26 11:17:21   Thread_watch_start 所有流程正常结束
+2018-07-26 11:17:22   Thread_watch_estop 急停线程正常结束, 线程将关闭. 请松开急停, 重新启动软件
+2018-07-26 11:19:38   Thread_watch_reset 复位开始
+2018-07-26 11:20:20   Thread_watch_reset 复位流程正常结束
+2018-07-26 11:20:27   Thread_watch_start 点胶流程开始
+2018-07-26 11:22:57   Thread_glue_teda_test 点胶泰达测试流程正常结束, 等待下次触发流程
+2018-07-26 11:23:10   Thread_watch_start 所有流程正常结束
+2018-07-26 14:27:09   Thread_watch_estop 急停线程正常结束, 线程将关闭. 请松开急停, 重新启动软件
+2018-07-26 14:27:37   Thread_watch_reset 复位开始
+2018-07-26 14:27:50   Thread_watch_reset 复位流程正常结束
+2018-07-26 14:27:55   Thread_watch_start 点胶流程开始
+2018-07-26 14:29:02   Thread_glue_teda_test 点胶泰达测试流程正常结束, 等待下次触发流程
+2018-07-26 14:29:12   Thread_watch_start 所有流程正常结束
+2018-07-26 14:30:32   Thread_watch_start 点胶流程开始
+2018-07-26 14:31:39   Thread_glue_teda_test 点胶泰达测试流程正常结束, 等待下次触发流程
+2018-07-26 14:31:49   Thread_watch_start 所有流程正常结束
+2018-07-26 14:32:51   Thread_watch_start 点胶流程开始
+2018-07-26 14:34:01   Thread_glue_teda_test 点胶泰达测试流程正常结束, 等待下次触发流程
+2018-07-26 14:34:11   Thread_watch_start 所有流程正常结束
+2018-07-26 14:35:45   Thread_watch_start 点胶流程开始
+2018-07-26 14:36:55   Thread_glue_teda_test 点胶泰达测试流程正常结束, 等待下次触发流程
+2018-07-26 14:37:05   Thread_watch_start 所有流程正常结束
+2018-07-26 14:37:47   Thread_watch_start 点胶流程开始
+2018-07-26 14:38:57   Thread_glue_teda_test 点胶泰达测试流程正常结束, 等待下次触发流程
+2018-07-26 14:39:07   Thread_watch_start 所有流程正常结束
+2018-07-26 14:39:53   Thread_watch_start 点胶流程开始
+2018-07-26 14:40:22   Thread_glue_teda_test 点胶泰达测试流程正常结束, 等待下次触发流程
+2018-07-26 14:40:22   Thread_watch_start 所有流程正常结束
+2018-07-26 14:40:23   Thread_watch_estop 急停线程正常结束, 线程将关闭. 请松开急停, 重新启动软件
+2018-07-26 14:41:11   Thread_watch_reset 复位开始
+2018-07-26 14:41:55   Thread_watch_reset 复位流程正常结束
+2018-07-26 14:42:08   Thread_watch_start 点胶流程开始
+2018-07-26 14:43:18   Thread_glue_teda_test 点胶泰达测试流程正常结束, 等待下次触发流程
+2018-07-26 14:43:28   Thread_watch_start 所有流程正常结束
+2018-07-26 14:43:46   Thread_watch_clearNeedle 擦胶开始
+2018-07-26 14:44:23   Thread_watch_clearNeedle 清胶流程正常结束
+2018-07-26 16:06:13   Thread_watch_reset 复位开始
+2018-07-26 16:06:39   Thread_watch_reset 复位流程正常结束
+2018-07-26 16:41:29   Thread_watch_glue 点胶开始
+2018-07-26 16:42:38   Thread_glue_teda_test 点胶泰达测试流程正常结束, 等待下次触发流程
+2018-07-26 16:42:38   Thread_watch_glue 监视点胶流程正常结束, 等待下次开始
+2018-07-26 17:08:21   Thread_watch_reset 复位开始
+2018-07-26 17:09:00   Thread_watch_reset 复位流程正常结束
+2018-07-26 17:09:16   Thread_watch_dischargeGlue 排胶流程启动
+2018-07-26 17:09:16   Thread_watch_dischargeGlue 排胶流程正常结束
+2018-07-26 17:09:18   Thread_watch_dischargeGlue 排胶流程启动
+2018-07-26 17:09:18   Thread_watch_dischargeGlue 排胶流程正常结束
+2018-07-26 17:09:20   Thread_watch_clearNeedle 擦胶开始
+2018-07-26 17:09:53   Thread_watch_estop 急停线程正常结束, 线程将关闭. 请松开急停, 重新启动软件
+2018-07-26 17:09:53   Thread_watch_clearNeedle 清胶流程正常结束
