@@ -5,6 +5,7 @@
 // 基础库
 #include <QtWidgets>
 #include <Windows.h>
+#include <tchar.h>
 #include <QDebug>
 
 // 线程库
@@ -169,6 +170,12 @@ private:	// BTN 针头校准2
 	QFuture<void> future_thread_needleCalib_2;
 	void thread_needleCalib_2();
 
+private:	// BTN 针头校准3
+	bool is_btn_needleCalib3_ing;
+	bool close_thread_btn_needleCalib3;
+	QFuture<void> future_thread_btn_needleCalib_3;
+	void thread_btn_needleCalib_3();
+
 private:	// 通讯
 	QTcpSocket  *socket_ccd;
 	QString receivedMsg_ccd;
@@ -256,10 +263,11 @@ public slots:	// 自定义槽 来自 PointDebug
 signals:		// 自定义信号 连接 Operation
 	void changedRundataLabel(QString str);	
 	void changedRundataText(QString str);	
-	void changedDistanceOffset();
+	void wchangedDistanceOffset();
 	void changedOffsetChart(float x, float y, float A);	
 
 	void changedDischargeGlue();
+	void wchangedSqlModel();
 };
 
 #endif // WORKFLOW_H

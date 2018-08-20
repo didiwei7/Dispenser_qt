@@ -22,8 +22,8 @@ typedef struct _CCDGlue
 	float            Z;                       // Z
 	float            center_X;				  // 圆心X
 	float            center_Y;				  // 圆心Y
+	float            speed;					  // 速度
 	float            extra_offset_z;	      // 额外偏移Z
-	bool			 laser;					  // 是否开启镭射
 	bool             open;					  // 是否开胶
 	int              openAdvance;			  // 提前开胶时间
 	int              openDelay;               // 延迟开胶时间
@@ -41,8 +41,8 @@ typedef struct _CCDGlue
 		Z = 0.000;                    // Z
 		center_X = 0.000;			  // 圆心X
 		center_Y = 0.000;			  // 圆心Y
-		extra_offset_z = 0.000;		  // 额外偏移Z
-		laser = false;				  // 是否开启镭射
+		speed = 0.000;				  // 是否开启镭射
+		extra_offset_z = 0.000;		  // 额外偏移Z		
 		open = false;				  // 是否开胶
 		openAdvance = 0;			  // 提前开胶时间
 		openDelay = 0;                // 延迟开胶时间
@@ -65,8 +65,8 @@ typedef struct _CCDGlue
 		Z = other.Z;
 		center_X = other.center_X;
 		center_Y = other.center_Y;
+		speed = other.speed;
 		extra_offset_z = other.extra_offset_z;
-		laser = other.laser;
 		open = other.open;
 		openAdvance = other.openAdvance;
 		openDelay = other.openDelay;
@@ -246,6 +246,10 @@ void set_stepAxis_speed(float speed);
 
 // 等待步进轴停止
 void wait_stepAxis_stop();
+
+
+void asyncSleep(unsigned int msec);
+
 
 
 #endif // ADTCONTROL_H

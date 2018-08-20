@@ -189,6 +189,8 @@
     <ClCompile Include="qcommunication\qcommunication.cpp" />
     <ClCompile Include="qflowlayout\qflowlayout.cpp" />
     <ClCompile Include="qio\qio.cpp" />
+    <ClCompile Include="qmyedit\qmyedit.cpp" />
+    <ClCompile Include="qmylabel\qmylabel.cpp" />
     <ClCompile Include="qmyslider\qmyslider.cpp" />
     <ClCompile Include="qnavigationbar\qnavigationbar.cpp" />
     <ClCompile Include="qthermometer\qthermometer.cpp" />
@@ -198,6 +200,10 @@
     </QtMoc>
     <ClInclude Include="qflowlayout\qflowlayout.h" />
     <QtMoc Include="qio\qio.h">
+    </QtMoc>
+    <QtMoc Include="qmyedit\qmyedit.h">
+    </QtMoc>
+    <QtMoc Include="qmylabel\qmylabel.h">
     </QtMoc>
     <ClInclude Include="qmyplugin.h" />
     <ClInclude Include="qmyplugin_global.h" />

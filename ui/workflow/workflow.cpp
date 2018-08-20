@@ -1038,15 +1038,8 @@ void Workflow::thread_glue_teda()
 		/********************** 直线插补 **********************/
 		case 200:	// 直线插补
 		{
-			// 判断 "镭射"
-			if (current_cmd.laser)
-			{
-				step_glue_teda = 300;
-			}
-			else
-			{
-				step_glue_teda = 210;
-			}
+			step_glue_teda = 210;
+
 		}
 		break;
 
@@ -1532,17 +1525,17 @@ void Workflow::thread_glue_teda_test()
 		case 20:	// 设置速度, 模式, 开启速度前瞻
 		{
 			// 设置运动速度
-			set_speed_mode(float(0.1), 20, 20, ADMODE::T);
+			set_speed_mode(float(0.1), 40, 40, ADMODE::T);
 
 			// 设置插补速度
-			set_inp_speed_mode(float(0.1), 20, 20, ADMODE::T);
+			set_inp_speed_mode(float(0.1), 40, 40, ADMODE::T);
 
 			// 开启速度前瞻
 			adt8949_set_speed_pretreat_mode(0, 1);
 
 			// 设置插补过程中线段角点最大速度
-			adt8949_set_speed_constraint(0, 1, 20);	// 此速度可以比插补速度稍大
-			adt8949_set_speed_constraint(0, 2, 20);
+			adt8949_set_speed_constraint(0, 1, 40);	// 此速度可以比插补速度稍大
+			adt8949_set_speed_constraint(0, 2, 40);
 
 			// 设置插补过程中线段角点加加速度
 			adt8949_set_acc_constraint(0, 1, 80000);
@@ -1675,9 +1668,13 @@ void Workflow::thread_glue_teda_test()
 			float move_pos[3];
 			move_pos[0] = work_matrix(index_current_cmd, 0) + distance_ccd_needle_x + calib_offset_x;
 			move_pos[1] = work_matrix(index_current_cmd, 1) + distance_ccd_neddle_y + calib_offset_y;
+			move_pos[2] = work_matrix(index_current_cmd, 2) + distance_needle_z + calib_offset_z;
 
 			float center_pos[2];
-			CalCCDGlueCenterPoint(center_pos, current_cmd.center_X, current_cmd.center_Y, 0, 0, 0, 0, 0);
+			// CalCCDGlueCenterPoint(center_pos, current_cmd.center_X, current_cmd.center_Y, 0, 0, 0, 0, 0);
+			
+			center_pos[0] = current_cmd.center_X + distance_ccd_needle_x + calib_offset_x;
+			center_pos[1] = current_cmd.center_Y + distance_ccd_neddle_y + calib_offset_y;
 
 			move_inp_abs_arc2(move_pos[0], move_pos[1], center_pos[0], center_pos[1]);
 
@@ -4034,6 +4031,7 @@ void Workflow::thread_needleCalib_1()
 
 	float x_start_pos, x_end_pos, x_mid_pos;
 	float y_start_pos, y_end_pos, y_mid_pos;
+	float z_stop_pos;
 
 	while (close_thread_needleCalib1 == false)
 	{
@@ -4044,12 +4042,12 @@ void Workflow::thread_needleCalib_1()
 			emit changedRundataText(QStringLiteral("Thread_needleCalib_1 校针1开始"));
 			writRunningLog(QStringLiteral("Thread_needleCalib_1 校针1开始"));
 
-			is_btn_needleCalib2_ing = true;
+			is_btn_needleCalib1_ing = true;
 			step_needleCalib = 10;
 		}
 		break;
 
-		case 10:		// 设置运动速度, 模式
+		case 10:	// 设置运动速度, 模式
 		{
 			set_speed_mode(float(0.1), 10, 10, ADMODE::T);
 			step_needleCalib = 20;
@@ -4063,19 +4061,19 @@ void Workflow::thread_needleCalib_1()
 			wait_axis_stop(AXISNUM::Z);
 
 			// 到 校针安全点
-			move_point_name("calib_needle_safe");
+			move_point_name("calib_needle_optical_safe");
 			wait_axis_stop(AXISNUM::X);
 			wait_axis_stop(AXISNUM::Y);
 			wait_axis_stop(AXISNUM::Z);
 
-			step_needleCalib = 20;
+			step_needleCalib = 30;
 		}
 		break;
 
 		case 30:	// 到校针点, X-3, Y-3
 		{
 			// 到 校针点
-			move_point_name("calib_needle");
+			move_point_name("calib_needle_optical");
 			wait_axis_stop(AXISNUM::X);
 			wait_axis_stop(AXISNUM::Y);
 			wait_axis_stop(AXISNUM::Z);
@@ -4091,6 +4089,8 @@ void Workflow::thread_needleCalib_1()
 
 		case 100:    // 向 X+ 走6mm 
 		{
+			set_speed_mode(float(0.1), 1, 1, ADMODE::T);
+
 			move_axis_offset(AXISNUM::X, 6);
 			step_needleCalib = 110;
 		}
@@ -4098,7 +4098,7 @@ void Workflow::thread_needleCalib_1()
 
 		case 110:	// 等待触发 "对射X" == 0
 		{
-			if (0 == read_in_bit(35))
+			if (0 == read_in_bit(29))
 			{
 				stop_axis(AXISNUM::X);
 				Sleep(1000);
@@ -4114,16 +4114,16 @@ void Workflow::thread_needleCalib_1()
 		}
 		break;
 
-		case 120:	// 继续向 X+ 走6mm
+		case 120:	// 继续向 X+ 走3mm
 		{
-			move_axis_offset(AXISNUM::X, 6);
+			move_axis_offset(AXISNUM::X, 3);
 			step_needleCalib = 130;
 		}
 		break;
 
 		case 130:	// 等待触发 "对射X" == 1
 		{
-			if (1 == read_in_bit(35))
+			if (1 == read_in_bit(29))
 			{
 				stop_axis(AXISNUM::X);
 				Sleep(1000);
@@ -4153,13 +4153,13 @@ void Workflow::thread_needleCalib_1()
 		case 200:	// 向 Y+ 走6mm 
 		{
 			move_axis_offset(AXISNUM::Y, 6);
-			step_needleCalib = 110;
+			step_needleCalib = 210;
 		}
 		break;
 
 		case 210:	// 等待触发 "对射Y" == 0
 		{
-			if (0 == read_in_bit(35))	// 此处写 "对射Y"
+			if (0 == read_in_bit(28))	// 此处写 "对射Y"
 			{
 				stop_axis(AXISNUM::Y);
 				Sleep(100);
@@ -4175,220 +4175,19 @@ void Workflow::thread_needleCalib_1()
 		}
 		break;
 
-		case 220:   // 继续向 Y+ 走6mm
+		case 220:   // 继续向 Y+ 走3mm
 		{
-			move_axis_offset(AXISNUM::Y, 6);
+			move_axis_offset(AXISNUM::Y, 3);
 			step_needleCalib = 230;
 		}
 		break;
 
 		case 230:	// 等待触发 "对射Y" == 1
 		{
-			if (1 == read_in_bit(35))	// 此处写 对射Y
+			if (1 == read_in_bit(28))	// 此处写 对射Y
 			{
 				stop_axis(AXISNUM::Y);
 				Sleep(100);
-
-				y_end_pos = get_current_pos_axis(AXISNUM::Y);
-
-				step_needleCalib = 240;
-			}
-			else
-			{
-				step_needleCalib = 230;
-			}
-		}
-		break;
-
-		case 240:	// 到 "对射Y" 中间
-		{
-			y_mid_pos = (y_end_pos + y_start_pos) / 2;
-
-			move_axis_abs(AXISNUM::X, y_mid_pos);
-			wait_axis_stop(AXISNUM::Y);
-
-			step_needleCalib = 8888;
-		}
-		break;
-
-		case 8888:	// 线程正常结束, 关闭线程
-		{
-			emit changedRundataText(QStringLiteral("Thread_needleCalib_1 校针1线程正常结束, 可示教该点位, 清空偏移量"));
-			writRunningLog(QStringLiteral("Thread_needleCalib_1 校针1线程正常结束"));
-
-			is_btn_needleCalib1_ing = false;
-			close_thread_needleCalib1 = true;
-			step_needleCalib = 0;
-		}
-		break;
-
-		default:
-			break;
-		}
-	}
-}
-
-// Thread BTN 针头校准2
-void Workflow::thread_needleCalib_2()
-{
-	int step_needleCalib = 0;
-
-	float x_start_pos, x_end_pos, x_mid_pos;
-	float y_start_pos, y_end_pos, y_mid_pos;
-
-	while (close_thread_needleCalib2 == false)
-	{
-		switch (step_needleCalib)
-		{
-		case 0:		// 消息更新
-		{
-			emit changedRundataText(QStringLiteral("Thread_needleCalib_2 校针2开始"));
-			writRunningLog(QStringLiteral("Thread_needleCalib_2 校针2开始"));
-
-			is_btn_needleCalib2_ing = true;
-			step_needleCalib = 10;
-		}
-		break;
-
-		case 10:		// 设置运动速度, 模式
-		{
-			set_speed_mode(float(0.1), 10, 10, ADMODE::T);
-			step_needleCalib = 20;
-		}
-		break;
-
-		case 20:	// 到校针安全点
-		{
-			// Z轴到 安全高度
-			move_axis_abs(AXISNUM::Z, 0);
-			wait_axis_stop(AXISNUM::Z);
-
-			// 到 校针安全点
-			move_point_name("calib_needle_safe");
-			wait_axis_stop(AXISNUM::X);
-			wait_axis_stop(AXISNUM::Y);
-			wait_axis_stop(AXISNUM::Z);
-
-			step_needleCalib = 20;
-		}
-		break;
-
-		case 30:	// 到校针点, X-3, Y-3
-		{
-			// 到 校针点
-			move_point_name("calib_needle");
-			wait_axis_stop(AXISNUM::X);
-			wait_axis_stop(AXISNUM::Y);
-			wait_axis_stop(AXISNUM::Z);
-
-			move_axis_offset(AXISNUM::X, -3);
-			move_axis_offset(AXISNUM::Y, -3);
-			wait_axis_stop(AXISNUM::X);
-			wait_axis_stop(AXISNUM::Y);
-
-			step_needleCalib = 100;
-		}
-		break;
-
-		case 100:    // 向 X+ 走6mm 
-		{
-			move_axis_offset(AXISNUM::X, 6);
-			step_needleCalib = 110;
-		}
-		break;
-
-		case 110:	// 等待触发 "对射X" == 0
-		{
-			if (0 == read_in_bit(35))
-			{
-				stop_axis(AXISNUM::X);
-				Sleep(1000);
-
-				x_start_pos = get_current_pos_axis(AXISNUM::X);
-
-				step_needleCalib = 120;
-			}
-			else
-			{
-				step_needleCalib = 110;
-			}
-		}
-		break;
-
-		case 120:	// 继续向 X+ 走6mm
-		{
-			move_axis_offset(AXISNUM::X, 6);
-			step_needleCalib = 130;
-		}
-		break;
-
-		case 130:	// 等待触发 "对射X" == 1
-		{
-			if (1 == read_in_bit(35))
-			{
-				stop_axis(AXISNUM::X);
-				Sleep(1000);
-
-				x_end_pos = get_current_pos_axis(AXISNUM::X);
-
-				step_needleCalib = 140;
-			}
-			else
-			{
-				step_needleCalib = 130;
-			}
-		}
-		break;
-
-		case 140:	// 到对射X中间
-		{
-			x_mid_pos = (x_end_pos + x_start_pos) / 2;
-
-			move_axis_abs(AXISNUM::X, x_mid_pos);
-			wait_axis_stop(AXISNUM::X);
-
-			step_needleCalib = 200;
-		}
-		break;
-
-		case 200:	// 向 Y+ 走6mm 
-		{
-			move_axis_offset(AXISNUM::Y, 6);
-			step_needleCalib = 110;
-		}
-		break;
-
-		case 210:	// 等待触发 "对射Y" == 0
-		{
-			if (0 == read_in_bit(35))	// 此处写 "对射Y"
-			{
-				stop_axis(AXISNUM::Y);
-				Sleep(100);
-
-				y_start_pos = get_current_pos_axis(AXISNUM::Y);
-
-				step_needleCalib = 220;
-			}
-			else
-			{
-				step_needleCalib = 210;
-			}
-		}
-		break;
-
-		case 220:   // 继续向 Y+ 走6mm
-		{
-			move_axis_offset(AXISNUM::Y, 6);
-			step_needleCalib = 230;
-		}
-		break;
-
-		case 230:	// 等待触发 "对射Y" == 1
-		{
-			if (1 == read_in_bit(35))	// 此处写 对射Y
-			{
-				stop_axis(AXISNUM::Y);
-				Sleep(1000);
 
 				y_end_pos = get_current_pos_axis(AXISNUM::Y);
 
@@ -4412,10 +4211,355 @@ void Workflow::thread_needleCalib_2()
 		}
 		break;
 
-		case 300:	// 计算偏移, 写入配置文件, 发射信号
+		case 300:	// 到安全高度, 弹框显示数据
 		{
-			calib_offset_x = x_mid_pos - allpoint_pointRun["calib_needle"].X;
-			calib_offset_y = y_mid_pos - allpoint_pointRun["calib_needle"].Y;
+			// 【1】 修改速度
+			set_speed_mode(float(0.1), 20, 20, ADMODE::T);
+
+			// 【2】 到安全高度
+			move_axis_abs(AXISNUM::Z, 0);
+			wait_axis_stop(AXISNUM::Z);
+
+			// 【3】 MessageBox阻塞线程
+			float x_src_pos = allpoint_pointRun["calib_needle_optical"].X;
+			float y_src_pos = allpoint_pointRun["calib_needle_optical"].Y;
+
+			float offset_x = x_mid_pos - x_src_pos;
+			float offset_y = y_mid_pos - y_src_pos;
+
+			TCHAR tcMsg[1024] = L"";
+			_stprintf(tcMsg, L"校准前的XY:\n"
+				"x_src_pos:  %.3f  y_src_pos:  %.3f\n"
+				"校准后的XY:\n"
+				"x_mid_pos:  %.3f  y_mid_pos:  %.3f\n"
+				"两次校准偏移:\n"
+				"offset_x:  %.3f  offset_y:  %.3f",
+				x_src_pos, y_src_pos, x_mid_pos, y_mid_pos, offset_x, offset_y);
+			LPCWSTR lpwMsg = tcMsg;
+
+			MessageBox(NULL, L"提示", lpwMsg, MB_OK);
+
+			// 【4】 消息显示
+			QString sx_mid_pos = QString::number(x_mid_pos, 'f', 3);
+			QString sy_mid_pos = QString::number(y_mid_pos, 'f', 3);
+			QString soffset_x = QString::number(offset_x, 'f', 3);
+			QString soffset_y = QString::number(offset_y, 'f', 3);
+
+			QString srcMsg = QStringLiteral("Thread_btn_needleCalib_3 原来的XY:  x_src_pos: %1  y_src_pos%2").arg(x_src_pos).arg(y_src_pos);
+			QString nowMsg = QStringLiteral("Thread_btn_needleCalib_3 校准的XY:  x_mid_pos: %1  y_mid_pos%2").arg(sx_mid_pos).arg(sy_mid_pos);
+			QString ostMsg = QStringLiteral("Thread_btn_needleCalib_3 校准的XY:  offset_x: %1  offset_y%2").arg(soffset_x).arg(soffset_y);
+
+			emit changedRundataText(srcMsg);
+			Sleep(10);
+			emit changedRundataText(nowMsg);
+			writRunningLog(nowMsg);
+			Sleep(50);
+			emit changedRundataText(ostMsg);
+			writRunningLog(ostMsg);
+			
+			step_needleCalib = 400;
+		}
+		break;
+
+		case 400:	// 到接触校针安全点
+		{
+			move_point_name("calib_needle_attach_safe");
+			wait_axis_stop(AXISNUM::X);
+			wait_axis_stop(AXISNUM::Y);
+			wait_axis_stop(AXISNUM::Z);
+
+			step_needleCalib = 410;
+		}
+		break;
+
+		case 410:	// 到接触校针点上方5mm
+		{
+			float pos_z = allpoint_pointRun["calib_needle_attach"].Z + float(5.000);
+
+			move_axis_abs(AXISNUM::Z, pos_z);
+			wait_axis_stop(AXISNUM::Z);
+
+			step_needleCalib = 420;
+		}
+		break;
+
+		case 420:	// 减速向下运动7mm
+		{
+			set_speed_mode(float(0.1), 1, 1, ADMODE::T);
+
+			move_axis_offset(AXISNUM::Z, float(-7.000));
+
+			step_needleCalib = 430;
+		}
+		break;
+
+		case 430:	// 等待接触式位移传感器触发
+		{
+			if (0 == read_in_bit(27))
+			{
+				stop_axis(AXISNUM::Z);
+				Sleep(1000);
+				z_stop_pos = get_current_pos_axis(AXISNUM::Z);
+				step_needleCalib = 8888;
+			}
+			else
+			{
+				step_needleCalib = 430;
+			}
+		}
+		break;
+
+		case 500:	// 到安全高度, 弹框显示数据
+		{
+			// 【1】 修改速度
+			set_speed_mode(float(0.1), 20, 20, ADMODE::T);
+
+			// 【2】 到安全高度
+			move_axis_abs(AXISNUM::Z, 0);
+			wait_axis_stop(AXISNUM::Z);
+
+			// 【3】 MessageBox阻塞线程
+			float z_src_pos = allpoint_pointRun["calib_needle_attach"].Z;
+			float offset_z = z_stop_pos - z_src_pos;
+
+			TCHAR tcMsg[1024] = L"";
+			_stprintf(tcMsg, L"校准前的Z: z_src_pos:  %.3f\n"
+							  "校准后的Z: z_stop_pos:  %.3f\n"
+							  "两次校准偏移: offset_z:  %.3f",
+						      z_src_pos, z_stop_pos, offset_z);
+			LPCWSTR lpwMsg = tcMsg;
+
+			MessageBox(NULL, NULL, lpwMsg, MB_OK);
+
+			step_needleCalib = 8888;
+		}
+		break;
+
+
+
+		case 8888:	// 线程正常结束, 关闭线程
+		{
+			// 【1】 修改数据库
+			QString str_x = QString::number(x_mid_pos, 'f', 3);
+			QString str_y = QString::number(y_mid_pos, 'f', 3);
+			QString str_z = QString::number(z_stop_pos, 'f', 3);
+
+			model_general->setData(model_general->index(3, 3), str_x);
+			model_general->setData(model_general->index(3, 4), str_y);
+			model_general->setData(model_general->index(4, 3), str_x);
+			model_general->setData(model_general->index(4, 3), str_y);
+			model_general->setData(model_general->index(6, 5), str_z);
+			model_general->submitAll();
+			emit wchangedSqlModel();
+
+			// 【2】 发送消息
+			emit changedRundataText(QStringLiteral("Thread_needleCalib_1 校针1线程正常结束, 可示教该点位, 清空偏移量"));
+			writRunningLog(QStringLiteral("Thread_needleCalib_1 校针1线程正常结束"));
+
+			is_btn_needleCalib1_ing = false;
+			close_thread_needleCalib1 = true;
+			step_needleCalib = 0;
+		}
+		break;
+
+		default:
+			break;
+		}
+	}
+}
+
+// Thread BTN 针头校准2
+void Workflow::thread_needleCalib_2()
+{
+	int step_needleCalib = 0;
+
+	float x_start_pos, x_end_pos, x_mid_pos;
+	float y_start_pos, y_end_pos, y_mid_pos;
+	float z_stop_pos;
+
+
+	while (close_thread_needleCalib2 == false)
+	{
+		switch (step_needleCalib)
+		{
+		case 0:		// 消息更新
+		{
+			emit changedRundataText(QStringLiteral("Thread_needleCalib_1 校针1开始"));
+			writRunningLog(QStringLiteral("Thread_needleCalib_1 校针1开始"));
+
+			is_btn_needleCalib2_ing = true;
+			step_needleCalib = 10;
+		}
+		break;
+
+		case 10:	// 设置运动速度, 模式
+		{
+			set_speed_mode(float(0.1), 10, 10, ADMODE::T);
+			step_needleCalib = 20;
+		}
+		break;
+
+		case 20:	// 到校针安全点
+		{
+			// Z轴到 安全高度
+			move_axis_abs(AXISNUM::Z, 0);
+			wait_axis_stop(AXISNUM::Z);
+
+			// 到 校针安全点
+			move_point_name("calib_needle_optical_safe");
+			wait_axis_stop(AXISNUM::X);
+			wait_axis_stop(AXISNUM::Y);
+			wait_axis_stop(AXISNUM::Z);
+
+			step_needleCalib = 30;
+		}
+		break;
+
+		case 30:	// 到校针点, X-3, Y-3
+		{
+			// 到 校针点
+			move_point_name("calib_needle_optical");
+			wait_axis_stop(AXISNUM::X);
+			wait_axis_stop(AXISNUM::Y);
+			wait_axis_stop(AXISNUM::Z);
+
+			move_axis_offset(AXISNUM::X, -3);
+			move_axis_offset(AXISNUM::Y, -3);
+			wait_axis_stop(AXISNUM::X);
+			wait_axis_stop(AXISNUM::Y);
+
+			step_needleCalib = 100;
+		}
+		break;
+
+		case 100:    // 向 X+ 走6mm 
+		{
+			set_speed_mode(float(0.1), 1, 1, ADMODE::T);
+
+			move_axis_offset(AXISNUM::X, 6);
+			step_needleCalib = 110;
+		}
+		break;
+
+		case 110:	// 等待触发 "对射X" == 0
+		{
+			if (0 == read_in_bit(29))
+			{
+				stop_axis(AXISNUM::X);
+				Sleep(1000);
+
+				x_start_pos = get_current_pos_axis(AXISNUM::X);
+
+				step_needleCalib = 120;
+			}
+			else
+			{
+				step_needleCalib = 110;
+			}
+		}
+		break;
+
+		case 120:	// 继续向 X+ 走3mm
+		{
+			move_axis_offset(AXISNUM::X, 3);
+			step_needleCalib = 130;
+		}
+		break;
+
+		case 130:	// 等待触发 "对射X" == 1
+		{
+			if (1 == read_in_bit(29))
+			{
+				stop_axis(AXISNUM::X);
+				Sleep(1000);
+
+				x_end_pos = get_current_pos_axis(AXISNUM::X);
+
+				step_needleCalib = 140;
+			}
+			else
+			{
+				step_needleCalib = 130;
+			}
+		}
+		break;
+
+		case 140:	// 到对射X中间
+		{
+			x_mid_pos = (x_end_pos + x_start_pos) / 2;
+
+			move_axis_abs(AXISNUM::X, x_mid_pos);
+			wait_axis_stop(AXISNUM::X);
+
+			step_needleCalib = 200;
+		}
+		break;
+
+		case 200:	// 向 Y+ 走6mm 
+		{
+			move_axis_offset(AXISNUM::Y, 6);
+			step_needleCalib = 210;
+		}
+		break;
+
+		case 210:	// 等待触发 "对射Y" == 0
+		{
+			if (0 == read_in_bit(28))	// 此处写 "对射Y"
+			{
+				stop_axis(AXISNUM::Y);
+				Sleep(100);
+
+				y_start_pos = get_current_pos_axis(AXISNUM::Y);
+
+				step_needleCalib = 220;
+			}
+			else
+			{
+				step_needleCalib = 210;
+			}
+		}
+		break;
+
+		case 220:   // 继续向 Y+ 走3mm
+		{
+			move_axis_offset(AXISNUM::Y, 3);
+			step_needleCalib = 230;
+		}
+		break;
+
+		case 230:	// 等待触发 "对射Y" == 1
+		{
+			if (1 == read_in_bit(28))	// 此处写 对射Y
+			{
+				stop_axis(AXISNUM::Y);
+				Sleep(100);
+
+				y_end_pos = get_current_pos_axis(AXISNUM::Y);
+
+				step_needleCalib = 240;
+			}
+			else
+			{
+				step_needleCalib = 230;
+			}
+		}
+		break;
+
+		case 240:	// 到 "对射Y" 中间
+		{
+			y_mid_pos = (y_end_pos + y_start_pos) / 2;
+
+			move_axis_abs(AXISNUM::Y, y_mid_pos);
+			wait_axis_stop(AXISNUM::Y);
+
+			step_needleCalib = 250;
+		}
+		break;
+
+		case 250:	// 计算偏移, 写入配置文件
+		{
+			calib_offset_x = x_mid_pos - allpoint_pointRun["calib_needle_optical"].X;
+			calib_offset_y = y_mid_pos - allpoint_pointRun["calib_needle_optical"].Y;
 
 			QSettings setting("../config/workflow_glue.ini", QSettings::IniFormat);
 			setting.beginGroup("calib_needle_optical");
@@ -4423,25 +4567,367 @@ void Workflow::thread_needleCalib_2()
 			setting.setValue("calib_offset_y", int(calib_offset_y * 1000));
 			setting.endGroup();
 
-			emit changedDistanceOffset();
-
 			step_needleCalib = 400;
 		}
 		break;
 
-		case 400:
+		case 400:	// 到接触校针安全点
 		{
+			set_speed_mode(float(0.1), 10, 10, ADMODE::T);
+
+			move_axis_abs(AXISNUM::Z, 0);
+			wait_axis_stop(AXISNUM::Z);
+
+			move_point_name("calib_needle_attach_safe");
+			wait_axis_stop(AXISNUM::X);
+			wait_axis_stop(AXISNUM::Y);
+			wait_axis_stop(AXISNUM::Z);
+
+			step_needleCalib = 410;
+		}
+		break;
+
+		case 410:	// 到接触校针点上方5mm
+		{
+			float pos_z = allpoint_pointRun["calib_needle_attach"].Z + float(5.000);
+
+			move_axis_abs(AXISNUM::Z, pos_z);
+			wait_axis_stop(AXISNUM::Z);
+			
+			step_needleCalib = 420;
+		}
+		break;
+
+		case 420:	// 减速向下运动10mm
+		{
+			set_speed_mode(float(0.1), 1, 1, ADMODE::T);
+			move_axis_offset(AXISNUM::Z, float(-7.000));
+
+			step_needleCalib = 430;
+		}
+		break;
+
+		case 430:	// 等待接触式位移传感器触发
+		{
+			if (0 == read_in_bit(27))	
+			{
+				stop_axis(AXISNUM::Z);
+				Sleep(1000);
+				z_stop_pos = get_current_pos_axis(AXISNUM::Z);
+				step_needleCalib = 440;
+			}
+			else
+			{
+				step_needleCalib = 430;
+			}
+		}
+		break;
+
+		case 440:	// 计算偏移
+		{
+			calib_offset_z = z_stop_pos - allpoint_pointRun["calib_needle_attach"].Z;
+			
+			QSettings setting("../config/workflow_glue.ini", QSettings::IniFormat);
+			setting.beginGroup("calib_needle_attach");
+			setting.setValue("calib_offset_z", int(calib_offset_z * 1000));
+			setting.endGroup();
+	
 			step_needleCalib = 8888;
+			break;
 		}
 		break;
 
 		case 8888:	// 线程正常结束, 关闭线程
 		{
-			emit changedRundataText(QStringLiteral("Thread_needleCalib_2 校针2线程正常结束"));
-			writRunningLog(QStringLiteral("Thread_needleCalib_2 校针2线程正常结束"));
+			// 【1】 发射信号
+			emit wchangedDistanceOffset();
+
+			// 【2】 速度设置
+			set_speed_mode(float(0.1), 10, 10, ADMODE::T);
+
+			// 【3】 Z轴到安全点
+			move_axis_abs(AXISNUM::Z, 0);
+			wait_axis_stop(AXISNUM::Z);
+
+			// 【4】 消息更新
+			emit changedRundataText(QStringLiteral("Thread_needleCalib_1 校针1线程正常结束, 可示教该点位, 清空偏移量"));
+			writRunningLog(QStringLiteral("Thread_needleCalib_1 校针1线程正常结束"));
 
 			is_btn_needleCalib2_ing = false;
 			close_thread_needleCalib2 = true;
+			step_needleCalib = 0;
+		}
+		break;
+
+		default:
+			break;
+		}
+	}
+}
+
+// Thread BTN 针头校准3
+void Workflow::thread_btn_needleCalib_3()
+{
+	int step_needleCalib = 0;
+	float x_stop_pos, y_stop_pos, z_stop_pos;
+
+	while (close_thread_btn_needleCalib3 == false)
+	{
+		switch (step_needleCalib)
+		{
+		case 0:		// 消息更新
+		{
+			emit changedRundataText(QStringLiteral("Thread_needleCalib_1 校针1开始"));
+			writRunningLog(QStringLiteral("Thread_needleCalib_1 校针1开始"));
+
+			is_btn_needleCalib3_ing = true;
+			step_needleCalib = 10;
+		}
+		break;
+
+		case 10:	// 设置运动速度, 模式
+		{
+			set_speed_mode(float(0.1), 20, 20, ADMODE::T);
+			step_needleCalib = 20;
+		}
+		break;
+
+		case 20:	// 到校针安全点
+		{
+			// Z轴到 安全高度
+			move_axis_abs(AXISNUM::Z, 0);
+			wait_axis_stop(AXISNUM::Z);
+
+			// 到 校针安全点
+			move_point_name("calib_needle_optical_safe");
+			wait_axis_stop(AXISNUM::X);
+			wait_axis_stop(AXISNUM::Y);
+			wait_axis_stop(AXISNUM::Z);
+
+			step_needleCalib = 30;
+		}
+		break;
+
+		case 30:	// 到校针点, X-3, Y-3
+		{
+			// 到 校针点
+			move_point_name("calib_needle_optical");
+			wait_axis_stop(AXISNUM::X);
+			wait_axis_stop(AXISNUM::Y);
+			wait_axis_stop(AXISNUM::Z);
+
+			move_axis_offset(AXISNUM::X, -3);
+			move_axis_offset(AXISNUM::Y, -3);
+			wait_axis_stop(AXISNUM::X);
+			wait_axis_stop(AXISNUM::Y);
+
+			step_needleCalib = 100;
+		}
+		break;
+
+		case 100:    // 向 X+ 走6mm 
+		{
+			set_speed_mode(float(0.1), 1, 1, ADMODE::T);
+
+			move_axis_offset(AXISNUM::X, 6);
+			step_needleCalib = 110;
+		}
+		break;
+
+		case 110:	// 等待触发 "对射X" == 0
+		{
+			if (0 == read_in_bit(29))
+			{
+				stop_axis(AXISNUM::X);
+				Sleep(1000);
+
+				x_stop_pos = get_current_pos_axis(AXISNUM::X);
+
+				step_needleCalib = 120;
+			}
+			else
+			{
+				step_needleCalib = 110;
+			}
+		}
+		break;
+
+		case 120:	// 刷新消息
+		{
+			QString sx = QString::number(x_stop_pos, 'f', 3);
+			QString sshow = QStringLiteral("Thread_btn_needleCalib_3 当前校准获取X值为: ") + sx;
+
+			emit changedRundataText(sshow);
+			writRunningLog(sshow);
+
+			step_needleCalib = 200;
+		}
+		break;
+
+
+		case 200:	// 向 Y+ 走6mm 
+		{
+			move_axis_offset(AXISNUM::Y, 6);
+			step_needleCalib = 210;
+		}
+		break;
+
+		case 210:	// 等待触发 "对射Y" == 0
+		{
+			if (0 == read_in_bit(28))	// 此处写 "对射Y"
+			{
+				stop_axis(AXISNUM::Y);
+				Sleep(100);
+
+				y_stop_pos = get_current_pos_axis(AXISNUM::Y);
+
+				step_needleCalib = 220;
+			}
+			else
+			{
+				step_needleCalib = 210;
+			}
+		}
+		break;
+
+		case 220:   // 刷新消息
+		{
+			QString sy = QString::number(y_stop_pos, 'f', 3);
+			QString sshow = QStringLiteral("Thread_btn_needleCalib_3 当前校准获取Y值为: ") + sy;
+
+			emit changedRundataText(sshow);
+			writRunningLog(sshow);
+
+			step_needleCalib = 300;
+		}
+		break;
+
+		case 300:
+		{
+			// 【1】 修改速度
+			set_speed_mode(float(0.1), 20, 20, ADMODE::T);
+
+			// 【2】 到安全高度
+			move_axis_abs(AXISNUM::Z, 0);
+			wait_axis_stop(AXISNUM::Z);
+
+			// 【3】 MessageBox阻塞线程
+			float x_src_pos = allpoint_pointRun["calib_needle_optical"].X;
+			float y_src_pos = allpoint_pointRun["calib_needle_optical"].Y;
+
+			float offset_x = x_stop_pos - x_src_pos;
+			float offset_y = y_stop_pos - y_src_pos;
+
+			/*QString show =  QStringLiteral("校准前的XY:\n") +
+							QString::number(x_src_pos, 'f', 3) + " , " + QString::number(y_src_pos, 'f', 3) + "\n" +
+							QStringLiteral("校准后的XY:\n") +
+							QString::number(x_stop_pos, 'f', 3) + " , " + QString::number(y_stop_pos, 'f', 3) + "\n" +
+							QStringLiteral("两次校准的偏移XY:\n") +
+							QString::number(offset_x, 'f', 3) + " , " + QString::number(offset_y, 'f', 3);*/
+
+			TCHAR tcMsg[1024] = L"";
+			_stprintf(tcMsg, L"校准前的XY:\n"
+							  "x_src_pos:  %.3f  y_src_pos:  %.3f\n"
+							  "校准后的XY:\n"
+						      "x_stop_pos:  %.3f  y_stop_pos:  %.3f\n"
+							  "两次校准偏移:\n"
+						      "offset_x:  %.3f  offset_y:  %.3f", 
+							  x_src_pos, y_src_pos, x_stop_pos, y_stop_pos, offset_x, offset_y);
+			LPCWSTR lpwMsg = tcMsg;
+
+			MessageBox(NULL, L"提示", lpwMsg, MB_OK);
+
+			// 【4】 消息显示
+			QString sx_stop_pos = QString::number(x_stop_pos, 'f', 3);
+			QString sy_stop_pos = QString::number(y_stop_pos, 'f', 3);
+			QString soffset_x = QString::number(offset_x, 'f', 3);
+			QString soffset_y = QString::number(offset_y, 'f', 3);
+
+			QString srcMsg = QStringLiteral("Thread_btn_needleCalib_3 原来的XY:  x_src_pos: %1  y_src_pos: %2").arg(x_src_pos).arg(y_src_pos);
+			QString nowMsg = QStringLiteral("Thread_btn_needleCalib_3 校准的XY:  x_mid_pos: %1  y_mid_pos: %2").arg(sx_stop_pos).arg(sy_stop_pos);
+			QString ostMsg = QStringLiteral("Thread_btn_needleCalib_3 校准的XY:  offset_x: %1  offset_y: %2").arg(soffset_x).arg(soffset_y);
+
+			emit changedRundataText(srcMsg);
+			Sleep(50);
+			emit changedRundataText(nowMsg);
+			writRunningLog(nowMsg);
+			Sleep(50);
+			emit changedRundataText(ostMsg);
+			writRunningLog(ostMsg);
+
+			step_needleCalib = 8888;
+		}
+		break;
+
+		case 400:	// 到接触校针安全点
+		{
+			move_point_name("calib_needle_attach_safe");
+			wait_axis_stop(AXISNUM::X);
+			wait_axis_stop(AXISNUM::Y);
+			wait_axis_stop(AXISNUM::Z);
+
+			step_needleCalib = 410;
+		}
+		break;
+
+		case 410:	// 到接触校针点上方5mm
+		{
+			float pos_z = allpoint_pointRun["calib_needle_attach"].Z + float(5.000);
+
+			move_axis_abs(AXISNUM::Z, pos_z);
+			wait_axis_stop(AXISNUM::Z);
+
+			step_needleCalib = 420;
+		}
+		break;
+
+		case 420:	// 减速向下运动7mm
+		{
+			set_speed_mode(float(0.1), 1, 1, ADMODE::T);
+
+			move_axis_offset(AXISNUM::Z, float(-7.000));
+
+			step_needleCalib = 430;
+		}
+		break;
+
+		case 430:	// 等待接触式位移传感器触发
+		{
+			if (0 == read_in_bit(27))
+			{
+				stop_axis(AXISNUM::Z);
+				Sleep(1000);
+				z_stop_pos = get_current_pos_axis(AXISNUM::Z);
+				step_needleCalib = 8888;
+			}
+			else
+			{
+				step_needleCalib = 430;
+			}
+		}
+		break;
+
+		case 8888:	// 线程正常结束, 关闭线程
+		{
+			// 【1】 写入数据
+			QString str_x = QString::number(x_stop_pos, 'f', 3);
+			QString str_y = QString::number(y_stop_pos, 'f', 3);
+			// QString str_z = QString::number(z_stop_pos, 'f', 3);
+
+			model_general->setData(model_general->index(3, 3), str_x);
+			model_general->setData(model_general->index(3, 4), str_y);
+			model_general->setData(model_general->index(4, 3), str_x);
+			model_general->setData(model_general->index(4, 3), str_y);
+			// model_general->setData(model_general->index(6, 5), str_z);
+			model_general->submitAll();
+			emit wchangedSqlModel();
+
+			// 【2】 发送消息
+			emit changedRundataText(QStringLiteral("Thread_btn_needleCalib_3 校针3线程正常结束, 已自动保存点位"));
+			writRunningLog(QStringLiteral("Thread_btn_needleCalib_3 校针3线程正常结束"));
+
+			is_btn_needleCalib1_ing = false;
+			close_thread_needleCalib1 = true;
 			step_needleCalib = 0;
 		}
 		break;
@@ -4586,8 +5072,8 @@ QVector<CCDGlue> Workflow::getCCDGluePoint2Vector(int index)
 		float Z = pointmodel->record(index).value("Z").toString().toFloat();
 		float center_X = pointmodel->record(index).value("center_X").toString().toFloat();
 		float center_Y = pointmodel->record(index).value("center_Y").toString().toFloat();
+		float speed = pointmodel->record(index).value("speed").toFloat();
 		float extra_offset_z = pointmodel->record(index).value("extra_offset_z").toString().toFloat();
-		bool laser = pointmodel->record(index).value("laser").toBool();
 		bool open = pointmodel->record(index).value("open").toBool();
 		int openAdvance = pointmodel->record(index).value("openAdvance").toInt();
 		int openDelay = pointmodel->record(index).value("openDelay").toInt();
@@ -4605,7 +5091,7 @@ QVector<CCDGlue> Workflow::getCCDGluePoint2Vector(int index)
 		point.center_X = center_X;
 		point.center_Y = center_Y;
 		point.extra_offset_z = calib_offset_z;
-		point.laser = laser;
+		point.speed = speed;
 		point.open = open;
 		point.openAdvance = openAdvance;
 		point.openDelay = openDelay;
@@ -4866,6 +5352,7 @@ bool Workflow::move_point_name(QString pointname, int z_flag)
 }
 
 
+
 // 写log文件
 void Workflow::writRunningLog(QString str)
 {
@@ -4968,7 +5455,6 @@ bool Workflow::getVisionData(float offset_x, float offset_y, float offset_z, int
 
 	return false;
 }
-
 
 
 
@@ -5092,13 +5578,55 @@ void Workflow::on_clicked_btn_dischargeGlue()
 // 连接 Operation 校针1
 void Workflow::on_clicked_btn_needleCalib_1()
 {
+	if (!(init_card() == 1)) return;
 
+	if (is_reset_ok == false)
+	{
+		QMessageBox::about(NULL, "Warning", QStringLiteral("未复位"));
+		return;
+	}
+
+	if (card_isMoving() == true)
+	{
+		QMessageBox::about(NULL, "Warning", QStringLiteral("控制卡正在运行"));
+		return;
+	}
+
+	if (is_btn_needleCalib1_ing == true)
+	{
+		QMessageBox::about(NULL, "Waring", QStringLiteral("正在校针"));
+		return;
+	}
+
+	close_thread_needleCalib1 = false;
+	future_thread_needleCalib_1 = QtConcurrent::run(&thread_pool, [&]() { thread_needleCalib_1(); });
 }
 
 // 连接 Operation 校针2
 void Workflow::on_clicked_btn_needleCalib_2()
 {
+	if (!(init_card() == 1)) return;
 
+	if (is_reset_ok == false)
+	{
+		QMessageBox::about(NULL, "Warning", QStringLiteral("未复位"));
+		return;
+	}
+
+	if (card_isMoving() == true)
+	{
+		QMessageBox::about(NULL, "Warning", QStringLiteral("控制卡正在运行"));
+		return;
+	}
+
+	if (is_btn_needleCalib2_ing == true)
+	{
+		QMessageBox::about(NULL, "Waring", QStringLiteral("正在校针"));
+		return;
+	}
+
+	close_thread_needleCalib2 = false;
+	future_thread_needleCalib_2 = QtConcurrent::run(&thread_pool, [&]() { thread_needleCalib_2(); });
 }
 
 // 连接 PointDebug 点位数据修改

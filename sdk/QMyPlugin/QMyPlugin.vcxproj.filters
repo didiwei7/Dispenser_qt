@@ -46,6 +46,12 @@
     <ClCompile Include="qio\qio.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="qmyedit\qmyedit.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="qmylabel\qmylabel.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="qmyslider\qmyslider.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -64,6 +70,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <QtMoc Include="qio\qio.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="qmyedit\qmyedit.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="qmylabel\qmylabel.h">
       <Filter>Header Files</Filter>
     </QtMoc>
     <ClInclude Include="qmyplugin.h">
@@ -89,6 +101,10 @@
     <CustomBuild Include="release\moc_predefs.h.cbt">
       <Filter>Generated Files</Filter>
     </CustomBuild>
+    
+    
+    
+    
     
     
     

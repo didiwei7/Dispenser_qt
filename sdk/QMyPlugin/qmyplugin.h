@@ -25,4 +25,10 @@ class QMySerial;
 #include "qflowlayout/qflowlayout.h"
 class QFlowLayout;
 
+#include "qmylabel/qmylabel.h"
+class QMyLabel;
+
+#include "qmyedit/qmyedit.h"
+class QMyEdit;
+
 #endif // QMYPLUGIN_H

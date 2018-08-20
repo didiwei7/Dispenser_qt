@@ -1,5 +1,7 @@
 #include "adtcontrol.h"
 
+
+
 // 初始化控制卡 第一次调用才初始化, 第二次调用时返回第一次初始化的结果
 int index = 1;
 int ret = 0;
@@ -226,7 +228,6 @@ void wait_axis_homeOk(int axis)
 
 
 
-
 // 获取输入点状态, by bit
 int read_in_bit(int bit)
 {
@@ -257,9 +258,6 @@ void change_out_bit(int bit)
 		adt8949_write_bit(0, bit, 0);
 	}
 }
-
-
-
 
 
 
@@ -526,5 +524,15 @@ void wait_stepAxis_stop()
 			stop_axis(AXISNUM::A);
 			break;
 		}
+	}
+}
+
+void asyncSleep(unsigned int msec)
+{
+	QTime reachTime = QTime::currentTime().addMSecs(msec);
+
+	while (QTime::currentTime() < reachTime)
+	{
+		QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
 	}
 }

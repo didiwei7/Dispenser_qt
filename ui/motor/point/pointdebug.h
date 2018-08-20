@@ -39,6 +39,7 @@ private:
     void setupUi();
     void setConnect();
 	void setTimer();
+	void setCommunication();
 
 private:	// ui初始化
 	void setGroupPoint();
@@ -50,14 +51,18 @@ private:	// ui初始化
 	void setGroupHome();
 	void setGroupCurrentpos();
 	void setGroupStep();
+	void setGroupCalib();
+	void setGroupLaser();
 
 	QGroupBox *group_move;
-	QGroupBox *group_io;
 	QGroupBox *group_home;
 
 	QGroupBox *group_pos;
     QGroupBox *group_currentpos;
     QGroupBox *group_step;
+	QGroupBox *group_io;
+	QGroupBox *group_laser;
+	QGroupBox *group_calib;
 
 private:	// 点位
 	void setCurrentModel(int index);
@@ -180,6 +185,32 @@ private:	// 移动步进
     QLineEdit *edit_Z_step;
 	QLineEdit *edit_A_step;
 
+private:	// Laser测量
+	void timer_updateLaser();
+	void on_btn_laser();
+
+	bool isLaserOpen;
+	QLabel *label_laser;
+	QPushButton *btn_laser;
+	QTimer *timer_laser;
+	QSerialPort *serial_laser;
+
+private:	// 手动标定
+	void on_btn_calib_getccd();
+	void on_btn_calib_getneedle();
+	void on_btn_calibOk();
+
+	QMyEdit *edit_calib_ccd_x;
+	QMyEdit *edit_calib_ccd_y;
+
+	QMyEdit *edit_calib_x;
+	QMyEdit *edit_calib_y;
+	QMyEdit *edit_calib_z;
+
+	QPushButton *btn_calib_getccd;
+	QPushButton *btn_calib_getneedle;
+	QPushButton *btn_calibOk;
+
 private:	// 更新数据
 	void timer_updateCurrentPos();
 	void timer_updateInputStatus();
@@ -195,6 +226,11 @@ private:	// 更新数据
 
 signals:	// 自定义信号槽
 	void changedSqlModel();	// 连接 Workflow, 应用当前修改
+
+	void changedDistanceOffset();
+
+public slots:
+	void on_wchangedSqlModel();
 };
 
 #endif // POINTDEBUG_H

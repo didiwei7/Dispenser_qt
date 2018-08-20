@@ -1,15 +1,5 @@
 ﻿#include "operation.h"
 
-void asyncSleep(unsigned int msec)
-{
-	QTime reachTime = QTime::currentTime().addMSecs(msec);
-
-	while (QTime::currentTime() < reachTime)
-	{
-		QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
-	}
-}
-
 Operation::Operation(QWidget *parent) : QWidget(parent)
 {
     setupUi();

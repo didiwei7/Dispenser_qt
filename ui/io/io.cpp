@@ -1,5 +1,6 @@
 ﻿#include "io.h"
 
+
 IO::IO(QWidget *parent) : QWidget(parent)
 {
 	// 【1】 初始化Ui

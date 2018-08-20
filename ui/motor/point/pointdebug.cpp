@@ -1,12 +1,14 @@
 ﻿#include "pointdebug.h"
 #include <iostream>
 
+
 PointDebug::PointDebug(QWidget *parent) : QWidget(parent)
 {
     setupUi();
 	setConnect();
 
 	// 由于Qt中所有的ui对象都是线程不安全的, 所以由线程改为在计时器中刷新
+	setCommunication();
 	setTimer();
 }
 
@@ -18,11 +20,14 @@ PointDebug::~PointDebug()
 void PointDebug::setupUi()
 {
 	setGroupPoint();
+
     setGroupMove();
-	setGroupIO();
 	setGroupCurrentpos();
 	setGroupStep();
 	setGroupHome();
+	setGroupIO();
+	setGroupLaser();
+	setGroupCalib();
 
 	QHBoxLayout *layout_1   = new QHBoxLayout();
 	QVBoxLayout *layout_2_1 = new QVBoxLayout();
@@ -41,6 +46,8 @@ void PointDebug::setupUi()
 	layout_2_1->addWidget(group_currentpos);
 	layout_2_1->addWidget(group_step);
 	layout_2_1->addWidget(group_io);
+	layout_2_1->addWidget(group_laser);
+	layout_2_1->addWidget(group_calib);
 	layout_2_1->addSpacerItem(new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding));
 
 	setLayout(layout_1);
@@ -114,6 +121,14 @@ void PointDebug::setConnect()
 	connect(btn_z_home, &QPushButton::clicked, this, &PointDebug::on_btn_z_home);
 	connect(btn_stop, &QPushButton::clicked, this, &PointDebug::on_btn_stop);
 	connect(btn_station_home, &QPushButton::clicked, this, &PointDebug::on_btn_station_home);
+
+	// 【6】 标定
+	connect(btn_calib_getccd, &QPushButton::clicked, this, &PointDebug::on_btn_calib_getccd);
+	connect(btn_calib_getneedle, &QPushButton::clicked, this, &PointDebug::on_btn_calib_getneedle);
+	connect(btn_calibOk,  &QPushButton::clicked, this, &PointDebug::on_btn_calibOk);
+
+	// 【7】 Laser
+	connect(btn_laser, &QPushButton::clicked, this, &PointDebug::on_btn_laser);
 }
 
 // 初始化计时器
@@ -126,6 +141,14 @@ void PointDebug::setTimer()
 	QTimer *timer_io = new QTimer(this);
 	connect(timer_io, &QTimer::timeout, this, &PointDebug::timer_updateInputStatus);
 	timer_io->start(10);
+
+	timer_laser = new QTimer(this);
+	connect(timer_laser, &QTimer::timeout, this, &PointDebug::timer_updateLaser);
+}
+
+void PointDebug::setCommunication()
+{
+	serial_laser = new QSerialPort(this);
 }
 
 // Ui
@@ -442,6 +465,71 @@ void PointDebug::setGroupStep()
 	group_step->setFixedHeight(120);
 }
 
+void PointDebug::setGroupLaser()
+{
+	group_laser = new QGroupBox(QStringLiteral("Laser测量"));
+	group_laser->setFont(QFont("MicroSoft Yahei", 8, QFont::Bold));
+
+	isLaserOpen = false;
+
+	QLabel *label_desc = new QLabel(QStringLiteral("镭射测量实时高度(mm):"));
+	label_laser = new QLabel("0.000");
+	
+	btn_laser = new QPushButton(QStringLiteral("开启实时测量"));
+	btn_laser->setFixedWidth(120);
+
+	QHBoxLayout *layout_1 = new QHBoxLayout();
+	layout_1->addWidget(label_desc);
+	layout_1->addWidget(label_laser);
+	layout_1->addSpacing(20);
+	layout_1->addWidget(btn_laser);
+	layout_1->addSpacerItem(new QSpacerItem(0, 0, QSizePolicy::Expanding, QSizePolicy::Minimum));
+
+	group_laser->setLayout(layout_1);
+}
+
+void PointDebug::setGroupCalib()
+{
+	group_calib = new QGroupBox(QStringLiteral("手动标定"));
+	group_calib->setFont(QFont("MicroSoft Yahei", 8, QFont::Bold));
+
+	edit_calib_ccd_x = new QMyEdit(QStringLiteral("CCD瞄准基准点 X:"), "0.000", "mm", false);
+	edit_calib_ccd_y = new QMyEdit(QStringLiteral("CCD瞄准基准点 Y:"), "0.000", "mm", false);
+
+	edit_calib_x = new QMyEdit(QStringLiteral("针头瞄准基准点 X:"), "0.000", "mm", false);
+	edit_calib_y = new QMyEdit(QStringLiteral("针头瞄准基准点 Y:"), "0.000", "mm", false);
+	edit_calib_z = new QMyEdit(QStringLiteral("针头瞄准基准点 Z:"), "0.000", "mm", false);
+
+	btn_calib_getccd = new QPushButton(QStringLiteral("获取CCD XY"));
+	btn_calib_getccd->setFixedWidth(80);
+	btn_calib_getneedle = new QPushButton(QStringLiteral("获取针头 XYZ"));
+	btn_calib_getneedle->setFixedWidth(80);
+
+	btn_calibOk = new QPushButton(QStringLiteral("计算保存标定结果"));
+	btn_calibOk->setFixedWidth(120);
+
+	QVBoxLayout *layout_1 = new QVBoxLayout();
+	layout_1->setSpacing(1);
+	QHBoxLayout *layout_2 = new QHBoxLayout();
+	layout_2->setSpacing(5);
+
+	layout_1->addWidget(edit_calib_ccd_x);
+	layout_1->addWidget(edit_calib_ccd_y);
+	layout_1->addSpacing(5);
+	layout_1->addWidget(edit_calib_x);
+	layout_1->addWidget(edit_calib_y);
+	layout_1->addWidget(edit_calib_z);
+	layout_1->addSpacing(5);
+	layout_1->addLayout(layout_2);
+
+	layout_2->addWidget(btn_calib_getccd);
+	layout_2->addWidget(btn_calib_getneedle);
+	layout_2->addWidget(btn_calibOk);
+	layout_2->addSpacerItem(new QSpacerItem(0, 0, QSizePolicy::Expanding, QSizePolicy::Minimum));
+	
+	group_calib->setLayout(layout_1);
+}
+
 void PointDebug::setGroupPoint()
 {
 	index_model = 0;
@@ -488,8 +576,8 @@ void PointDebug::setViewPoint()
 										"Z varchar,"
 										"center_X varchar,"
 										"center_Y varchar,"
-										"extra_offset_z varchar,"
-										"laser bool,"
+										"speed varchar,"
+										"extra_offset_z varchar,"									
 										"open bool,"
 										"openAdvance integer,"
 										"openDelay integer,"
@@ -507,8 +595,8 @@ void PointDebug::setViewPoint()
 										"Z varchar,"
 										"center_X varchar,"
 										"center_Y varchar,"
+										"speed varchar,"
 										"extra_offset_z varchar,"
-										"laser bool,"
 										"open bool,"
 										"openAdvance integer,"
 										"openDelay integer,"
@@ -526,8 +614,8 @@ void PointDebug::setViewPoint()
 										"Z varchar,"
 										"center_X varchar,"
 										"center_Y varchar,"
+										"speed varchar,"
 										"extra_offset_z varchar,"
-										"laser bool,"
 										"open bool,"
 										"openAdvance integer,"
 										"openDelay integer,"
@@ -545,8 +633,8 @@ void PointDebug::setViewPoint()
 										"Z varchar,"
 										"center_X varchar,"
 										"center_Y varchar,"
+										"speed varchar,"
 										"extra_offset_z varchar,"
-										"laser bool,"
 										"open bool,"
 										"openAdvance integer,"
 										"openDelay integer,"
@@ -573,6 +661,7 @@ void PointDebug::setViewPoint()
     // 更改Model对象的 头信息
 	model_general->setHeaderData(model_general->fieldIndex("name"), Qt::Horizontal, QStringLiteral("名称"));
 	model_general->setHeaderData(model_general->fieldIndex("description"),  Qt::Horizontal, QStringLiteral("描述"));
+	model_general->setHeaderData(model_general->fieldIndex("speed"), Qt::Horizontal, QStringLiteral("速度"));
 	model_general->setHeaderData(model_general->fieldIndex("extra_offset_z"), Qt::Horizontal, QStringLiteral("额外偏移Z"));
 	model_general->setHeaderData(model_general->fieldIndex("open"), Qt::Horizontal, QStringLiteral("是否开胶"));
 	model_general->setHeaderData(model_general->fieldIndex("openAdvance"), Qt::Horizontal, QStringLiteral("提前开胶"));
@@ -592,6 +681,7 @@ void PointDebug::setViewPoint()
 	// 更改Model对象的 头信息
 	model_glue1->setHeaderData(model_glue1->fieldIndex("name"), Qt::Horizontal, QStringLiteral("名称"));
 	model_glue1->setHeaderData(model_glue1->fieldIndex("description"), Qt::Horizontal, QStringLiteral("描述"));
+	model_glue1->setHeaderData(model_general->fieldIndex("speed"), Qt::Horizontal, QStringLiteral("速度"));
 	model_glue1->setHeaderData(model_glue1->fieldIndex("extra_offset_z"), Qt::Horizontal, QStringLiteral("额外偏移Z"));
 	model_glue1->setHeaderData(model_glue1->fieldIndex("open"), Qt::Horizontal, QStringLiteral("是否开胶"));
 	model_glue1->setHeaderData(model_glue1->fieldIndex("openAdvance"), Qt::Horizontal, QStringLiteral("提前开胶"));
@@ -611,6 +701,7 @@ void PointDebug::setViewPoint()
 	// 更改Model对象的 头信息
 	model_glue2->setHeaderData(model_glue2->fieldIndex("name"), Qt::Horizontal, QStringLiteral("名称"));
 	model_glue2->setHeaderData(model_glue2->fieldIndex("description"), Qt::Horizontal, QStringLiteral("描述"));
+	model_glue2->setHeaderData(model_general->fieldIndex("speed"), Qt::Horizontal, QStringLiteral("速度"));
 	model_glue2->setHeaderData(model_glue2->fieldIndex("extra_offset_z"), Qt::Horizontal, QStringLiteral("额外偏移Z"));
 	model_glue2->setHeaderData(model_glue2->fieldIndex("open"), Qt::Horizontal, QStringLiteral("是否开胶"));
 	model_glue2->setHeaderData(model_glue2->fieldIndex("openAdvance"), Qt::Horizontal, QStringLiteral("提前开胶"));
@@ -630,6 +721,7 @@ void PointDebug::setViewPoint()
 	// 更改Model对象的 头信息
 	model_glue3->setHeaderData(model_glue3->fieldIndex("name"), Qt::Horizontal, QStringLiteral("名称"));
 	model_glue3->setHeaderData(model_glue3->fieldIndex("description"), Qt::Horizontal, QStringLiteral("描述"));
+	model_glue3->setHeaderData(model_general->fieldIndex("speed"), Qt::Horizontal, QStringLiteral("速度"));
 	model_glue3->setHeaderData(model_glue3->fieldIndex("extra_offset_z"), Qt::Horizontal, QStringLiteral("额外偏移Z"));
 	model_glue3->setHeaderData(model_glue3->fieldIndex("open"), Qt::Horizontal, QStringLiteral("是否开胶"));
 	model_glue3->setHeaderData(model_glue3->fieldIndex("openAdvance"), Qt::Horizontal, QStringLiteral("提前开胶"));
@@ -663,18 +755,19 @@ void PointDebug::setViewPoint()
 	pointview->setColumnWidth(5, 60);
 	pointview->setColumnWidth(6, 60);
 	pointview->setColumnWidth(7, 60);
-	pointview->setColumnWidth(8, 70);
-	pointview->setColumnWidth(9, 60);
+	pointview->setColumnWidth(8, 60);
+	pointview->setColumnWidth(9, 70);
 	pointview->setColumnWidth(10, 60);
 	pointview->setColumnWidth(11, 60);
 	pointview->setColumnWidth(12, 60);
 	pointview->setColumnWidth(13, 60);
 	pointview->setColumnWidth(14, 60);
 	pointview->setColumnWidth(15, 60);
-	pointview->setColumnHidden(11, true);
-	pointview->setColumnHidden(12, true);
-	pointview->setColumnHidden(14, true);
-	pointview->setColumnHidden(15, true);
+	pointview->setColumnWidth(16, 100);
+	// pointview->setColumnHidden(11, true);
+	// pointview->setColumnHidden(12, true);
+	// pointview->setColumnHidden(14, true);
+	// pointview->setColumnHidden(15, true);
     // 可弹出右键菜单
     pointview->setContextMenuPolicy(Qt::CustomContextMenu);
 	// 隐藏表头
@@ -891,8 +984,8 @@ void PointDebug::on_action_add()
 	record_point.setValue("Z", "0.000");
 	record_point.setValue("center_X", "null");
 	record_point.setValue("center_Y", "null");
+	record_point.setValue("speed", "1.000");
 	record_point.setValue("extra_offset_z", "null");
-	record_point.setValue("laser", false);
 	record_point.setValue("open", false);
 	record_point.setValue("openAdvance", 0);
 	record_point.setValue("openDelay", 0);
@@ -963,8 +1056,8 @@ void PointDebug::on_action_insert()
 	record_point.setValue("Z", "0.000");
 	record_point.setValue("center_X", "null");
 	record_point.setValue("center_Y", "null");
+	record_point.setValue("speed", "1.000");
 	record_point.setValue("extra_offset_z", "null");
-	record_point.setValue("laser", false);
 	record_point.setValue("open", false);
 	record_point.setValue("openAdvance", 0);
 	record_point.setValue("openDelay", 0);
@@ -983,6 +1076,21 @@ void PointDebug::on_action_save()
 	pointmodel->submitAll();
 
 	// emit changedSqlModel(index_model);
+	emit changedSqlModel();
+}
+
+void PointDebug::on_wchangedSqlModel()
+{
+	model_general->select();
+	model_glue1->select();
+	model_glue2->select();
+	model_glue3->select();
+
+	model_general->submitAll();
+	model_glue1->submitAll();
+	model_glue2->submitAll();
+	model_glue3->submitAll();
+
 	emit changedSqlModel();
 }
 
@@ -1448,6 +1556,98 @@ void PointDebug::on_btn_z_home()
 }
 
 
+void PointDebug::on_btn_calib_getccd()
+{
+	float fx = get_current_pos_axis(AXISNUM::X);
+	QString sx = QString::number(fx, 'f', 3);
+	edit_calib_ccd_x->setValue(sx);
+
+	float fy = get_current_pos_axis(AXISNUM::Y);
+	QString sy = QString::number(fy, 'f', 3);
+	edit_calib_ccd_y->setValue(sy);
+}
+
+void PointDebug::on_btn_calib_getneedle()
+{
+	float fx = get_current_pos_axis(AXISNUM::X);
+	QString sx = QString::number(fx, 'f', 3);
+	edit_calib_x->setValue(sx);
+
+	float fy = get_current_pos_axis(AXISNUM::X);
+	QString sy = QString::number(fy, 'f', 3);
+	edit_calib_y->setValue(sy);
+
+	float fz = get_current_pos_axis(AXISNUM::X);
+	QString sz = QString::number(fz, 'f', 3);
+	edit_calib_z->setValue(sz);
+}
+
+void PointDebug::on_btn_calibOk()
+{
+	QString ccdx = edit_calib_ccd_x->getValue();
+	QString ccdy = edit_calib_ccd_y->getValue();
+	QString x = edit_calib_x->getValue();
+	QString y = edit_calib_x->getValue();
+	QString z = edit_calib_x->getValue();
+
+	int offsetx = int(x.toFloat() * 1000) - int(ccdx.toFloat() * 1000);
+	int offsety = int(y.toFloat() * 1000) - int(ccdy.toFloat() * 1000);
+
+	int offsetz = int(z.toFloat() * 1000);
+	
+	QSettings setting("../config/workflow_glue.ini", QSettings::IniFormat);
+	setting.beginGroup("calib_needle_optical");
+	setting.setValue("calib_offset_x", offsetx);
+	setting.setValue("calib_offset_y", offsety);
+	setting.endGroup();
+
+	setting.beginGroup("calib_needle_attach");
+	setting.setValue("calib_offset_z", offsetz);
+	setting.endGroup();
+
+	emit changedDistanceOffset();
+}
+
+
+void PointDebug::on_btn_laser()
+{
+	if (isLaserOpen == false)
+	{
+		serial_laser->setPortName("COM5");
+		if (!serial_laser->open(QIODevice::ReadWrite))
+		{
+			QMessageBox::about(NULL, "Warning", QStringLiteral("打开串口失败")); 
+			return;
+		}
+		else
+		{
+			serial_laser->setBaudRate(9600);
+			serial_laser->setDataBits(QSerialPort::Data8);
+			serial_laser->setParity(QSerialPort::NoParity);
+			serial_laser->setStopBits(QSerialPort::OneStop);
+			serial_laser->setFlowControl(QSerialPort::NoFlowControl);
+		}
+
+		isLaserOpen = true;
+		btn_laser->setText(QStringLiteral("关闭实时测量"));
+		timer_laser->start(100);
+	}
+	else
+	{
+		if (!serial_laser->isOpen())
+		{
+			QMessageBox::about(NULL, "Warning", QStringLiteral("关闭串口失败"));
+			return;
+		}
+
+		serial_laser->close();
+		isLaserOpen = false;
+		btn_laser->setText(QStringLiteral("开启实时测量"));
+		timer_laser->stop();
+	}
+}
+
+
 // 计时器 更新 当前位置
 void PointDebug::timer_updateCurrentPos()
 {
@@ -1481,4 +1681,17 @@ void PointDebug::timer_updateInputStatus()
 	INPUT_Z[1]->setStatus(!read_in_bit(14));
 	INPUT_Z[2]->setStatus(read_in_bit(9));
 	INPUT_Z[3]->setStatus(!read_in_bit(2));
+}
+
+// 计时器 更新 Laser
+void PointDebug::timer_updateLaser()
+{
+	if (!serial_laser->isOpen()) return;
+
+	char data_send[10] = { 0x02, 'M', 'E', 'A', 'S', 'U', 'R', 'E', 0x03 };
+	serial_laser->write(data_send);
+	asyncSleep(1);
+	QString str = QString(serial_laser->readAll()).remove(QChar(2)).remove(QChar(3));
+
+	if(label_laser->text() != str && str.length() > 4) label_laser->setText(str);
 }

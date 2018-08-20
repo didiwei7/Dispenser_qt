@@ -22,7 +22,9 @@ SOURCES  += qio/qio.cpp \
             qnavigationbar/qnavigationbar.cpp \
             qthermometer/qthermometer.cpp \
             qcommunication/qcommunication.cpp \
-            qflowlayout/qflowlayout.cpp
+            qflowlayout/qflowlayout.cpp \
+            qmylabel/qmylabel.cpp \
+            qmyedit/qmyedit.cpp
 
 
 HEADERS  += qmyplugin_global.h   \
@@ -32,7 +34,9 @@ HEADERS  += qmyplugin_global.h   \
             qnavigationbar/qnavigationbar.h \
             qthermometer/qthermometer.h \
             qcommunication/qcommunication.h \
-            qflowlayout/qflowlayout.h
+            qflowlayout/qflowlayout.h \
+            qmylabel/qmylabel.h \
+            qmyedit/qmyedit.h
 
 unix {
     target.path = /usr/lib
